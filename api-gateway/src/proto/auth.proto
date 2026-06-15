@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package auth;
+
+service AuthService {
+  rpc HospitalRegistration(HospitalRegReq)
+  returns (HospitalRegRes);
+
+}
+
+message HospitalRegReq {
+  string email        = 1;
+  string hospitalName = 2;
+  string password     = 3;
+}
+
+message HospitalRegRes {
+  int32 id = 1;
+}
