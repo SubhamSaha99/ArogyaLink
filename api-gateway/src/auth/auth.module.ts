@@ -19,7 +19,7 @@ import { AuthService } from './auth.service';
             protoPath: join(__dirname, '../proto/auth.proto'),
             url:
               configService.get<string>('AUTH_SERVICE_GRPC_URL') ??
-              'localhost:50051',
+              '0.0.0.0:50051',
           },
         }),
       },

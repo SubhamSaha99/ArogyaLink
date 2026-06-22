@@ -1,15 +1,22 @@
 import { Transform } from 'class-transformer';
-import { IsEmail, IsString, MinLength } from 'class-validator';
+import { IsEmail, IsInt, IsString, MinLength } from 'class-validator';
 
-export class HospitalRegDto {
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+export class HealthInstituteRegDto {
+  @IsInt()
+  healthInstituteType!: number;
+
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsEmail()
   email!: string;
 
-  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   @IsString()
   @MinLength(1)
-  hospitalName!: string;
+  healthInstituteName!: string;
 
   @IsString()
   @MinLength(1)

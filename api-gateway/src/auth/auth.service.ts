@@ -1,12 +1,12 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import type { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
-import { HospitalRegDto } from './auth.dto';
+import { HealthInstituteRegDto } from './auth.dto';
 import {
   AUTH_SERVICE_NAME,
   AuthServiceClient,
-  HospitalRegReq,
-  HospitalRegRes,
+  HealthInstituteRegReq,
+  HealthInstituteRegRes,
 } from '../proto/generated/auth';
 
 @Injectable()
@@ -20,15 +20,16 @@ export class AuthService implements OnModuleInit {
       this.client.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
   }
 
-  hospitalRegistration(request: HospitalRegDto): Promise<HospitalRegRes> {
-    const hospitalRegistrationRequest: HospitalRegReq = {
+  hospitalRegistration(request: HealthInstituteRegDto): Promise<HealthInstituteRegRes> {
+    const hospitalRegistrationRequest: HealthInstituteRegReq = {
+      healthInstituteType: request.healthInstituteType,
       email: request.email,
-      hospitalName: request.hospitalName,
+      healthInstituteName: request.healthInstituteName,
       password: request.password,
     };
 
     return firstValueFrom(
-      this.authGrpcService.hospitalRegistration(hospitalRegistrationRequest),
+      this.authGrpcService.healthInstituteRegistration(hospitalRegistrationRequest),
     );
   }
 }
