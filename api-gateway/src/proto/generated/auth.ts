@@ -18,24 +18,45 @@ export interface HealthInstituteRegReq {
 }
 
 export interface HealthInstituteRegRes {
-  userId: string;
+  healthInstituteId: string;
+}
+
+export interface HealthInstituteLoginReq {
+  healthInstituteId?: string | undefined;
+  email?: string | undefined;
+  password: string;
+  requestIp: string;
+}
+
+export interface HealthInstituteLoginRes {
+  healthInstituteId: string;
+  healthInstituteName: string;
+  healthInstituteType: string;
+  email: string;
+  token: string;
 }
 
 export const AUTH_PACKAGE_NAME = "auth";
 
 export interface AuthServiceClient {
   healthInstituteRegistration(request: HealthInstituteRegReq): Observable<HealthInstituteRegRes>;
+
+  healthInstituteLogin(request: HealthInstituteLoginReq): Observable<HealthInstituteLoginRes>;
 }
 
 export interface AuthServiceController {
   healthInstituteRegistration(
     request: HealthInstituteRegReq,
   ): Promise<HealthInstituteRegRes> | Observable<HealthInstituteRegRes> | HealthInstituteRegRes;
+
+  healthInstituteLogin(
+    request: HealthInstituteLoginReq,
+  ): Promise<HealthInstituteLoginRes> | Observable<HealthInstituteLoginRes> | HealthInstituteLoginRes;
 }
 
 export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["healthInstituteRegistration"];
+    const grpcMethods: string[] = ["healthInstituteRegistration", "healthInstituteLogin"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("AuthService", method)(constructor.prototype[method], method, descriptor);

@@ -1,10 +1,10 @@
 import { Controller } from '@nestjs/common';
-
 import { AuthService } from './auth.service';
-
 import {
   AuthServiceController,
   AuthServiceControllerMethods,
+  HealthInstituteLoginReq,
+  HealthInstituteLoginRes,
   HealthInstituteRegReq,
   HealthInstituteRegRes,
 } from '../proto/generated/auth';
@@ -17,6 +17,12 @@ export class AuthController implements AuthServiceController {
   async healthInstituteRegistration(
     request: HealthInstituteRegReq,
   ): Promise<HealthInstituteRegRes> {
-    return this.authService.hospitalRegistration(request);
+    return this.authService.healthInstituteRegistration(request);
+  }
+
+  async healthInstituteLogin(
+    request: HealthInstituteLoginReq,
+  ): Promise<HealthInstituteLoginRes> {
+    return this.authService.healthInstituteLogin(request);
   }
 }

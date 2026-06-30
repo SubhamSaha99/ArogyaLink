@@ -15,7 +15,7 @@ export class RegisterHealthInstituteProcedure1782030746336 implements MigrationI
                 AS $$
                 DECLARE
                     v_id BIGINT;
-                    v_userId VARCHAR(20);
+                    v_healthInstituteId VARCHAR(20);
                     v_prefix CHAR(1);
                     v_sqlstate TEXT;
                     v_message TEXT;
@@ -61,17 +61,17 @@ export class RegisterHealthInstituteProcedure1782030746336 implements MigrationI
                     RETURNING id INTO v_id;
 
                     -- Generate User ID
-                    v_userId := v_prefix || LPAD(v_id::TEXT, 6, '0');
+                    v_healthInstituteId := v_prefix || LPAD(v_id::TEXT, 6, '0');
 
                     -- Update User ID
                     UPDATE health_institute
                     SET
-                        user_id = v_userId,
+                        health_institute_id = v_healthInstituteId,
                         updated_at = NOW()
                     WHERE id = v_id;
 
                     -- Return generated userId
-                    p_result := v_userId;
+                    p_result := v_healthInstituteId;
 
                 EXCEPTION
                     WHEN OTHERS THEN

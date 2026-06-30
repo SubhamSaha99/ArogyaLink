@@ -6,15 +6,33 @@ service AuthService {
   rpc HealthInstituteRegistration(HealthInstituteRegReq)
   returns (HealthInstituteRegRes);
 
+  rpc HealthInstituteLogin(HealthInstituteLoginReq)
+  returns (HealthInstituteLoginRes);
+
 }
 
 message HealthInstituteRegReq {
   int32  healthInstituteType = 1;
-  string email                 = 2;
+  string email               = 2;
   string healthInstituteName = 3;
-  string password              = 4;
+  string password            = 4;
 }
 
 message HealthInstituteRegRes {
-  string userId = 1;
+  string healthInstituteId = 1;
+}
+
+message HealthInstituteLoginReq {
+  optional string healthInstituteId = 1;
+  optional string email             = 2;
+  string          password          = 3;
+  string          requestIp         = 4;
+}
+
+message HealthInstituteLoginRes {
+  string healthInstituteId   = 1;
+  string healthInstituteName = 2;
+  string healthInstituteType = 3;
+  string email               = 4;
+  string token               = 5;
 }
