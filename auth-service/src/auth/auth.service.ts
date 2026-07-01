@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
 import { status } from '@grpc/grpc-js';
-import { createHmac } from 'crypto';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
+import { JwtService } from '@nestjs/jwt';
 import {
   HealthInstituteLoginReq,
   HealthInstituteLoginRes,
@@ -14,7 +14,10 @@ import { throwRpcException } from '../helpers/rpcException';
 
 @Injectable()
 export class AuthService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly jwtService: JwtService,
+  ) {}
 
   async healthInstituteRegistration(
     request: HealthInstituteRegReq,
@@ -87,8 +90,8 @@ export class AuthService {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
 
-      const token = this.generateJwtToken({
-        userId: procedureResult.user_id,
+      const token = await this.jwtService.signAsync({
+        healthInstituteId: procedureResult.health_institute_id,
         email: procedureResult.email,
         requestIp: request.requestIp,
       });
@@ -109,22 +112,5 @@ export class AuthService {
     } finally {
       await queryRunner.release();
     }
-  }
-
-  private generateJwtToken(payload: Record<string, unknown>): string {
-    const header = { alg: 'HS256', typ: 'JWT' };
-    const encodeBase64Url = (value: unknown) =>
-      Buffer.from(JSON.stringify(value)).toString('base64url');
-
-    const headerSegment = encodeBase64Url(header);
-    const payloadSegment = encodeBase64Url(payload);
-    const signature = createHmac(
-      'sha256',
-      process.env.JWT_SECRET || 'dev-secret-key',
-    )
-      .update(`${headerSegment}.${payloadSegment}`)
-      .digest('base64url');
-
-    return `${headerSegment}.${payloadSegment}.${signature}`;
   }
 }
