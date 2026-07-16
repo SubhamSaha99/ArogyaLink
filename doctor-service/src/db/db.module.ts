@@ -2,9 +2,8 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseService } from './db.service';
-import { HealthInstitute } from './entities/healthInstitute.entity';
+import { DoctorProfile } from './entities/doctorProfile.entity';
 import { DbExceptionLog } from './entities/dbExceptionLog.entity';
-import { Doctor } from './entities/doctor.entity';
 
 @Module({
   imports: [
@@ -22,7 +21,7 @@ import { Doctor } from './entities/doctor.entity';
         synchronize: true,
         migrationsRun: false,
         migrations: ['dist/db/migrations/*.js'],
-        entities:[HealthInstitute, Doctor, DbExceptionLog],
+        entities:[DoctorProfile, DbExceptionLog],
         logging: true,
       }),
     }),

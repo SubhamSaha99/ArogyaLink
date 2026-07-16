@@ -1,7 +1,7 @@
 services:
-  postgres:
+  auth_postgres:
     image: postgres:16
-    container_name: postgres
+    container_name: postgres_auth
     restart: always
     environment:
       POSTGRES_USER: postgres
@@ -10,11 +10,29 @@ services:
     ports:
       - "5432:5432"
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - auth_postgres_data:/var/lib/postgresql/data
+    networks:
+      - arogyalink-network
+
+  doctor_postgres:
+    image: postgres:16
+    container_name: postgres_doctor
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: doctor_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - doctor_postgres_data:/var/lib/postgresql/data
+    networks:
+      - arogyalink-network
 
 networks:
   arogyalink-network:
     driver: bridge
 
 volumes:
-  postgres_data:
+  auth_postgres_data:
+  doctor_postgres_data:

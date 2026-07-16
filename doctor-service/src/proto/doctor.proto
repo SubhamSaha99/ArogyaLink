@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package doctor;
+
+service DoctorService {
+  rpc CreateDoctorProfile(DoctorProfileReq)
+  returns (DoctorProfileRes);
+}
+
+message DoctorProfileReq {
+  string doctorId = 1;
+  string email    = 2;
+  string mobile   = 3;
+
+  string          firstName  = 4;
+  optional string middleName = 5;
+  string          lastName   = 6;
+}
+
+message DoctorProfileRes {
+  string doctorId = 1;
+}

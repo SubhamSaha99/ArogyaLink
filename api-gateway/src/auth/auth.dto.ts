@@ -52,3 +52,27 @@ export class HealthInstituteLoginDto {
   @MinLength(6)
   password!: string;
 }
+
+export class DoctorRegDto {
+  @IsEmail()
+  email!: string;
+
+  @Matches(/^\+[1-9]{1}[0-9]{3,14}$/, {
+    message: 'Invalid Mobile Number',
+  })
+  mobile!: string;
+
+  @IsString()
+  firstName!: string;
+
+  @IsOptional()
+  @IsString()
+  middleName!: string;
+
+  @IsString()
+  lastName!: string;
+
+  @IsString()
+  @MinLength(6)
+  password!: string;
+}

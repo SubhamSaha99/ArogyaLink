@@ -9,6 +9,12 @@ service AuthService {
   rpc HealthInstituteLogin(HealthInstituteLoginReq)
   returns (HealthInstituteLoginRes);
 
+  rpc CreateDoctorAuth(DoctorAuthReq)
+  returns (DoctorRegistrationRes);
+
+  rpc CompensateDoctorRegistration(CompensateDoctorRegistrationReq)
+  returns (CompensateDoctorRegistrationRes);
+
 }
 
 message HealthInstituteRegReq {
@@ -35,4 +41,22 @@ message HealthInstituteLoginRes {
   string healthInstituteType = 3;
   string email               = 4;
   string token               = 5;
+}
+
+message DoctorAuthReq {
+  string email    = 1;
+  string mobile   = 2;
+  string password = 3;
+}
+
+message DoctorRegistrationRes {
+  string doctorId = 1;
+}
+
+message CompensateDoctorRegistrationReq {
+  string doctorId = 1;
+}
+
+message CompensateDoctorRegistrationRes {
+  bool success = 1;
 }

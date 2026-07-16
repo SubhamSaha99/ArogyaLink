@@ -4,6 +4,10 @@ import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
 import { JwtService } from '@nestjs/jwt';
 import {
+  CompensateDoctorRegistrationReq,
+  CompensateDoctorRegistrationRes,
+  DoctorAuthReq,
+  DoctorRegistrationRes,
   HealthInstituteLoginReq,
   HealthInstituteLoginRes,
   HealthInstituteRegReq,
@@ -112,5 +116,69 @@ export class AuthService {
     } finally {
       await queryRunner.release();
     }
+  }
+
+  async doctorRegistration(
+    request: DoctorAuthReq,
+  ): Promise<DoctorRegistrationRes> {
+    const hashedPassword = await bcrypt.hash(request.password, 10);
+
+    const result = await this.dataSource.query(
+      `CALL create_doctor_auth($1, $2, $3, $4)`,
+      [request.email, request.mobile, hashedPassword, null],
+    );
+
+    const procedureResult = result?.[0]?.p_result;
+
+    if (procedureResult === Errors.emailExistError) {
+      throwRpcException(status.ALREADY_EXISTS, 'Email already exists');
+    }
+    if (procedureResult === Errors.mobileExistError) {
+      throwRpcException(status.ALREADY_EXISTS, 'Mobile already exists');
+    }
+    if (procedureResult === Errors.dbError) {
+      throwRpcException(status.INTERNAL, 'Database error');
+    }
+    if (!/^DOC\d{6}$/.test(procedureResult)) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
+    return {
+      doctorId: procedureResult,
+    };
+  }
+
+  async compensateDoctorRegistration(
+    request: CompensateDoctorRegistrationReq,
+  ): Promise<CompensateDoctorRegistrationRes> {
+    const match = request.doctorId.match(/^DOC(\d{6})$/);
+
+    if (!match) {
+      return throwRpcException(
+        status.INVALID_ARGUMENT,
+        'Invalid doctor ID format',
+      );
+    }
+
+    const doctorPk = Number(match[1]);
+
+    const result = await this.dataSource.query(
+      `CALL compensate_doctor_registration($1, $2)`,
+      [doctorPk, null],
+    );
+
+    const procedureResult = result?.[0]?.p_result;
+
+    if (procedureResult === Errors.doctorNotFoundError)
+      throwRpcException(status.NOT_FOUND, 'Doctor auth record not found');
+    if (procedureResult === Errors.dbError)
+      throwRpcException(
+        status.INTERNAL,
+        'Failed to compensate doctor registration',
+      );
+    if (procedureResult === Errors.doctorNotFoundError)
+      throwRpcException(status.NOT_FOUND, 'Doctor auth record not found');
+    return {
+      success: true,
+    };
   }
 }

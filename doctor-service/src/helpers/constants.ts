@@ -2,6 +2,5 @@ export enum Errors {
   emailExistError = 'emailExist',
   mobileExistError = 'mobileExist',
   emailNotExistError = 'emailNotExist',
-  doctorNotFoundError = 'doctorNotFound',
   dbError = 'dbError',
 }

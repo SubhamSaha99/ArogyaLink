@@ -3,6 +3,10 @@ import { AuthService } from './auth.service';
 import {
   AuthServiceController,
   AuthServiceControllerMethods,
+  CompensateDoctorRegistrationReq,
+  CompensateDoctorRegistrationRes,
+  DoctorAuthReq,
+  DoctorRegistrationRes,
   HealthInstituteLoginReq,
   HealthInstituteLoginRes,
   HealthInstituteRegReq,
@@ -24,5 +28,17 @@ export class AuthController implements AuthServiceController {
     request: HealthInstituteLoginReq,
   ): Promise<HealthInstituteLoginRes> {
     return this.authService.healthInstituteLogin(request);
+  }
+
+  async createDoctorAuth(
+    request: DoctorAuthReq,
+  ): Promise<DoctorRegistrationRes> {
+    return this.authService.doctorRegistration(request);
+  }
+
+  async compensateDoctorRegistration(
+    request: CompensateDoctorRegistrationReq,
+  ): Promise<CompensateDoctorRegistrationRes> {
+    return this.authService.compensateDoctorRegistration(request);
   }
 }
