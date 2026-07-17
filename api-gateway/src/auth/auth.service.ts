@@ -2,6 +2,7 @@ import { Inject, Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import type { ClientGrpc } from '@nestjs/microservices';
 import { firstValueFrom } from 'rxjs';
 import {
+  DoctorLoginDto,
   DoctorRegDto,
   HealthInstituteLoginDto,
   HealthInstituteRegDto,
@@ -10,6 +11,8 @@ import {
   AUTH_SERVICE_NAME,
   AuthServiceClient,
   DoctorAuthReq,
+  DoctorLoginReq,
+  DoctorLoginRes,
   DoctorRegistrationRes,
   HealthInstituteLoginReq,
   HealthInstituteLoginRes,
@@ -128,5 +131,25 @@ export class AuthService implements OnModuleInit {
 
       throw error;
     }
+  }
+
+  /**
+   * * Docotor login
+   * @param request
+   * @param requestIp
+   * @returns DoctorLoginRes
+   */
+  async doctorLogin(
+    request: DoctorLoginDto,
+    requestIp: string,
+  ): Promise<DoctorLoginRes> {
+    const loginRequest: DoctorLoginReq = {
+      email: request.email || '',
+      mobile: request.mobile || '',
+      password: request.password,
+      requestIp,
+    };
+
+    return firstValueFrom(this.authGrpcService.doctorLogin(loginRequest));
   }
 }

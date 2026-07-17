@@ -1,7 +1,7 @@
 export enum Errors {
   emailExistError = 'emailExist',
   mobileExistError = 'mobileExist',
-  emailNotExistError = 'emailNotExist',
+  invalidCredentialError = 'invalidCredential',
   doctorNotFoundError = 'doctorNotFound',
   dbError = 'dbError',
 }

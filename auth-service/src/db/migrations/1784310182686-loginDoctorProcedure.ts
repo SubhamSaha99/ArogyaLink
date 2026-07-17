@@ -1,13 +1,13 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class LoginHealthInstituteProcedure1782706056345 implements MigrationInterface {
+export class LoginDoctorProcedure1784310182686 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-                CREATE OR REPLACE PROCEDURE login_health_institute(
-                IN p_healthInstituteId VARCHAR(20),
-                IN p_email VARCHAR(255),
-                INOUT p_result REFCURSOR
+                CREATE OR REPLACE PROCEDURE login_doctor(
+                    IN p_email VARCHAR(255),
+                    IN p_mobile VARCHAR(20),
+                    INOUT p_result REFCURSOR
                 )
                 LANGUAGE plpgsql
                 AS $$
@@ -19,27 +19,26 @@ export class LoginHealthInstituteProcedure1782706056345 implements MigrationInte
                     
                 IF NOT EXISTS (
                     SELECT 1
-                    FROM health_institute
+                    FROM doctor
                     WHERE
                         (
-                            p_healthInstituteId IS NOT NULL
-                            AND TRIM(p_healthInstituteId) <> ''
-                            AND health_institute_id = p_healthInstituteId
+                            p_email IS NOT NULL
+                            AND TRIM(p_email) <> ''
+                            AND email = p_email
                         )
                         OR
                         (
-                            (p_healthInstituteId IS NULL OR TRIM(p_healthInstituteId) = '')
-                            AND email = p_email
+                            (p_email IS NULL OR TRIM(p_email) = '')
+                            AND mobile = p_mobile
                         )
                 ) THEN
 
                     OPEN p_result FOR
                     SELECT
                         'invalidCredential'::VARCHAR AS status,
-                        NULL::VARCHAR AS health_institute_id,
-                        NULL::VARCHAR AS health_institute_name,
-                        NULL::INT AS health_institute_type,
+                        NULL::VARCHAR AS doctor_id,
                         NULL::VARCHAR AS email,
+                        NULL::VARCHAR AS mobile,
                         NULL::VARCHAR AS password;
 
                     RETURN;
@@ -48,22 +47,21 @@ export class LoginHealthInstituteProcedure1782706056345 implements MigrationInte
                 OPEN p_result FOR
                 SELECT
                     'SUCCESS'::VARCHAR AS status,
-                    health_institute_id,
-                    health_institute_name,
-                    health_institute_type,
+                    doctor_id,
                     email,
+                    mobile,
                     password
-                FROM health_institute
+                FROM doctor
                 WHERE
                     (
-                        p_healthInstituteId IS NOT NULL
-                        AND TRIM(p_healthInstituteId) <> ''
-                        AND health_institute_id = p_healthInstituteId
+                        p_email IS NOT NULL
+                        AND TRIM(p_email) <> ''
+                        AND email = p_email
                     )
                     OR
                     (
-                        (p_healthInstituteId IS NULL OR TRIM(p_healthInstituteId) = '')
-                        AND email = p_email
+                        (p_email IS NULL OR TRIM(p_email) = '')
+                        AND mobile = p_mobile
                     );
 
                 EXCEPTION
@@ -81,7 +79,7 @@ export class LoginHealthInstituteProcedure1782706056345 implements MigrationInte
                         created_at
                     )
                     VALUES (
-                        'login_health_institute',
+                        'login_doctor',
                         v_sqlstate,
                         v_message,
                         COALESCE(v_detail, ''),
@@ -91,10 +89,9 @@ export class LoginHealthInstituteProcedure1782706056345 implements MigrationInte
                     OPEN p_result FOR
                     SELECT
                         'dbError'::VARCHAR AS status,
-                        NULL::VARCHAR AS health_institute_id,
-                        NULL::VARCHAR AS health_institute_name,
-                        NULL::INT AS health_institute_type,
+                        NULL::VARCHAR AS doctor_id,
                         NULL::VARCHAR AS email,
+                        NULL::VARCHAR AS mobile,
                         NULL::VARCHAR AS password;
 
                 END;
@@ -103,7 +100,7 @@ export class LoginHealthInstituteProcedure1782706056345 implements MigrationInte
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`DROP PROCEDURE IF EXISTS login_health_institute(VARCHAR, VARCHAR, REFCURSOR);`);
+        await queryRunner.query(`DROP PROCEDURE IF EXISTS login_doctor(VARCHAR, VARCHAR, REFCURSOR);`);
     }
 
 }

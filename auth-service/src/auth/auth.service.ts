@@ -7,6 +7,8 @@ import {
   CompensateDoctorRegistrationReq,
   CompensateDoctorRegistrationRes,
   DoctorAuthReq,
+  DoctorLoginReq,
+  DoctorLoginRes,
   DoctorRegistrationRes,
   HealthInstituteLoginReq,
   HealthInstituteLoginRes,
@@ -23,6 +25,11 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
+  /**
+   * * Health Institute Registartion
+   * @param request
+   * @returns HealthInstituteRegRes
+   */
   async healthInstituteRegistration(
     request: HealthInstituteRegReq,
   ): Promise<HealthInstituteRegRes> {
@@ -55,6 +62,11 @@ export class AuthService {
     };
   }
 
+  /**
+   * * Health Institute Login
+   * @param request
+   * @returns HealthInstituteLoginRes
+   */
   async healthInstituteLogin(
     request: HealthInstituteLoginReq,
   ): Promise<HealthInstituteLoginRes> {
@@ -78,7 +90,7 @@ export class AuthService {
       if (!procedureResult) {
         throwRpcException(status.INTERNAL, 'Invalid response from procedure');
       }
-      if (procedureResult.status === Errors.emailNotExistError) {
+      if (procedureResult.status === Errors.invalidCredentialError) {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
       if (procedureResult.status === Errors.dbError) {
@@ -96,7 +108,6 @@ export class AuthService {
 
       const token = await this.jwtService.signAsync({
         healthInstituteId: procedureResult.health_institute_id,
-        email: procedureResult.email,
         requestIp: request.requestIp,
       });
 
@@ -118,6 +129,11 @@ export class AuthService {
     }
   }
 
+  /**
+   * * Doctor Registration
+   * @param request
+   * @returns DoctorRegistrationRes
+   */
   async doctorRegistration(
     request: DoctorAuthReq,
   ): Promise<DoctorRegistrationRes> {
@@ -180,5 +196,68 @@ export class AuthService {
     return {
       success: true,
     };
+  }
+
+  /**
+   * * Doctor login
+   * @param request 
+   * @returns DoctorLoginRes
+   */
+  async doctorLogin(request: DoctorLoginReq): Promise<DoctorLoginRes> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.query(`CALL login_doctor($1, $2, 'login_cursor')`, [
+        request.email,
+        request.mobile,
+      ]);
+
+      const result = await queryRunner.query(`FETCH ALL FROM login_cursor`);
+      const procedureResult = result?.[0];
+
+      await queryRunner.query(`CLOSE login_cursor`);
+      await queryRunner.commitTransaction();
+
+      if (!procedureResult) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+      if (procedureResult.status === Errors.invalidCredentialError) {
+        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+      }
+      if (procedureResult.status === Errors.dbError) {
+        throwRpcException(status.INTERNAL, 'Database error');
+      }
+
+      const isPasswordValid = await bcrypt.compare(
+        request.password,
+        procedureResult.password,
+      );
+
+      if (!isPasswordValid) {
+        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+      }
+
+      const token = await this.jwtService.signAsync({
+        doctorId: procedureResult.doctor_id,
+        requestIp: request.requestIp,
+      });
+
+      return {
+        doctorId: procedureResult.doctor_id,
+        email: procedureResult.email,
+        mobile: procedureResult.mobile,
+        token,
+      };
+    } catch (error) {
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
   }
 }

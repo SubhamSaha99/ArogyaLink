@@ -15,6 +15,9 @@ service AuthService {
   rpc CompensateDoctorRegistration(CompensateDoctorRegistrationReq)
   returns (CompensateDoctorRegistrationRes);
 
+  rpc DoctorLogin(DoctorLoginReq)
+  returns (DoctorLoginRes);
+
 }
 
 message HealthInstituteRegReq {
@@ -59,4 +62,18 @@ message CompensateDoctorRegistrationReq {
 
 message CompensateDoctorRegistrationRes {
   bool success = 1;
+}
+
+message DoctorLoginReq {
+  optional string email     = 1;
+  optional string mobile    = 2;
+  string          password  = 3;
+  string          requestIp = 4;
+}
+
+message DoctorLoginRes {
+    string doctorId = 1;
+    string email = 2;
+    string mobile = 3;
+    string token = 4;
 }

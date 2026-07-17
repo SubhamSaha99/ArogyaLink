@@ -15,6 +15,7 @@ import {
   HealthInstituteRegDto,
   HealthInstituteLoginDto,
   DoctorRegDto,
+  DoctorLoginDto,
 } from './auth.dto';
 import { extractRequestIp } from '../common/extreactRequestIp';
 
@@ -128,7 +129,48 @@ export class AuthController {
           throw new UnauthorizedException(error.details);
 
         default:
-            console.log(error.details);
+          console.log(error.details);
+          throw new InternalServerErrorException(
+            error.details || 'Internal server error',
+          );
+      }
+    }
+  }
+
+  /**
+   * * Doctor login
+   * @param request 
+   * @param httpRequest 
+   * @returns json
+   */
+  @Post('doctorLogin')
+  async doctorLogin(
+    @Body() request: DoctorLoginDto,
+    @Req() httpRequest: Request,
+  ) {
+    try {
+      const result = await this.authService.doctorLogin(
+        request,
+        extractRequestIp(httpRequest),
+      );
+
+      return {
+        success: true,
+        message: 'Doctor logged in successfully',
+        data: result,
+      };
+    } catch (error: any) {
+      switch (error.code) {
+        case status.UNAUTHENTICATED:
+          throw new UnauthorizedException(error.details);
+
+        case status.INVALID_ARGUMENT:
+          throw new BadRequestException(error.details);
+
+        case status.NOT_FOUND:
+          throw new BadRequestException(error.details);
+
+        default:
           throw new InternalServerErrorException(
             error.details || 'Internal server error',
           );
