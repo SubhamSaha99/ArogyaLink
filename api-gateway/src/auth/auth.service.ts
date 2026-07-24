@@ -10,7 +10,6 @@ import {
 import {
   AUTH_SERVICE_NAME,
   AuthServiceClient,
-  DoctorAuthReq,
   DoctorLoginReq,
   DoctorLoginRes,
   DoctorRegistrationRes,
@@ -21,7 +20,6 @@ import {
 } from '../proto/generated/auth';
 import {
   DOCTOR_SERVICE_NAME,
-  DoctorProfileReq,
   DoctorServiceClient,
 } from '../proto/generated/doctor';
 
@@ -85,6 +83,11 @@ export class AuthService implements OnModuleInit {
     );
   }
 
+  /**
+   * * Doctor Registration
+   * @param request
+   * @returns DoctorRegistrationRes
+   */
   async doctorRegistration(
     request: DoctorRegDto,
   ): Promise<DoctorRegistrationRes> {

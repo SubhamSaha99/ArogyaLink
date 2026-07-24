@@ -66,12 +66,12 @@ export class DoctorProfile {
   gender?: number;
 
   @Column({
-    name: 'status',
-    type: 'smallint',
-    default: 1,
-    comment: '1-Active, 2-Inactive',
+    name: 'profile_image',
+    type: 'text',
+    nullable: true,
+    comment: 'URL or path of the doctor profile image',
   })
-  status!: number;
+  profileImage?: string;
 
   @CreateDateColumn({
     name: 'created_at',

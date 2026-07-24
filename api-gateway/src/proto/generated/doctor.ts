@@ -23,21 +23,40 @@ export interface DoctorProfileRes {
   doctorId: string;
 }
 
+export interface UpdateDoctorBasicDeatilsReq {
+  doctorId: string;
+  firstName?: string | undefined;
+  middleName?: string | undefined;
+  lastName?: string | undefined;
+  gender?: number | undefined;
+  profileImage?: string | undefined;
+}
+
+export interface UpdateDoctorBasicDeatilsRes {
+  doctorId: string;
+}
+
 export const DOCTOR_PACKAGE_NAME = "doctor";
 
 export interface DoctorServiceClient {
   createDoctorProfile(request: DoctorProfileReq): Observable<DoctorProfileRes>;
+
+  updateDoctorBasicDetails(request: UpdateDoctorBasicDeatilsReq): Observable<UpdateDoctorBasicDeatilsRes>;
 }
 
 export interface DoctorServiceController {
   createDoctorProfile(
     request: DoctorProfileReq,
   ): Promise<DoctorProfileRes> | Observable<DoctorProfileRes> | DoctorProfileRes;
+
+  updateDoctorBasicDetails(
+    request: UpdateDoctorBasicDeatilsReq,
+  ): Promise<UpdateDoctorBasicDeatilsRes> | Observable<UpdateDoctorBasicDeatilsRes> | UpdateDoctorBasicDeatilsRes;
 }
 
 export function DoctorServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createDoctorProfile"];
+    const grpcMethods: string[] = ["createDoctorProfile", "updateDoctorBasicDetails"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("DoctorService", method)(constructor.prototype[method], method, descriptor);

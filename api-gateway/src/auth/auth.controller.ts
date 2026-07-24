@@ -17,7 +17,7 @@ import {
   DoctorRegDto,
   DoctorLoginDto,
 } from './auth.dto';
-import { extractRequestIp } from '../common/extreactRequestIp';
+import { extractRequestIp } from '../common/util/extreactRequestIp';
 
 @Controller('auth')
 export class AuthController {

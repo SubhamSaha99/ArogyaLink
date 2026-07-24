@@ -4,6 +4,8 @@ import {
   DoctorProfileRes,
   DoctorServiceController,
   DoctorServiceControllerMethods,
+  UpdateDoctorBasicDeatilsReq,
+  UpdateDoctorBasicDeatilsRes,
 } from '../proto/generated/doctor';
 import { ProfileService } from './profile.service';
 
@@ -16,5 +18,11 @@ export class ProfileController implements DoctorServiceController {
     request: DoctorProfileReq,
   ): Promise<DoctorProfileRes> {
     return this.profileServvice.createDoctorProfile(request);
+  }
+
+  async updateDoctorBasicDetails(
+    request: UpdateDoctorBasicDeatilsReq,
+  ): Promise<UpdateDoctorBasicDeatilsRes> {
+    return this.profileServvice.updateDoctorBasicDetails(request);
   }
 }

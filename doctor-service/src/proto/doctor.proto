@@ -5,6 +5,8 @@ package doctor;
 service DoctorService {
   rpc CreateDoctorProfile(DoctorProfileReq)
   returns (DoctorProfileRes);
+  rpc UpdateDoctorBasicDetails(UpdateDoctorBasicDeatilsReq)
+  returns (UpdateDoctorBasicDeatilsRes);
 }
 
 message DoctorProfileReq {
@@ -18,5 +20,18 @@ message DoctorProfileReq {
 }
 
 message DoctorProfileRes {
+  string doctorId = 1;
+}
+
+message UpdateDoctorBasicDeatilsReq {
+  string          doctorId     = 1;
+  optional string firstName    = 2;
+  optional string middleName   = 3;
+  optional string lastName     = 4;
+  optional int32  gender       = 5;
+  optional string profileImage = 6;
+}
+
+message UpdateDoctorBasicDeatilsRes {
   string doctorId = 1;
 }

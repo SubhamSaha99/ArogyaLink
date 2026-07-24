@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { DoctorProfileReq, DoctorProfileRes } from '../proto/generated/doctor';
+import { DoctorProfileReq, DoctorProfileRes, UpdateDoctorBasicDeatilsReq, UpdateDoctorBasicDeatilsRes } from '../proto/generated/doctor';
 import { throwRpcException } from '../helpers/rpcException';
 import { status } from '@grpc/grpc-js';
 import { Errors } from '../helpers/constants';
@@ -26,6 +26,36 @@ export class ProfileService {
     );
 
     const procedureResult = result?.[0]?.p_result;
+    if (procedureResult === Errors.dbError) {
+      throwRpcException(status.INTERNAL, 'Database error');
+    }
+    if (!/^DOC\d{6}$/.test(procedureResult)) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
+
+    return {
+      doctorId: procedureResult,
+    };
+  }
+
+  async updateDoctorBasicDetails(request: UpdateDoctorBasicDeatilsReq): Promise<UpdateDoctorBasicDeatilsRes> {
+    const result = await this.dataSource.query(
+      `CALL update_doctor_basic_details($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        request.doctorId,
+        request.firstName,
+        request.middleName,
+        request.lastName,
+        request.gender,
+        request.profileImage,
+        null
+      ],
+    );
+
+    const procedureResult = result?.[0]?.p_result;
+    if (procedureResult === Errors.invalidIdError) {
+      throwRpcException(status.INVALID_ARGUMENT, 'Invalid Doctor ID');
+    }
     if (procedureResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
