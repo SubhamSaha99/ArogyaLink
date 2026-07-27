@@ -5,8 +5,12 @@ package doctor;
 service DoctorService {
   rpc CreateDoctorProfile(DoctorProfileReq)
   returns (DoctorProfileRes);
+
   rpc UpdateDoctorBasicDetails(UpdateDoctorBasicDeatilsReq)
   returns (UpdateDoctorBasicDeatilsRes);
+
+  rpc UpdateDoctorProfessionalDetails(UpdateDoctorProfessionalDetailsReq)
+  returns (UpdateDoctorProfessionalDetailsRes);
 }
 
 message DoctorProfileReq {
@@ -33,5 +37,18 @@ message UpdateDoctorBasicDeatilsReq {
 }
 
 message UpdateDoctorBasicDeatilsRes {
+  string doctorId = 1;
+}
+
+message UpdateDoctorProfessionalDetailsReq {
+  string doctorId            = 1;
+  string medicalRegistration = 2;
+  int32  registrationCouncil = 3;
+  int32  registrationState   = 4;
+  int32  registrationYear    = 5;
+  int32  licenseStatus       = 6;
+}
+
+message UpdateDoctorProfessionalDetailsRes {
   string doctorId = 1;
 }

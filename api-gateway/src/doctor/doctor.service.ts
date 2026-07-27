@@ -5,8 +5,13 @@ import {
   DoctorServiceClient,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
+  UpdateDoctorProfessionalDetailsReq,
+  UpdateDoctorProfessionalDetailsRes,
 } from '../proto/generated/doctor';
-import { DoctorBasicDetailsDto } from './doctor.dto';
+import {
+  DoctorBasicDetailsDto,
+  DoctorProfessionalDetailsDto,
+} from './doctor.dto';
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/util/file.util';
 import { moveFile } from '../common/util/uploadFile';
@@ -55,5 +60,23 @@ export class DoctorService implements OnModuleInit {
       }
       throw error;
     }
+  }
+
+  /**
+   * * Update Doctor Professional Details.
+   * @param request
+   * @returns UpdateDoctorProfessionalDetailsRes
+   */
+  async updateDoctorProfessinalDetails(
+    request: DoctorProfessionalDetailsDto,
+  ): Promise<UpdateDoctorProfessionalDetailsRes> {
+    const doctorProfesionalDetails: UpdateDoctorProfessionalDetailsReq = {
+      ...request,
+    };
+    return await firstValueFrom(
+      this.doctorGrpcService.updateDoctorProfessionalDetails(
+        doctorProfesionalDetails,
+      ),
+    );
   }
 }

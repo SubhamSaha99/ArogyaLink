@@ -2,11 +2,13 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
 @Entity('doctor_profile')
+@Index('idx_doctor_profile_doctor_id', ['doctorId'], { unique: true })
 export class DoctorProfile {
   @PrimaryGeneratedColumn('increment')
   id!: number;

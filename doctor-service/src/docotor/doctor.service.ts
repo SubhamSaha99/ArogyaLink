@@ -1,14 +1,26 @@
 import { Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
-import { DoctorProfileReq, DoctorProfileRes, UpdateDoctorBasicDeatilsReq, UpdateDoctorBasicDeatilsRes } from '../proto/generated/doctor';
+import {
+  DoctorProfileReq,
+  DoctorProfileRes,
+  UpdateDoctorBasicDeatilsReq,
+  UpdateDoctorBasicDeatilsRes,
+  UpdateDoctorProfessionalDetailsReq,
+  UpdateDoctorProfessionalDetailsRes,
+} from '../proto/generated/doctor';
 import { throwRpcException } from '../helpers/rpcException';
 import { status } from '@grpc/grpc-js';
 import { Errors } from '../helpers/constants';
 
 @Injectable()
-export class ProfileService {
+export class DoctorService {
   constructor(private readonly dataSource: DataSource) {}
 
+  /**
+   * * Create Doctor Profile
+   * @param request
+   * @returns DoctorProfileRes
+   */
   async createDoctorProfile(
     request: DoctorProfileReq,
   ): Promise<DoctorProfileRes> {
@@ -38,7 +50,14 @@ export class ProfileService {
     };
   }
 
-  async updateDoctorBasicDetails(request: UpdateDoctorBasicDeatilsReq): Promise<UpdateDoctorBasicDeatilsRes> {
+  /**
+   * * Update Doctor Basic Details.
+   * @param request
+   * @returns UpdateDoctorBasicDeatilsRes
+   */
+  async updateDoctorBasicDetails(
+    request: UpdateDoctorBasicDeatilsReq,
+  ): Promise<UpdateDoctorBasicDeatilsRes> {
     const result = await this.dataSource.query(
       `CALL update_doctor_basic_details($1, $2, $3, $4, $5, $6, $7)`,
       [
@@ -48,7 +67,44 @@ export class ProfileService {
         request.lastName,
         request.gender,
         request.profileImage,
-        null
+        null,
+      ],
+    );
+
+    const procedureResult = result?.[0]?.p_result;
+    if (procedureResult === Errors.invalidIdError) {
+      throwRpcException(status.INVALID_ARGUMENT, 'Invalid Doctor ID');
+    }
+    if (procedureResult === Errors.dbError) {
+      throwRpcException(status.INTERNAL, 'Database error');
+    }
+    if (!/^DOC\d{6}$/.test(procedureResult)) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
+
+    return {
+      doctorId: procedureResult,
+    };
+  }
+
+  /**
+   * * Update Doctor Professional Details.
+   * @param request
+   * @returns UpdateDoctorProfessionalDetailsRes
+   */
+  async updateDoctorProfessionalDetails(
+    request: UpdateDoctorProfessionalDetailsReq,
+  ): Promise<UpdateDoctorProfessionalDetailsRes> {
+    const result = await this.dataSource.query(
+      `CALL update_doctor_professional_details($1, $2, $3, $4, $5, $6, $7)`,
+      [
+        request.doctorId,
+        request.medicalRegistration,
+        request.registrationCouncil,
+        request.registrationState,
+        request.registrationYear,
+        request.licenseStatus,
+        null,
       ],
     );
 

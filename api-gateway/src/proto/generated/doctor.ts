@@ -36,12 +36,29 @@ export interface UpdateDoctorBasicDeatilsRes {
   doctorId: string;
 }
 
+export interface UpdateDoctorProfessionalDetailsReq {
+  doctorId: string;
+  medicalRegistration: string;
+  registrationCouncil: number;
+  registrationState: number;
+  registrationYear: number;
+  licenseStatus: number;
+}
+
+export interface UpdateDoctorProfessionalDetailsRes {
+  doctorId: string;
+}
+
 export const DOCTOR_PACKAGE_NAME = "doctor";
 
 export interface DoctorServiceClient {
   createDoctorProfile(request: DoctorProfileReq): Observable<DoctorProfileRes>;
 
   updateDoctorBasicDetails(request: UpdateDoctorBasicDeatilsReq): Observable<UpdateDoctorBasicDeatilsRes>;
+
+  updateDoctorProfessionalDetails(
+    request: UpdateDoctorProfessionalDetailsReq,
+  ): Observable<UpdateDoctorProfessionalDetailsRes>;
 }
 
 export interface DoctorServiceController {
@@ -52,11 +69,22 @@ export interface DoctorServiceController {
   updateDoctorBasicDetails(
     request: UpdateDoctorBasicDeatilsReq,
   ): Promise<UpdateDoctorBasicDeatilsRes> | Observable<UpdateDoctorBasicDeatilsRes> | UpdateDoctorBasicDeatilsRes;
+
+  updateDoctorProfessionalDetails(
+    request: UpdateDoctorProfessionalDetailsReq,
+  ):
+    | Promise<UpdateDoctorProfessionalDetailsRes>
+    | Observable<UpdateDoctorProfessionalDetailsRes>
+    | UpdateDoctorProfessionalDetailsRes;
 }
 
 export function DoctorServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createDoctorProfile", "updateDoctorBasicDetails"];
+    const grpcMethods: string[] = [
+      "createDoctorProfile",
+      "updateDoctorBasicDetails",
+      "updateDoctorProfessionalDetails",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("DoctorService", method)(constructor.prototype[method], method, descriptor);

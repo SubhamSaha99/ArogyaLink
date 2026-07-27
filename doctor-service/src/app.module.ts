@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { ProfileModule } from './profile/profile.module';
+import { ProfileModule } from './docotor/doctor.module';
 import { DatabaseModule } from './db/db.module';
 import { ConfigModule } from '@nestjs/config';
 

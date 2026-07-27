@@ -1,10 +1,13 @@
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsIn,
+  IsInt,
+  IsNotEmpty,
   IsOptional,
   IsString,
   Length,
   Matches,
+  Min,
 } from 'class-validator';
 
 export class DoctorBasicDetailsDto {
@@ -34,10 +37,43 @@ export class DoctorBasicDetailsDto {
 
   @IsOptional()
   @Transform(({ value }) =>
-    value === undefined || value === null || value === '' ? value : Number(value),
+    value === undefined || value === null || value === ''
+      ? value
+      : Number(value),
   )
   @IsIn([1, 2, 3], {
     message: 'Gender must be 1 (Male), 2 (Female), or 3 (Other)',
   })
   gender?: number;
+}
+
+export class DoctorProfessionalDetailsDto {
+  @IsString()
+  @Matches(/^DOC\d{6}$/, {
+    message: 'Invalid Doctor ID',
+  })
+  doctorId!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  medicalRegistration!: string;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  registrationCouncil!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  registrationState!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  @Min(1900)
+  registrationYear!: number;
+
+  @Type(() => Number)
+  @IsInt()
+  licenseStatus!: number;
 }

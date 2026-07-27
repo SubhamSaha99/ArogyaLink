@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseService } from './db.service';
 import { DoctorProfile } from './entities/doctorProfile.entity';
 import { DbExceptionLog } from './entities/dbExceptionLog.entity';
+import { DoctorProfessionalDetails } from './entities/doctorProfessionalDetails.entity';
 
 @Module({
   imports: [
@@ -21,7 +22,7 @@ import { DbExceptionLog } from './entities/dbExceptionLog.entity';
         synchronize: true,
         migrationsRun: false,
         migrations: ['dist/db/migrations/*.js'],
-        entities:[DoctorProfile, DbExceptionLog],
+        entities:[DoctorProfile, DoctorProfessionalDetails, DbExceptionLog],
         logging: true,
       }),
     }),
