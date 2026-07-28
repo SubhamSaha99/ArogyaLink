@@ -3,9 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { AuthModule } from './auth/auth.module';
 import { DatabaseModule } from './db/db.module';
 import { DatabaseService } from './db/db.service';
+import { SessionModule } from './session/session.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, DatabaseModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), AuthModule, DatabaseModule, SessionModule],
   providers: [DatabaseService]
 })
 export class AppModule {}

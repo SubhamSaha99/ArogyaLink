@@ -15,8 +15,8 @@ import {
   HealthInstituteRegReq,
   HealthInstituteRegRes,
 } from '../proto/generated/auth';
-import { Errors } from '../helpers/constant';
-import { throwRpcException } from '../helpers/rpcException';
+import { Errors } from '../util/constant';
+import { throwRpcException } from '../util/rpcException';
 
 @Injectable()
 export class AuthService {

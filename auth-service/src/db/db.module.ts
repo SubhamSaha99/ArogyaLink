@@ -2,9 +2,11 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseService } from './db.service';
-import { HealthInstitute } from './entities/healthInstitute.entity';
-import { DbExceptionLog } from './entities/dbExceptionLog.entity';
+import { HealthInstitute } from './entities/health-institute.entity';
+import { DbExceptionLog } from './entities/db-exception-log.entity';
 import { Doctor } from './entities/doctor.entity';
+import { UserSession } from './entities/user-session.entity';
+import { SecurityAuditLog } from './entities/security-audit-log.entity';
 
 @Module({
   imports: [
@@ -22,7 +24,7 @@ import { Doctor } from './entities/doctor.entity';
         synchronize: true,
         migrationsRun: false,
         migrations: ['dist/db/migrations/*.js'],
-        entities:[HealthInstitute, Doctor, DbExceptionLog],
+        entities:[HealthInstitute, Doctor, UserSession, SecurityAuditLog, DbExceptionLog],
         logging: true,
       }),
     }),

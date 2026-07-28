@@ -1,30 +1,22 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { JwtModule } from '@nestjs/jwt';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-
-import { HealthInstitute } from '../db/entities/healthInstitute.entity';
+import { ConfigModule } from '@nestjs/config';
+import { HealthInstitute } from '../db/entities/health-institute.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
+import { JwtUtil } from '../util/jwt.util';
+import { SessionService } from '../session/session.service';
+import { UserSession } from '../db/entities/user-session.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([HealthInstitute]),
-
-    JwtModule.registerAsync({
-      imports: [ConfigModule],
-      inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        global: true,
-        secret: configService.get<string>('JWT_SECRET') || 'jwtSecret',
-        signOptions: {
-          expiresIn: (configService.get<string>('JWT_EXPIRES') as any) || '180s',
-        },
-      }),
-    }),
+    ConfigModule,
+    TypeOrmModule.forFeature([HealthInstitute, UserSession]),
+    JwtModule.register({}),
   ],
   controllers: [AuthController],
-  providers: [AuthService],
-  exports: [JwtModule],
+  providers: [AuthService, JwtUtil, SessionService],
+  exports: [JwtUtil, SessionService, JwtModule],
 })
 export class AuthModule {}

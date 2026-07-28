@@ -8,9 +8,9 @@ import {
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
 } from '../proto/generated/doctor';
-import { throwRpcException } from '../helpers/rpcException';
+import { throwRpcException } from '../util/rpcException';
 import { status } from '@grpc/grpc-js';
-import { Errors } from '../helpers/constants';
+import { Errors } from '../util/constants';
 
 @Injectable()
 export class DoctorService {
