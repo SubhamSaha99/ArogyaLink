@@ -3,6 +3,7 @@ import {
   Controller,
   Post,
   Req,
+  Ip,
   BadRequestException,
   ConflictException,
   InternalServerErrorException,
@@ -18,6 +19,7 @@ import {
   DoctorLoginDto,
 } from './auth.dto';
 import { extractRequestIp } from '../common/util/extreactRequestIp';
+import { UAParser } from 'ua-parser-js';
 
 @Controller('auth')
 export class AuthController {
@@ -68,11 +70,24 @@ export class AuthController {
   async healthInstituteLogin(
     @Body() request: HealthInstituteLoginDto,
     @Req() httpRequest: Request,
+    @Ip() requestIp: string,
   ) {
     try {
+      const userAgent = httpRequest.headers['user-agent'] ?? '';
+
+      const parser = new UAParser(userAgent);
+      const deviceDetails = parser.getResult();
+
+      const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+        .filter(Boolean)
+        .join(' on ');
+
       const result = await this.authService.healthInstituteLogin(
         request,
-        extractRequestIp(httpRequest),
+        // extractRequestIp(httpRequest),
+        requestIp,
+        userAgent,
+        deviceName,
       );
 
       return {
@@ -86,8 +101,6 @@ export class AuthController {
           throw new UnauthorizedException(error.details);
 
         case status.INVALID_ARGUMENT:
-          throw new BadRequestException(error.details);
-
         case status.NOT_FOUND:
           throw new BadRequestException(error.details);
 
@@ -139,19 +152,32 @@ export class AuthController {
 
   /**
    * * Doctor login
-   * @param request 
-   * @param httpRequest 
+   * @param request
+   * @param httpRequest
    * @returns json
    */
   @Post('doctorLogin')
   async doctorLogin(
     @Body() request: DoctorLoginDto,
     @Req() httpRequest: Request,
+    @Ip() requestIp: string,
   ) {
     try {
+      const userAgent = httpRequest.headers['user-agent'] ?? '';
+
+      const parser = new UAParser(userAgent);
+      const deviceDetails = parser.getResult();
+
+      const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+        .filter(Boolean)
+        .join(' on ');
+
       const result = await this.authService.doctorLogin(
         request,
-        extractRequestIp(httpRequest),
+        // extractRequestIp(httpRequest),
+        requestIp,
+        userAgent,
+        deviceName,
       );
 
       return {

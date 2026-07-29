@@ -5,7 +5,7 @@ import {
   AuthServiceControllerMethods,
   CompensateDoctorRegistrationReq,
   CompensateDoctorRegistrationRes,
-  DoctorAuthReq,
+  DoctorRegistrationReq,
   DoctorLoginReq,
   DoctorLoginRes,
   DoctorRegistrationRes,
@@ -33,7 +33,7 @@ export class AuthController implements AuthServiceController {
   }
 
   async createDoctorAuth(
-    request: DoctorAuthReq,
+    request: DoctorRegistrationReq,
   ): Promise<DoctorRegistrationRes> {
     return this.authService.doctorRegistration(request);
   }

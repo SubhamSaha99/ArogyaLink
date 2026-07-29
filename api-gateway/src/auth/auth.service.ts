@@ -70,19 +70,22 @@ export class AuthService implements OnModuleInit {
   healthInstituteLogin(
     request: HealthInstituteLoginDto,
     requestIp: string,
+    userAgent: string,
+    deviceName?: string,
   ): Promise<HealthInstituteLoginRes> {
     const loginRequest: HealthInstituteLoginReq = {
       healthInstituteId: request.healthInstituteId || '',
       email: request.email || '',
       password: request.password,
       requestIp,
+      userAgent,
+      deviceName: deviceName || '',
     };
 
     return firstValueFrom(
       this.authGrpcService.healthInstituteLogin(loginRequest),
     );
   }
-
   /**
    * * Doctor Registration
    * @param request
@@ -145,12 +148,16 @@ export class AuthService implements OnModuleInit {
   async doctorLogin(
     request: DoctorLoginDto,
     requestIp: string,
+    userAgent: string,
+    deviceName?: string,
   ): Promise<DoctorLoginRes> {
     const loginRequest: DoctorLoginReq = {
       email: request.email || '',
       mobile: request.mobile || '',
       password: request.password,
       requestIp,
+      userAgent,
+      deviceName: deviceName || '',
     };
 
     return firstValueFrom(this.authGrpcService.doctorLogin(loginRequest));

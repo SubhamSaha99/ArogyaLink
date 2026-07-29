@@ -2,11 +2,10 @@ import { Injectable } from '@nestjs/common';
 import { status } from '@grpc/grpc-js';
 import * as bcrypt from 'bcrypt';
 import { DataSource } from 'typeorm';
-import { JwtService } from '@nestjs/jwt';
 import {
   CompensateDoctorRegistrationReq,
   CompensateDoctorRegistrationRes,
-  DoctorAuthReq,
+  DoctorRegistrationReq,
   DoctorLoginReq,
   DoctorLoginRes,
   DoctorRegistrationRes,
@@ -15,14 +14,21 @@ import {
   HealthInstituteRegReq,
   HealthInstituteRegRes,
 } from '../proto/generated/auth';
-import { Errors } from '../util/constant';
+import { AuditAction, AuditStatus, Errors, UserRole } from '../util/constant';
 import { throwRpcException } from '../util/rpcException';
+import { JwtUtil } from '../util/jwt.util';
+import { SessionService } from '../session/session.service';
+import { AuditService } from '../session/audit.service';
+import { HashUtil } from '../util/hash.util';
 
 @Injectable()
 export class AuthService {
   constructor(
     private readonly dataSource: DataSource,
-    private readonly jwtService: JwtService,
+    private readonly jwtUtil: JwtUtil,
+    private readonly sessionService: SessionService,
+    private readonly auditService: AuditService,
+    private readonly hashUtil: HashUtil,
   ) {}
 
   /**
@@ -90,14 +96,16 @@ export class AuthService {
       if (!procedureResult) {
         throwRpcException(status.INTERNAL, 'Invalid response from procedure');
       }
+
       if (procedureResult.status === Errors.invalidCredentialError) {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
+
       if (procedureResult.status === Errors.dbError) {
         throwRpcException(status.INTERNAL, 'Database error');
       }
 
-      const isPasswordValid = await bcrypt.compare(
+      const isPasswordValid = await this.hashUtil.verify(
         request.password,
         procedureResult.password,
       );
@@ -106,9 +114,45 @@ export class AuthService {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
 
-      const token = await this.jwtService.signAsync({
-        healthInstituteId: procedureResult.health_institute_id,
-        requestIp: request.requestIp,
+      const session = await this.sessionService.createSession({
+        userBusinessId: procedureResult.health_institute_id,
+        role: UserRole.HEALTH_INSTITUTE,
+        refreshTokenHash: '',
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+        deviceName: request.deviceName,
+        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      });
+
+      // Generate tokens
+      const accessToken = await this.jwtUtil.generateAccessToken({
+        sessionId: session.sessionId,
+        userBusinessId: procedureResult.health_institute_id,
+        role: UserRole.HEALTH_INSTITUTE,
+      });
+
+      const refreshToken = this.jwtUtil.generateRefreshToken({
+        sessionId: session.sessionId,
+        userBusinessId: procedureResult.health_institute_id,
+        role: UserRole.HEALTH_INSTITUTE,
+      });
+
+      // Store hashed refresh token
+      await this.sessionService.updateRefreshToken(
+        session.sessionId,
+        await this.hashUtil.hash(refreshToken),
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      );
+
+      // Audit log
+      await this.auditService.log({
+        userBusinessId: procedureResult.health_institute_id,
+        role: UserRole.HEALTH_INSTITUTE,
+        sessionId: session.sessionId,
+        action: AuditAction.LOGIN_SUCCESS,
+        status: AuditStatus.SUCCESS,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
       });
 
       return {
@@ -116,7 +160,8 @@ export class AuthService {
         healthInstituteName: procedureResult.health_institute_name,
         healthInstituteType: String(procedureResult.health_institute_type),
         email: procedureResult.email,
-        token,
+        accessToken,
+        refreshToken,
       };
     } catch (error) {
       if (queryRunner.isTransactionActive) {
@@ -135,9 +180,9 @@ export class AuthService {
    * @returns DoctorRegistrationRes
    */
   async doctorRegistration(
-    request: DoctorAuthReq,
+    request: DoctorRegistrationReq,
   ): Promise<DoctorRegistrationRes> {
-    const hashedPassword = await bcrypt.hash(request.password, 10);
+    const hashedPassword = await this.hashUtil.hash(request.password);
 
     const result = await this.dataSource.query(
       `CALL create_doctor_auth($1, $2, $3, $4)`,
@@ -163,6 +208,11 @@ export class AuthService {
     };
   }
 
+  /**
+   * * Compensate Doctor Registration
+   * @param request
+   * @returns boolean
+   */
   async compensateDoctorRegistration(
     request: CompensateDoctorRegistrationReq,
   ): Promise<CompensateDoctorRegistrationRes> {
@@ -200,7 +250,7 @@ export class AuthService {
 
   /**
    * * Doctor login
-   * @param request 
+   * @param request
    * @returns DoctorLoginRes
    */
   async doctorLogin(request: DoctorLoginReq): Promise<DoctorLoginRes> {
@@ -239,16 +289,59 @@ export class AuthService {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
 
-      const token = await this.jwtService.signAsync({
-        doctorId: procedureResult.doctor_id,
-        requestIp: request.requestIp,
+      // Generate Refresh Token
+      const refreshToken = this.jwtUtil.generateRefreshToken({
+        userBusinessId: procedureResult.doctor_id,
+        role: UserRole.DOCTOR,
+        sessionId: '',
+      });
+
+      const refreshTokenHash = await this.hashUtil.hash(refreshToken);
+
+      const session = await this.sessionService.createSession({
+        userBusinessId: procedureResult.doctor_id,
+        role: UserRole.DOCTOR,
+        refreshTokenHash,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+        deviceName: request.deviceName,
+        expiresAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
+      });
+
+      const accessToken = await this.jwtUtil.generateAccessToken({
+        sessionId: session.sessionId,
+        userBusinessId: procedureResult.doctor_id,
+        role: UserRole.DOCTOR,
+      });
+
+      const newRefreshToken = this.jwtUtil.generateRefreshToken({
+        sessionId: session.sessionId,
+        userBusinessId: procedureResult.doctor_id,
+        role: UserRole.DOCTOR,
+      });
+
+      await this.sessionService.updateRefreshToken(
+        session.sessionId,
+        await this.hashUtil.hash(newRefreshToken),
+        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+      );
+
+      await this.auditService.log({
+        userBusinessId: procedureResult.doctor_id,
+        role: UserRole.DOCTOR,
+        sessionId: session.sessionId,
+        action: AuditAction.LOGIN_SUCCESS,
+        status: AuditStatus.SUCCESS,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
       });
 
       return {
         doctorId: procedureResult.doctor_id,
         email: procedureResult.email,
         mobile: procedureResult.mobile,
-        token,
+        accessToken,
+        refreshToken: newRefreshToken,
       };
     } catch (error) {
       if (queryRunner.isTransactionActive) {
