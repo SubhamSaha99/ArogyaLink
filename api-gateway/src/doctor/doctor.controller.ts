@@ -2,9 +2,11 @@ import {
   BadRequestException,
   Body,
   Controller,
+  Get,
   InternalServerErrorException,
   Post,
   UploadedFile,
+  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
@@ -15,6 +17,9 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../common/multer.config';
 import { status } from '@grpc/grpc-js';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 @Controller('doctor')
 export class DoctorController {
@@ -27,6 +32,7 @@ export class DoctorController {
    * @returns JSON
    */
   @Post('updateDoctorBasicDetails')
+  @UseGuards(JwtAuthGuard)
   @UseInterceptors(
     FileInterceptor(
       'profileImage',
@@ -72,6 +78,7 @@ export class DoctorController {
    * @returns JSON
    */
   @Post('updateDcotorProfessionalDetails')
+  @UseGuards(JwtAuthGuard)
   async updateDoctorProfessinalDetails(
     @Body() request: DoctorProfessionalDetailsDto,
   ) {
@@ -98,5 +105,11 @@ export class DoctorController {
           );
       }
     }
+  }
+
+  @Get('getDoctorProfile')
+  @UseGuards(JwtAuthGuard)
+  getProfile(@CurrentUser() user: JwtPayload) {
+    return user;
   }
 }

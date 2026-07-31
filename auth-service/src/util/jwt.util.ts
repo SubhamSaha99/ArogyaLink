@@ -18,16 +18,16 @@ export class JwtUtil {
     });
   }
 
-  generateRefreshToken(payload: JwtPayload): string {
-    return this.jwtService.sign(payload, {
+  async generateRefreshToken(payload: JwtPayload): Promise<string> {
+    return await this.jwtService.signAsync(payload, {
       secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       expiresIn: this.configService.get<string>('JWT_REFRESH_EXPIRES_IN') as any,
     });
   }
 
-  verifyAccessToken(token: string): JwtPayload {
+  async verifyAccessToken(token: string): Promise<JwtPayload> {
     try {
-      return this.jwtService.verify<JwtPayload>(token, {
+      return await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret: this.configService.get<string>('JWT_ACCESS_SECRET'),
       });
     } catch {
@@ -35,9 +35,9 @@ export class JwtUtil {
     }
   }
 
-  verifyRefreshToken(token: string): JwtPayload {
+  async verifyRefreshToken(token: string): Promise<JwtPayload> {
     try {
-      return this.jwtService.verify<JwtPayload>(token, {
+      return await this.jwtService.verifyAsync<JwtPayload>(token, {
         secret: this.configService.get<string>('JWT_REFRESH_SECRET'),
       });
     } catch {

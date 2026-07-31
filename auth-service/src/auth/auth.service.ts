@@ -121,7 +121,7 @@ export class AuthService {
         ipAddress: request.requestIp,
         userAgent: request.userAgent,
         deviceName: request.deviceName,
-        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        expiresAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       });
 
       // Generate tokens
@@ -131,20 +131,18 @@ export class AuthService {
         role: UserRole.HEALTH_INSTITUTE,
       });
 
-      const refreshToken = this.jwtUtil.generateRefreshToken({
+      const refreshToken = await this.jwtUtil.generateRefreshToken({
         sessionId: session.sessionId,
         userBusinessId: procedureResult.health_institute_id,
         role: UserRole.HEALTH_INSTITUTE,
       });
 
-      // Store hashed refresh token
       await this.sessionService.updateRefreshToken(
         session.sessionId,
         await this.hashUtil.hash(refreshToken),
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       );
 
-      // Audit log
       await this.auditService.log({
         userBusinessId: procedureResult.health_institute_id,
         role: UserRole.HEALTH_INSTITUTE,
@@ -288,9 +286,8 @@ export class AuthService {
       if (!isPasswordValid) {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
-
-      // Generate Refresh Token
-      const refreshToken = this.jwtUtil.generateRefreshToken({
+      
+      const refreshToken = await this.jwtUtil.generateRefreshToken({
         userBusinessId: procedureResult.doctor_id,
         role: UserRole.DOCTOR,
         sessionId: '',
@@ -314,7 +311,7 @@ export class AuthService {
         role: UserRole.DOCTOR,
       });
 
-      const newRefreshToken = this.jwtUtil.generateRefreshToken({
+      const newRefreshToken = await this.jwtUtil.generateRefreshToken({
         sessionId: session.sessionId,
         userBusinessId: procedureResult.doctor_id,
         role: UserRole.DOCTOR,
@@ -323,7 +320,7 @@ export class AuthService {
       await this.sessionService.updateRefreshToken(
         session.sessionId,
         await this.hashUtil.hash(newRefreshToken),
-        new Date(Date.now() + 7 * 24 * 60 * 60 * 1000),
+        new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
       );
 
       await this.auditService.log({
