@@ -13,6 +13,8 @@ import {
   HealthInstituteLoginRes,
   HealthInstituteRegReq,
   HealthInstituteRegRes,
+  RefreshTokenReq,
+  RefreshTokenRes,
 } from '../proto/generated/auth';
 import { AuditAction, AuditStatus, Errors, UserRole } from '../util/constant';
 import { throwRpcException } from '../util/rpcException';
@@ -286,7 +288,7 @@ export class AuthService {
       if (!isPasswordValid) {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
-      
+
       const refreshToken = await this.jwtUtil.generateRefreshToken({
         userBusinessId: procedureResult.doctor_id,
         role: UserRole.DOCTOR,
@@ -348,6 +350,81 @@ export class AuthService {
       throw error;
     } finally {
       await queryRunner.release();
+    }
+  }
+
+  async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
+    try {
+      // Verify Refresh JWT
+      const payload = await this.jwtUtil.verifyRefreshToken(request.refreshToken);
+
+      // Find Session
+      const session = await this.sessionService.findSessionBySessionId(
+        payload.sessionId,
+      );
+
+      if (!session) {
+        throwRpcException(status.UNAUTHENTICATED, 'Invalid session');
+      } else if (!session.isActive) {
+        throwRpcException(
+          status.UNAUTHENTICATED,
+          'Session has been logged out',
+        );
+      } else if (session.expiresAt.getTime() < Date.now()) {
+        throwRpcException(status.UNAUTHENTICATED, 'Session expired');
+      }
+
+      // Verify Refresh Token Hash
+      const isValidRefreshToken = await this.hashUtil.verify(
+        request.refreshToken,
+        session!!.refreshTokenHash,
+      );
+
+      if (!isValidRefreshToken) {
+        throwRpcException(status.UNAUTHENTICATED, 'Invalid refresh token');
+      }
+
+      // Generate New Access Token
+      const accessToken = await this.jwtUtil.generateAccessToken({
+        sessionId: session!.sessionId,
+        userBusinessId: session!.userBusinessId,
+        role: session!.role,
+      });
+
+      // Generate New Refresh Token
+      const refreshToken = await this.jwtUtil.generateRefreshToken({
+        sessionId: session!.sessionId,
+        userBusinessId: session!.userBusinessId,
+        role: session!.role,
+      });
+
+      // Rotate Refresh Token
+      await this.sessionService.updateRefreshToken(
+        session!.sessionId,
+        await this.hashUtil.hash(refreshToken),
+        session!.expiresAt,
+      );
+
+      // Update Last Activity
+      await this.sessionService.updateLastActivity(session!.sessionId);
+
+      // Audit
+      await this.auditService.log({
+        userBusinessId: session!.userBusinessId,
+        role: session!.role,
+        sessionId: session!.sessionId,
+        action: AuditAction.TOKEN_REFRESH,
+        status: AuditStatus.SUCCESS,
+        ipAddress: session!.ipAddress,
+        userAgent: session!.userAgent,
+      });
+
+      return {
+        accessToken,
+        refreshToken,
+      };
+    } catch (error) {
+      throw error;
     }
   }
 }

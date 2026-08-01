@@ -18,6 +18,9 @@ service AuthService {
   rpc DoctorLogin(DoctorLoginReq)
   returns (DoctorLoginRes);
 
+  rpc RefreshToken(RefreshTokenReq)
+  returns (RefreshTokenRes);
+
 }
 
 message HealthInstituteRegReq {
@@ -82,4 +85,13 @@ message DoctorLoginRes {
   string mobile       = 3;
   string accessToken  = 4;
   string refreshToken = 5;
+}
+
+message RefreshTokenReq{
+  string refreshToken = 1;
+}
+
+message RefreshTokenRes{
+  string accessToken  = 1;
+  string refreshToken = 2;
 }

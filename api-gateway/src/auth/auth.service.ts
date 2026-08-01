@@ -6,6 +6,7 @@ import {
   DoctorRegDto,
   HealthInstituteLoginDto,
   HealthInstituteRegDto,
+  RefreshTokenDto,
 } from './auth.dto';
 import {
   AUTH_SERVICE_NAME,
@@ -17,6 +18,8 @@ import {
   HealthInstituteLoginRes,
   HealthInstituteRegReq,
   HealthInstituteRegRes,
+  RefreshTokenReq,
+  RefreshTokenRes,
 } from '../proto/generated/auth';
 import {
   DOCTOR_SERVICE_NAME,
@@ -161,5 +164,15 @@ export class AuthService implements OnModuleInit {
     };
 
     return firstValueFrom(this.authGrpcService.doctorLogin(loginRequest));
+  }
+
+  async refreshToken(request: RefreshTokenDto): Promise<RefreshTokenRes> {
+    const refreshTokenRequest: RefreshTokenReq = {
+      refreshToken: request.refreshToken,
+    };
+
+    return firstValueFrom(
+      this.authGrpcService.refreshToken(refreshTokenRequest),
+    );
   }
 }

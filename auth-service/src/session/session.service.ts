@@ -90,8 +90,17 @@ export class SessionService {
       {
         refreshTokenHash,
         expiresAt,
+        lastActivity: new Date(),
       },
     );
+  }
+
+  async findSessionBySessionId(sessionId: string): Promise<UserSession | null> {
+    return this.sessionRepository.findOne({
+      where: {
+        sessionId,
+      },
+    });
   }
 
   async deleteExpiredSessions(): Promise<void> {

@@ -13,7 +13,10 @@ import {
   HealthInstituteLoginRes,
   HealthInstituteRegReq,
   HealthInstituteRegRes,
+  RefreshTokenReq,
+  RefreshTokenRes,
 } from '../proto/generated/auth';
+import { Observable } from 'rxjs';
 
 @Controller()
 @AuthServiceControllerMethods()
@@ -46,5 +49,9 @@ export class AuthController implements AuthServiceController {
 
   async doctorLogin(request: DoctorLoginReq): Promise<DoctorLoginRes> {
     return this.authService.doctorLogin(request);
+  }
+
+  async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
+      return this.authService.refreshToken(request);
   }
 }

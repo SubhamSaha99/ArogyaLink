@@ -77,7 +77,7 @@ export class DoctorController {
    * @param request
    * @returns JSON
    */
-  @Post('updateDcotorProfessionalDetails')
+  @Post('updateDoctorProfessionalDetails')
   @UseGuards(JwtAuthGuard)
   async updateDoctorProfessinalDetails(
     @Body() request: DoctorProfessionalDetailsDto,

@@ -74,6 +74,15 @@ export interface DoctorLoginRes {
   refreshToken: string;
 }
 
+export interface RefreshTokenReq {
+  refreshToken: string;
+}
+
+export interface RefreshTokenRes {
+  accessToken: string;
+  refreshToken: string;
+}
+
 export const AUTH_PACKAGE_NAME = "auth";
 
 export interface AuthServiceClient {
@@ -86,6 +95,8 @@ export interface AuthServiceClient {
   compensateDoctorRegistration(request: CompensateDoctorRegistrationReq): Observable<CompensateDoctorRegistrationRes>;
 
   doctorLogin(request: DoctorLoginReq): Observable<DoctorLoginRes>;
+
+  refreshToken(request: RefreshTokenReq): Observable<RefreshTokenRes>;
 }
 
 export interface AuthServiceController {
@@ -109,6 +120,8 @@ export interface AuthServiceController {
     | CompensateDoctorRegistrationRes;
 
   doctorLogin(request: DoctorLoginReq): Promise<DoctorLoginRes> | Observable<DoctorLoginRes> | DoctorLoginRes;
+
+  refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> | Observable<RefreshTokenRes> | RefreshTokenRes;
 }
 
 export function AuthServiceControllerMethods() {
@@ -119,6 +132,7 @@ export function AuthServiceControllerMethods() {
       "createDoctorAuth",
       "compensateDoctorRegistration",
       "doctorLogin",
+      "refreshToken",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

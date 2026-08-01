@@ -17,6 +17,7 @@ import {
   HealthInstituteLoginDto,
   DoctorRegDto,
   DoctorLoginDto,
+  RefreshTokenDto,
 } from './auth.dto';
 import { extractRequestIp } from '../common/util/extreactRequestIp';
 import { UAParser } from 'ua-parser-js';
@@ -193,6 +194,33 @@ export class AuthController {
         case status.INVALID_ARGUMENT:
           throw new BadRequestException(error.details);
 
+        case status.NOT_FOUND:
+          throw new BadRequestException(error.details);
+
+        default:
+          throw new InternalServerErrorException(
+            error.details || 'Internal server error',
+          );
+      }
+    }
+  }
+
+  @Post('refreshToken')
+  async refreshToken(@Body() request: RefreshTokenDto) {
+    try {
+      const result = await this.authService.refreshToken(request);
+
+      return {
+        success: true,
+        message: 'Token refreshed successfully.',
+        data: result,
+      };
+    } catch (error: any) {
+      switch (error.code) {
+        case status.UNAUTHENTICATED:
+          throw new UnauthorizedException(error.details);
+
+        case status.INVALID_ARGUMENT:
         case status.NOT_FOUND:
           throw new BadRequestException(error.details);
 
