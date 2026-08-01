@@ -67,6 +67,8 @@ export class SessionService {
       { sessionId },
       {
         isActive: false,
+        refreshTokenHash: '',
+        updatedAt: new Date(),
       },
     );
   }

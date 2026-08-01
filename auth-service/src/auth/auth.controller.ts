@@ -15,6 +15,8 @@ import {
   HealthInstituteRegRes,
   RefreshTokenReq,
   RefreshTokenRes,
+  LogoutReq,
+  LogoutRes,
 } from '../proto/generated/auth';
 import { Observable } from 'rxjs';
 
@@ -53,5 +55,9 @@ export class AuthController implements AuthServiceController {
 
   async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
       return this.authService.refreshToken(request);
+  }
+
+  async logout(request: LogoutReq): Promise<LogoutRes> {
+      return this.authService.logout(request);
   }
 }

@@ -21,6 +21,9 @@ service AuthService {
   rpc RefreshToken(RefreshTokenReq)
   returns (RefreshTokenRes);
 
+  rpc Logout(LogoutReq)
+  returns (LogoutRes);
+
 }
 
 message HealthInstituteRegReq {
@@ -94,4 +97,12 @@ message RefreshTokenReq{
 message RefreshTokenRes{
   string accessToken  = 1;
   string refreshToken = 2;
+}
+
+message LogoutReq {
+  string sessionId = 1;
+}
+
+message LogoutRes {
+  bool success = 1;
 }

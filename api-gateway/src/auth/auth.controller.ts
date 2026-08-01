@@ -8,6 +8,8 @@ import {
   ConflictException,
   InternalServerErrorException,
   UnauthorizedException,
+  Get,
+  UseGuards,
 } from '@nestjs/common';
 import { status } from '@grpc/grpc-js';
 import type { Request } from 'express';
@@ -21,6 +23,9 @@ import {
 } from './auth.dto';
 import { extractRequestIp } from '../common/util/extreactRequestIp';
 import { UAParser } from 'ua-parser-js';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
 @Controller('auth')
 export class AuthController {
@@ -205,6 +210,11 @@ export class AuthController {
     }
   }
 
+  /**
+   * * Refresh Auth Token
+   * @param request
+   * @returns json
+   */
   @Post('refreshToken')
   async refreshToken(@Body() request: RefreshTokenDto) {
     try {
@@ -223,6 +233,29 @@ export class AuthController {
         case status.INVALID_ARGUMENT:
         case status.NOT_FOUND:
           throw new BadRequestException(error.details);
+
+        default:
+          throw new InternalServerErrorException(
+            error.details || 'Internal server error',
+          );
+      }
+    }
+  }
+
+  @Get('logout')
+  @UseGuards(JwtAuthGuard)
+  async logout(@CurrentUser() user: JwtPayload) {
+    try {
+      await this.authService.logout(user.sessionId);
+
+      return {
+        success: true,
+        message: 'Logged out successfully.',
+      };
+    } catch (error: any) {
+      switch (error.code) {
+        case status.UNAUTHENTICATED:
+          throw new UnauthorizedException(error.details);
 
         default:
           throw new InternalServerErrorException(

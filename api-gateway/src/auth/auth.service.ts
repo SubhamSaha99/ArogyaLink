@@ -18,6 +18,8 @@ import {
   HealthInstituteLoginRes,
   HealthInstituteRegReq,
   HealthInstituteRegRes,
+  LogoutReq,
+  LogoutRes,
   RefreshTokenReq,
   RefreshTokenRes,
 } from '../proto/generated/auth';
@@ -25,6 +27,7 @@ import {
   DOCTOR_SERVICE_NAME,
   DoctorServiceClient,
 } from '../proto/generated/doctor';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -166,6 +169,11 @@ export class AuthService implements OnModuleInit {
     return firstValueFrom(this.authGrpcService.doctorLogin(loginRequest));
   }
 
+  /**
+   * * Refresh Auth Token
+   * @param request
+   * @returns RefreshTokenRes
+   */
   async refreshToken(request: RefreshTokenDto): Promise<RefreshTokenRes> {
     const refreshTokenRequest: RefreshTokenReq = {
       refreshToken: request.refreshToken,
@@ -173,6 +181,19 @@ export class AuthService implements OnModuleInit {
 
     return firstValueFrom(
       this.authGrpcService.refreshToken(refreshTokenRequest),
+    );
+  }
+
+  /**
+   * * Logout
+   * @param sessionId 
+   * @returns 
+   */
+  logout(sessionId: string): Promise<LogoutRes> {
+    return firstValueFrom(
+      this.authGrpcService.logout({
+        sessionId,
+      }),
     );
   }
 }

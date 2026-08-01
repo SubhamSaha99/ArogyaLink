@@ -15,6 +15,8 @@ import {
   HealthInstituteRegRes,
   RefreshTokenReq,
   RefreshTokenRes,
+  LogoutReq,
+  LogoutRes,
 } from '../proto/generated/auth';
 import { AuditAction, AuditStatus, Errors, UserRole } from '../util/constant';
 import { throwRpcException } from '../util/rpcException';
@@ -355,10 +357,10 @@ export class AuthService {
 
   async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
     try {
-      // Verify Refresh JWT
-      const payload = await this.jwtUtil.verifyRefreshToken(request.refreshToken);
+      const payload = await this.jwtUtil.verifyRefreshToken(
+        request.refreshToken,
+      );
 
-      // Find Session
       const session = await this.sessionService.findSessionBySessionId(
         payload.sessionId,
       );
@@ -374,7 +376,6 @@ export class AuthService {
         throwRpcException(status.UNAUTHENTICATED, 'Session expired');
       }
 
-      // Verify Refresh Token Hash
       const isValidRefreshToken = await this.hashUtil.verify(
         request.refreshToken,
         session!!.refreshTokenHash,
@@ -384,31 +385,26 @@ export class AuthService {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid refresh token');
       }
 
-      // Generate New Access Token
       const accessToken = await this.jwtUtil.generateAccessToken({
         sessionId: session!.sessionId,
         userBusinessId: session!.userBusinessId,
         role: session!.role,
       });
 
-      // Generate New Refresh Token
       const refreshToken = await this.jwtUtil.generateRefreshToken({
         sessionId: session!.sessionId,
         userBusinessId: session!.userBusinessId,
         role: session!.role,
       });
 
-      // Rotate Refresh Token
       await this.sessionService.updateRefreshToken(
         session!.sessionId,
         await this.hashUtil.hash(refreshToken),
         session!.expiresAt,
       );
 
-      // Update Last Activity
       await this.sessionService.updateLastActivity(session!.sessionId);
 
-      // Audit
       await this.auditService.log({
         userBusinessId: session!.userBusinessId,
         role: session!.role,
@@ -422,6 +418,32 @@ export class AuthService {
       return {
         accessToken,
         refreshToken,
+      };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  async logout(request: LogoutReq): Promise<LogoutRes> {
+    try {
+      const session = await this.sessionService.validateSession(
+        request.sessionId,
+      );
+
+      await this.sessionService.deactivateSession(request.sessionId);
+
+      await this.auditService.log({
+        userBusinessId: session.userBusinessId,
+        role: session.role,
+        sessionId: session.sessionId,
+        action: AuditAction.LOGOUT,
+        status: AuditStatus.SUCCESS,
+        ipAddress: session.ipAddress,
+        userAgent: session.userAgent,
+      });
+
+      return {
+        success: true,
       };
     } catch (error) {
       throw error;
