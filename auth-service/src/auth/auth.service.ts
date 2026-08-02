@@ -24,6 +24,7 @@ import { JwtUtil } from '../util/jwt.util';
 import { SessionService } from '../session/session.service';
 import { AuditService } from '../session/audit.service';
 import { HashUtil } from '../util/hash.util';
+import { randomUUID } from 'node:crypto';
 
 @Injectable()
 export class AuthService {
@@ -118,44 +119,49 @@ export class AuthService {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
 
-      const session = await this.sessionService.createSession({
+      //   TODO: Generate Session & JWT
+
+      const sessionId = randomUUID();
+
+      const jwtPayload = {
+        sessionId,
         userBusinessId: procedureResult.health_institute_id,
         role: UserRole.HEALTH_INSTITUTE,
-        refreshTokenHash: '',
-        ipAddress: request.requestIp,
-        userAgent: request.userAgent,
-        deviceName: request.deviceName,
-        expiresAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-      });
+      };
 
-      // Generate tokens
-      const accessToken = await this.jwtUtil.generateAccessToken({
-        sessionId: session.sessionId,
-        userBusinessId: procedureResult.health_institute_id,
-        role: UserRole.HEALTH_INSTITUTE,
-      });
+      const [accessToken, refreshToken] = await Promise.all([
+        this.jwtUtil.generateAccessToken(jwtPayload),
+        this.jwtUtil.generateRefreshToken(jwtPayload),
+      ]);
 
-      const refreshToken = await this.jwtUtil.generateRefreshToken({
-        sessionId: session.sessionId,
-        userBusinessId: procedureResult.health_institute_id,
-        role: UserRole.HEALTH_INSTITUTE,
-      });
+      const refreshTokenHash = await this.hashUtil.hash(refreshToken);
 
-      await this.sessionService.updateRefreshToken(
-        session.sessionId,
-        await this.hashUtil.hash(refreshToken),
-        new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-      );
+      //   TODO: Store Session & Audit
 
-      await this.auditService.log({
-        userBusinessId: procedureResult.health_institute_id,
-        role: UserRole.HEALTH_INSTITUTE,
-        sessionId: session.sessionId,
-        action: AuditAction.LOGIN_SUCCESS,
-        status: AuditStatus.SUCCESS,
-        ipAddress: request.requestIp,
-        userAgent: request.userAgent,
-      });
+      const refreshExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+      await Promise.all([
+        this.sessionService.createSession({
+          sessionId,
+          userBusinessId: procedureResult.health_institute_id,
+          role: UserRole.HEALTH_INSTITUTE,
+          refreshTokenHash,
+          ipAddress: request.requestIp,
+          userAgent: request.userAgent,
+          deviceName: request.deviceName,
+          expiresAt: refreshExpiry,
+        }),
+
+        this.auditService.log({
+          userBusinessId: procedureResult.health_institute_id,
+          role: UserRole.HEALTH_INSTITUTE,
+          sessionId,
+          action: AuditAction.LOGIN_SUCCESS,
+          status: AuditStatus.SUCCESS,
+          ipAddress: request.requestIp,
+          userAgent: request.userAgent,
+        }),
+      ]);
 
       return {
         healthInstituteId: procedureResult.health_institute_id,
@@ -291,58 +297,56 @@ export class AuthService {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
 
-      const refreshToken = await this.jwtUtil.generateRefreshToken({
-        userBusinessId: procedureResult.doctor_id,
+      //   TODO: Generate Session & JWT
+
+      const sessionId = randomUUID();
+
+      const jwtPayload = {
+        sessionId,
+        userBusinessId: procedureResult.health_institute_id,
         role: UserRole.DOCTOR,
-        sessionId: '',
-      });
+      };
+
+      const [accessToken, refreshToken] = await Promise.all([
+        this.jwtUtil.generateAccessToken(jwtPayload),
+        this.jwtUtil.generateRefreshToken(jwtPayload),
+      ]);
 
       const refreshTokenHash = await this.hashUtil.hash(refreshToken);
 
-      const session = await this.sessionService.createSession({
-        userBusinessId: procedureResult.doctor_id,
-        role: UserRole.DOCTOR,
-        refreshTokenHash,
-        ipAddress: request.requestIp,
-        userAgent: request.userAgent,
-        deviceName: request.deviceName,
-        expiresAt: new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-      });
+      //   TODO: Store Session & Audit
 
-      const accessToken = await this.jwtUtil.generateAccessToken({
-        sessionId: session.sessionId,
-        userBusinessId: procedureResult.doctor_id,
-        role: UserRole.DOCTOR,
-      });
+      const refreshExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-      const newRefreshToken = await this.jwtUtil.generateRefreshToken({
-        sessionId: session.sessionId,
-        userBusinessId: procedureResult.doctor_id,
-        role: UserRole.DOCTOR,
-      });
+      await Promise.all([
+        this.sessionService.createSession({
+          sessionId,
+          userBusinessId: procedureResult.health_institute_id,
+          role: UserRole.DOCTOR,
+          refreshTokenHash,
+          ipAddress: request.requestIp,
+          userAgent: request.userAgent,
+          deviceName: request.deviceName,
+          expiresAt: refreshExpiry,
+        }),
 
-      await this.sessionService.updateRefreshToken(
-        session.sessionId,
-        await this.hashUtil.hash(newRefreshToken),
-        new Date(Date.now() + 1 * 24 * 60 * 60 * 1000),
-      );
-
-      await this.auditService.log({
-        userBusinessId: procedureResult.doctor_id,
-        role: UserRole.DOCTOR,
-        sessionId: session.sessionId,
-        action: AuditAction.LOGIN_SUCCESS,
-        status: AuditStatus.SUCCESS,
-        ipAddress: request.requestIp,
-        userAgent: request.userAgent,
-      });
+        this.auditService.log({
+          userBusinessId: procedureResult.health_institute_id,
+          role: UserRole.DOCTOR,
+          sessionId,
+          action: AuditAction.LOGIN_SUCCESS,
+          status: AuditStatus.SUCCESS,
+          ipAddress: request.requestIp,
+          userAgent: request.userAgent,
+        }),
+      ]);
 
       return {
         doctorId: procedureResult.doctor_id,
         email: procedureResult.email,
         mobile: procedureResult.mobile,
         accessToken,
-        refreshToken: newRefreshToken,
+        refreshToken,
       };
     } catch (error) {
       if (queryRunner.isTransactionActive) {
@@ -355,6 +359,11 @@ export class AuthService {
     }
   }
 
+  /**
+   * * Refresh Auth Token
+   * @param request
+   * @returns RefreshTokenRes
+   */
   async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
     try {
       const payload = await this.jwtUtil.verifyRefreshToken(
@@ -378,42 +387,45 @@ export class AuthService {
 
       const isValidRefreshToken = await this.hashUtil.verify(
         request.refreshToken,
-        session!!.refreshTokenHash,
+        session!.refreshTokenHash,
       );
 
       if (!isValidRefreshToken) {
         throwRpcException(status.UNAUTHENTICATED, 'Invalid refresh token');
       }
 
-      const accessToken = await this.jwtUtil.generateAccessToken({
+      const jwtPayload = {
         sessionId: session!.sessionId,
         userBusinessId: session!.userBusinessId,
         role: session!.role,
-      });
+      };
 
-      const refreshToken = await this.jwtUtil.generateRefreshToken({
-        sessionId: session!.sessionId,
-        userBusinessId: session!.userBusinessId,
-        role: session!.role,
-      });
+      const [accessToken, refreshToken] = await Promise.all([
+        this.jwtUtil.generateAccessToken(jwtPayload),
+        this.jwtUtil.generateRefreshToken(jwtPayload),
+      ]);
 
-      await this.sessionService.updateRefreshToken(
-        session!.sessionId,
-        await this.hashUtil.hash(refreshToken),
-        session!.expiresAt,
-      );
+      const refreshTokenHash = await this.hashUtil.hash(refreshToken);
 
-      await this.sessionService.updateLastActivity(session!.sessionId);
+      await Promise.all([
+        this.sessionService.updateRefreshToken(
+          session!.sessionId,
+          refreshTokenHash,
+          session!.expiresAt,
+        ),
 
-      await this.auditService.log({
-        userBusinessId: session!.userBusinessId,
-        role: session!.role,
-        sessionId: session!.sessionId,
-        action: AuditAction.TOKEN_REFRESH,
-        status: AuditStatus.SUCCESS,
-        ipAddress: session!.ipAddress,
-        userAgent: session!.userAgent,
-      });
+        this.sessionService.updateLastActivity(session!.sessionId),
+
+        this.auditService.log({
+          userBusinessId: session!.userBusinessId,
+          role: session!.role,
+          sessionId: session!.sessionId,
+          action: AuditAction.TOKEN_REFRESH,
+          status: AuditStatus.SUCCESS,
+          ipAddress: session!.ipAddress,
+          userAgent: session!.userAgent,
+        }),
+      ]);
 
       return {
         accessToken,
@@ -424,6 +436,11 @@ export class AuthService {
     }
   }
 
+  /**
+   * * Log Out
+   * @param request
+   * @returns LogoutRes
+   */
   async logout(request: LogoutReq): Promise<LogoutRes> {
     try {
       const session = await this.sessionService.validateSession(

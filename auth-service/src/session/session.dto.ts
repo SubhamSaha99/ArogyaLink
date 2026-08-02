@@ -1,6 +1,7 @@
 import { UserRole } from '../util/constant';
 
 export interface CreateSessionDto {
+  sessionId: string;
   userBusinessId: string;
   role: UserRole;
   refreshTokenHash: string;

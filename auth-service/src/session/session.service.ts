@@ -4,7 +4,6 @@ import { Repository } from 'typeorm';
 
 import { UserSession } from '../db/entities/user-session.entity';
 import { CreateSessionDto } from './session.dto';
-import { randomUUID } from 'crypto';
 
 @Injectable()
 export class SessionService {
@@ -15,7 +14,7 @@ export class SessionService {
 
   async createSession(dto: CreateSessionDto): Promise<UserSession> {
     const session = this.sessionRepository.create({
-      sessionId: randomUUID(),
+      sessionId: dto.sessionId,
       userBusinessId: dto.userBusinessId,
       role: dto.role,
       refreshTokenHash: dto.refreshTokenHash,
