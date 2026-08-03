@@ -21,7 +21,6 @@ import {
   DoctorLoginDto,
   RefreshTokenDto,
 } from './auth.dto';
-import { extractRequestIp } from '../common/util/extreactRequestIp';
 import { UAParser } from 'ua-parser-js';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
@@ -38,32 +37,13 @@ export class AuthController {
    */
   @Post('healthInstituteRegistration')
   async healthInstituteRegistration(@Body() request: HealthInstituteRegDto) {
-    try {
-      const result =
-        await this.authService.healthInstituteRegistration(request);
+    const result = await this.authService.healthInstituteRegistration(request);
 
-      return {
-        success: true,
-        message: 'Health institute registered successfully',
-        data: result,
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.ALREADY_EXISTS:
-          throw new ConflictException(error.details);
-
-        case status.INVALID_ARGUMENT:
-          throw new BadRequestException(error.details);
-
-        case status.NOT_FOUND:
-          throw new BadRequestException(error.details);
-
-        default:
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Health institute registered successfully',
+      data: result,
+    };
   }
 
   /**
@@ -78,44 +58,27 @@ export class AuthController {
     @Req() httpRequest: Request,
     @Ip() requestIp: string,
   ) {
-    try {
-      const userAgent = httpRequest.headers['user-agent'] ?? '';
+    const userAgent = httpRequest.headers['user-agent'] ?? '';
 
-      const parser = new UAParser(userAgent);
-      const deviceDetails = parser.getResult();
+    const parser = new UAParser(userAgent);
+    const deviceDetails = parser.getResult();
 
-      const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
-        .filter(Boolean)
-        .join(' on ');
+    const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+      .filter(Boolean)
+      .join(' on ');
 
-      const result = await this.authService.healthInstituteLogin(
-        request,
-        // extractRequestIp(httpRequest),
-        requestIp,
-        userAgent,
-        deviceName,
-      );
+    const result = await this.authService.healthInstituteLogin(
+      request,
+      requestIp,
+      userAgent,
+      deviceName,
+    );
 
-      return {
-        success: true,
-        message: 'Health institute logged in successfully',
-        data: result,
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.UNAUTHENTICATED:
-          throw new UnauthorizedException(error.details);
-
-        case status.INVALID_ARGUMENT:
-        case status.NOT_FOUND:
-          throw new BadRequestException(error.details);
-
-        default:
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Health institute logged in successfully',
+      data: result,
+    };
   }
 
   /**
@@ -125,35 +88,13 @@ export class AuthController {
    */
   @Post('doctorRegistration')
   async doctorRegistration(@Body() request: DoctorRegDto) {
-    try {
-      const result = await this.authService.doctorRegistration(request);
+    const result = await this.authService.doctorRegistration(request);
 
-      return {
-        success: true,
-        message: 'Doctor registered successfully',
-        data: result,
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.ALREADY_EXISTS:
-          throw new ConflictException(error.details);
-
-        case status.INVALID_ARGUMENT:
-          throw new BadRequestException(error.details);
-
-        case status.NOT_FOUND:
-          throw new BadRequestException(error.details);
-
-        case status.UNAUTHENTICATED:
-          throw new UnauthorizedException(error.details);
-
-        default:
-          console.log(error.details);
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Doctor registered successfully',
+      data: result,
+    };
   }
 
   /**
@@ -168,46 +109,27 @@ export class AuthController {
     @Req() httpRequest: Request,
     @Ip() requestIp: string,
   ) {
-    try {
-      const userAgent = httpRequest.headers['user-agent'] ?? '';
+    const userAgent = httpRequest.headers['user-agent'] ?? '';
 
-      const parser = new UAParser(userAgent);
-      const deviceDetails = parser.getResult();
+    const parser = new UAParser(userAgent);
+    const deviceDetails = parser.getResult();
 
-      const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
-        .filter(Boolean)
-        .join(' on ');
+    const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+      .filter(Boolean)
+      .join(' on ');
 
-      const result = await this.authService.doctorLogin(
-        request,
-        // extractRequestIp(httpRequest),
-        requestIp,
-        userAgent,
-        deviceName,
-      );
+    const result = await this.authService.doctorLogin(
+      request,
+      requestIp,
+      userAgent,
+      deviceName,
+    );
 
-      return {
-        success: true,
-        message: 'Doctor logged in successfully',
-        data: result,
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.UNAUTHENTICATED:
-          throw new UnauthorizedException(error.details);
-
-        case status.INVALID_ARGUMENT:
-          throw new BadRequestException(error.details);
-
-        case status.NOT_FOUND:
-          throw new BadRequestException(error.details);
-
-        default:
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Doctor logged in successfully',
+      data: result,
+    };
   }
 
   /**
@@ -217,51 +139,23 @@ export class AuthController {
    */
   @Post('refreshToken')
   async refreshToken(@Body() request: RefreshTokenDto) {
-    try {
-      const result = await this.authService.refreshToken(request);
+    const result = await this.authService.refreshToken(request);
 
-      return {
-        success: true,
-        message: 'Token refreshed successfully.',
-        data: result,
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.UNAUTHENTICATED:
-          throw new UnauthorizedException(error.details);
-
-        case status.INVALID_ARGUMENT:
-        case status.NOT_FOUND:
-          throw new BadRequestException(error.details);
-
-        default:
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Token refreshed successfully.',
+      data: result,
+    };
   }
 
   @Get('logout')
   @UseGuards(JwtAuthGuard)
   async logout(@CurrentUser() user: JwtPayload) {
-    try {
-      await this.authService.logout(user.sessionId);
+    await this.authService.logout(user.sessionId);
 
-      return {
-        success: true,
-        message: 'Logged out successfully.',
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.UNAUTHENTICATED:
-          throw new UnauthorizedException(error.details);
-
-        default:
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Logged out successfully.',
+    };
   }
 }

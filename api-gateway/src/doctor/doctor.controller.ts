@@ -45,31 +45,16 @@ export class DoctorController {
     @Body() request: DoctorBasicDetailsDto,
     @UploadedFile() profileImage?: Express.Multer.File,
   ) {
-    try {
-      const result = await this.doctorService.updateDoctorBasicDetails(
-        request,
-        profileImage,
-      );
+    const result = await this.doctorService.updateDoctorBasicDetails(
+      request,
+      profileImage,
+    );
 
-      return {
-        success: true,
-        message: 'Deatils Updated Successfully.',
-        data: result,
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.INVALID_ARGUMENT:
-          throw new BadRequestException(error.details);
-
-        case status.NOT_FOUND:
-          throw new BadRequestException(error.details);
-
-        default:
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Deatils Updated Successfully.',
+      data: result,
+    };
   }
 
   /**
@@ -82,29 +67,14 @@ export class DoctorController {
   async updateDoctorProfessinalDetails(
     @Body() request: DoctorProfessionalDetailsDto,
   ) {
-    try {
-      const result =
-        await this.doctorService.updateDoctorProfessinalDetails(request);
+    const result =
+      await this.doctorService.updateDoctorProfessinalDetails(request);
 
-      return {
-        success: true,
-        message: 'Deatils Updated Successfully.',
-        data: result,
-      };
-    } catch (error: any) {
-      switch (error.code) {
-        case status.INVALID_ARGUMENT:
-          throw new BadRequestException(error.details);
-
-        case status.NOT_FOUND:
-          throw new BadRequestException(error.details);
-
-        default:
-          throw new InternalServerErrorException(
-            error.details || 'Internal server error',
-          );
-      }
-    }
+    return {
+      success: true,
+      message: 'Deatils Updated Successfully.',
+      data: result,
+    };
   }
 
   @Get('getDoctorProfile')
