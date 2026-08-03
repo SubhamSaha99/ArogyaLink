@@ -20,12 +20,12 @@ import {
   ValidateAccessTokenReq,
   ValidateAccessTokenRes,
 } from '../proto/generated/auth';
-import { AuditAction, AuditStatus, Errors, UserRole } from '../util/constant';
-import { throwRpcException } from '../util/rpcException';
-import { JwtUtil } from '../util/jwt.util';
+import { AuditAction, AuditStatus, Errors, UserRole } from '../common/util/constant';
+import { throwRpcException } from '../common/util/rpcException';
+import { JwtUtil } from '../common/util/jwt.util';
 import { SessionService } from '../session/session.service';
 import { AuditService } from '../session/audit.service';
-import { HashUtil } from '../util/hash.util';
+import { HashUtil } from '../common/util/hash.util';
 import { randomUUID } from 'node:crypto';
 
 @Injectable()

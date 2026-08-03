@@ -1,4 +1,4 @@
-import { UserRole } from '../util/constant';
+import { UserRole } from '../common/util/constant';
 
 export interface CreateSessionDto {
   sessionId: string;

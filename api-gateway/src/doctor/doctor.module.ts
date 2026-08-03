@@ -4,6 +4,7 @@ import { DoctorService } from './doctor.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
+import { RolesGuard } from '../common/guards/role.guard';
 
 @Module({
   imports: [
@@ -26,6 +27,6 @@ import { join } from 'path';
     ]),
   ],
   controllers: [DoctorController],
-  providers: [DoctorService],
+  providers: [DoctorService, RolesGuard],
 })
 export class DoctorModule {}

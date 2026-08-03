@@ -6,7 +6,7 @@ import {
   UpdateDateColumn,
   Index,
 } from 'typeorm';
-import { UserRole } from '../../util/constant';
+import { UserRole } from '../../common/util/constant';
 
 @Entity('user_sessions')
 @Index('idx_user_sessions_session_id', ['sessionId'], { unique: true })
