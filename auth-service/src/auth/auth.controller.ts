@@ -17,8 +17,9 @@ import {
   RefreshTokenRes,
   LogoutReq,
   LogoutRes,
+  ValidateAccessTokenReq,
+  ValidateAccessTokenRes,
 } from '../proto/generated/auth';
-import { Observable } from 'rxjs';
 
 @Controller()
 @AuthServiceControllerMethods()
@@ -54,10 +55,16 @@ export class AuthController implements AuthServiceController {
   }
 
   async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
-      return this.authService.refreshToken(request);
+    return this.authService.refreshToken(request);
   }
 
   async logout(request: LogoutReq): Promise<LogoutRes> {
-      return this.authService.logout(request);
+    return this.authService.logout(request);
+  }
+
+  async validateAccessToken(
+    request: ValidateAccessTokenReq,
+  ): Promise<ValidateAccessTokenRes> {
+    return this.authService.validateAccessToken(request);
   }
 }

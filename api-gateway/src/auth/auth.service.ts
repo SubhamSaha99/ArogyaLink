@@ -22,6 +22,7 @@ import {
   LogoutRes,
   RefreshTokenReq,
   RefreshTokenRes,
+  ValidateAccessTokenRes,
 } from '../proto/generated/auth';
 import {
   DOCTOR_SERVICE_NAME,
@@ -185,9 +186,22 @@ export class AuthService implements OnModuleInit {
   }
 
   /**
-   * * Logout
+   * * Validate Access Token
    * @param sessionId 
-   * @returns 
+   * @returns ValidateAccessTokenRes
+   */
+  validateAccessToken(sessionId: string): Promise<ValidateAccessTokenRes> {
+    return firstValueFrom(
+      this.authGrpcService.validateAccessToken({
+        sessionId,
+      }),
+    );
+  }
+
+  /**
+   * * Logout
+   * @param sessionId
+   * @returns
    */
   logout(sessionId: string): Promise<LogoutRes> {
     return firstValueFrom(

@@ -17,6 +17,8 @@ import {
   RefreshTokenRes,
   LogoutReq,
   LogoutRes,
+  ValidateAccessTokenReq,
+  ValidateAccessTokenRes,
 } from '../proto/generated/auth';
 import { AuditAction, AuditStatus, Errors, UserRole } from '../util/constant';
 import { throwRpcException } from '../util/rpcException';
@@ -321,7 +323,7 @@ export class AuthService {
       await Promise.all([
         this.sessionService.createSession({
           sessionId,
-          userBusinessId: procedureResult.health_institute_id,
+          userBusinessId: procedureResult.doctor_id,
           role: UserRole.DOCTOR,
           refreshTokenHash,
           ipAddress: request.requestIp,
@@ -331,7 +333,7 @@ export class AuthService {
         }),
 
         this.auditService.log({
-          userBusinessId: procedureResult.health_institute_id,
+          userBusinessId: procedureResult.doctor_id,
           role: UserRole.DOCTOR,
           sessionId,
           action: AuditAction.LOGIN_SUCCESS,
@@ -465,5 +467,14 @@ export class AuthService {
     } catch (error) {
       throw error;
     }
+  }
+
+
+  async validateAccessToken(
+    request: ValidateAccessTokenReq,
+  ): Promise<ValidateAccessTokenRes> {
+    await this.sessionService.validateSession(request.sessionId);
+
+    return { valid: true };
   }
 }

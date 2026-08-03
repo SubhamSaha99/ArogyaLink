@@ -91,6 +91,14 @@ export interface LogoutRes {
   success: boolean;
 }
 
+export interface ValidateAccessTokenReq {
+  sessionId: string;
+}
+
+export interface ValidateAccessTokenRes {
+  valid: boolean;
+}
+
 export const AUTH_PACKAGE_NAME = "auth";
 
 export interface AuthServiceClient {
@@ -107,6 +115,8 @@ export interface AuthServiceClient {
   refreshToken(request: RefreshTokenReq): Observable<RefreshTokenRes>;
 
   logout(request: LogoutReq): Observable<LogoutRes>;
+
+  validateAccessToken(request: ValidateAccessTokenReq): Observable<ValidateAccessTokenRes>;
 }
 
 export interface AuthServiceController {
@@ -134,6 +144,10 @@ export interface AuthServiceController {
   refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> | Observable<RefreshTokenRes> | RefreshTokenRes;
 
   logout(request: LogoutReq): Promise<LogoutRes> | Observable<LogoutRes> | LogoutRes;
+
+  validateAccessToken(
+    request: ValidateAccessTokenReq,
+  ): Promise<ValidateAccessTokenRes> | Observable<ValidateAccessTokenRes> | ValidateAccessTokenRes;
 }
 
 export function AuthServiceControllerMethods() {
@@ -146,6 +160,7 @@ export function AuthServiceControllerMethods() {
       "doctorLogin",
       "refreshToken",
       "logout",
+      "validateAccessToken",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

@@ -24,6 +24,9 @@ service AuthService {
   rpc Logout(LogoutReq)
   returns (LogoutRes);
 
+  rpc ValidateAccessToken(ValidateAccessTokenReq)
+  returns (ValidateAccessTokenRes);
+
 }
 
 message HealthInstituteRegReq {
@@ -105,4 +108,12 @@ message LogoutReq {
 
 message LogoutRes {
   bool success = 1;
+}
+
+message ValidateAccessTokenReq {
+  string sessionId = 1;
+}
+
+message ValidateAccessTokenRes {
+  bool valid = 1;
 }

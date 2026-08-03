@@ -15,7 +15,7 @@ import {
   DoctorProfessionalDetailsDto,
 } from './doctor.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerConfig } from '../common/multer.config';
+import { multerConfig } from '../common/util/multer.config';
 import { status } from '@grpc/grpc-js';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';

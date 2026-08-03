@@ -4,6 +4,8 @@ import { Repository } from 'typeorm';
 
 import { UserSession } from '../db/entities/user-session.entity';
 import { CreateSessionDto } from './session.dto';
+import { throwRpcException } from '../util/rpcException';
+import { status } from '@grpc/grpc-js';
 
 @Injectable()
 export class SessionService {
@@ -31,25 +33,23 @@ export class SessionService {
   }
 
   async validateSession(sessionId: string): Promise<UserSession> {
-    const session = await this.sessionRepository.findOne({
-      where: {
-        sessionId,
-      },
-    });
+    const session = await this.findSessionBySessionId(sessionId);
 
     if (!session) {
-      throw new UnauthorizedException('Session not found.');
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid session.');
     }
 
-    if (!session.isActive) {
-      throw new UnauthorizedException('Session is inactive.');
+    const validatedSession = session!;
+
+    if (!validatedSession.isActive) {
+      throwRpcException(status.UNAUTHENTICATED, 'Session has been logged out.');
     }
 
-    if (session.expiresAt.getTime() <= Date.now()) {
-      throw new UnauthorizedException('Session has expired.');
+    if (validatedSession.expiresAt.getTime() <= Date.now()) {
+      throwRpcException(status.UNAUTHENTICATED, 'Session has expired.');
     }
 
-    return session;
+    return validatedSession;
   }
 
   async updateLastActivity(sessionId: string): Promise<void> {
