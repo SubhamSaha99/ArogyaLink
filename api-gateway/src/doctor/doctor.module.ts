@@ -4,7 +4,7 @@ import { DoctorService } from './doctor.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
-import { RolesGuard } from '../common/guards/role.guard';
+import { RolesGuard } from '../common/guards/roles.guard';
 
 @Module({
   imports: [

@@ -6,7 +6,6 @@ import {
   InternalServerErrorException,
   Post,
   UploadedFile,
-  UseGuards,
   UseInterceptors,
 } from '@nestjs/common';
 import { DoctorService } from './doctor.service';
@@ -17,12 +16,10 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../common/util/multer.config';
 import { status } from '@grpc/grpc-js';
-import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { RolesGuard } from '../common/guards/role.guard';
-import { Roles } from '../common/decorators/roles.decorator';
 import { UserRole } from '../common/util/constant';
+import { Auth } from '../common/decorators/auth.decorator';
 
 @Controller('doctor')
 export class DoctorController {
@@ -35,8 +32,7 @@ export class DoctorController {
    * @returns JSON
    */
   @Post('updateDoctorBasicDetails')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.DOCTOR)
+  @Auth(UserRole.DOCTOR)
   @UseInterceptors(
     FileInterceptor(
       'profileImage',
@@ -82,8 +78,7 @@ export class DoctorController {
    * @returns JSON
    */
   @Post('updateDoctorProfessionalDetails')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.DOCTOR)
+  @Auth(UserRole.DOCTOR)
   async updateDoctorProfessinalDetails(
     @Body() request: DoctorProfessionalDetailsDto,
   ) {
@@ -113,8 +108,7 @@ export class DoctorController {
   }
 
   @Get('getDoctorProfile')
-  @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(UserRole.DOCTOR)
+  @Auth(UserRole.DOCTOR)
   getProfile(@CurrentUser() user: JwtPayload) {
     return user;
   }
