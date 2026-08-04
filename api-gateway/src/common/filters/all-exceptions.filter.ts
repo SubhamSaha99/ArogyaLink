@@ -25,9 +25,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
       response.status(statusCode).json({
         statusCode,
         timestamp: new Date().toISOString(),
-        ...(typeof payload === 'object'
-          ? payload
-          : { message: payload }),
+        ...(typeof payload === 'object' ? payload : { message: payload }),
       });
 
       return;
@@ -65,9 +63,7 @@ export class AllExceptionsFilter implements ExceptionFilter {
     }
 
     message =
-      exception?.details ??
-      exception?.message ??
-      'Internal server error';
+      exception?.details ?? exception?.message ?? 'Internal server error';
 
     response.status(statusCode).json({
       statusCode,

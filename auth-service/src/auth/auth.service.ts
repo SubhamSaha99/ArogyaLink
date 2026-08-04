@@ -20,7 +20,12 @@ import {
   ValidateAccessTokenReq,
   ValidateAccessTokenRes,
 } from '../proto/generated/auth';
-import { AuditAction, AuditStatus, Errors, UserRole } from '../common/util/constant';
+import {
+  AuditAction,
+  AuditStatus,
+  Errors,
+  UserRole,
+} from '../common/util/constant';
 import { throwRpcException } from '../common/util/rpcException';
 import { JwtUtil } from '../common/util/jwt.util';
 import { SessionService } from '../session/session.service';
@@ -468,7 +473,6 @@ export class AuthService {
       throw error;
     }
   }
-
 
   async validateAccessToken(
     request: ValidateAccessTokenReq,

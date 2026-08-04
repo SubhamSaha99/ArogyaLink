@@ -1,9 +1,7 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Get,
-  InternalServerErrorException,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -15,7 +13,6 @@ import {
 } from './doctor.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../common/util/multer.config';
-import { status } from '@grpc/grpc-js';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { UserRole } from '../common/util/constant';

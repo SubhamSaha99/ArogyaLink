@@ -18,7 +18,6 @@ import {
   HealthInstituteLoginRes,
   HealthInstituteRegReq,
   HealthInstituteRegRes,
-  LogoutReq,
   LogoutRes,
   RefreshTokenReq,
   RefreshTokenRes,
@@ -28,7 +27,6 @@ import {
   DOCTOR_SERVICE_NAME,
   DoctorServiceClient,
 } from '../proto/generated/doctor';
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -187,7 +185,7 @@ export class AuthService implements OnModuleInit {
 
   /**
    * * Validate Access Token
-   * @param sessionId 
+   * @param sessionId
    * @returns ValidateAccessTokenRes
    */
   validateAccessToken(sessionId: string): Promise<ValidateAccessTokenRes> {

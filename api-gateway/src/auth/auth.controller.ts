@@ -4,14 +4,9 @@ import {
   Post,
   Req,
   Ip,
-  BadRequestException,
-  ConflictException,
-  InternalServerErrorException,
-  UnauthorizedException,
   Get,
   UseGuards,
 } from '@nestjs/common';
-import { status } from '@grpc/grpc-js';
 import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import {
