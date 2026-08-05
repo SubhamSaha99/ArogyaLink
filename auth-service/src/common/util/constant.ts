@@ -40,3 +40,10 @@ export enum AuditAction {
   INVALID_TOKEN = 'INVALID_TOKEN',
   IP_CHANGED = 'IP_CHANGED',
 }
+
+export const REDIS_CLIENT = 'REDIS_CLIENT';
+
+export const LOGIN_RATE_LIMIT = {
+  MAX_ATTEMPTS: 5,
+  BLOCK_TIME_SECONDS: 15 * 60,
+};

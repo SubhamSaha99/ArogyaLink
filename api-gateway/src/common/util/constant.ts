@@ -4,9 +4,3 @@ export enum UserRole {
   HEALTH_INSTITUTE = 'HEALTH_INSTITUTE',
   ADMIN = 'ADMIN',
 }
-
-export const LOGIN_RATE_LIMIT = {
-  MAX_ATTEMPTS: 5,
-  BLOCK_TIME_SECONDS: 15 * 60,
-};
-export const REDIS_CLIENT = 'REDIS_CLIENT';

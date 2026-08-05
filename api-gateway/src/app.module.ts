@@ -4,7 +4,6 @@ import { AuthModule } from './auth/auth.module';
 import { DoctorModule } from './doctor/doctor.module';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { APP_GUARD } from '@nestjs/core';
-import { RedisModule } from './redis/redis.module';
 
 @Module({
   imports: [
@@ -21,7 +20,6 @@ import { RedisModule } from './redis/redis.module';
     }),
     AuthModule,
     DoctorModule,
-    RedisModule,
   ],
   providers: [
     { provide: APP_GUARD, useClass: ThrottlerGuard },

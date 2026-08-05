@@ -32,6 +32,7 @@
     "@nestjs/typeorm": "^11.0.3",
     "@types/bcrypt": "^6.0.0",
     "bcrypt": "^6.0.0",
+    "ioredis": "^5.11.1",
     "pg": "^8.21.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.1",
@@ -43,7 +44,7 @@
     "@eslint/js": "^9.18.0",
     "@nestjs/cli": "^11.0.0",
     "@nestjs/schematics": "^11.0.0",
-    "@nestjs/testing": "^7.5.5",
+    "@nestjs/testing": "^11.1.28",
     "@types/express": "^5.0.0",
     "@types/jest": "^30.0.0",
     "@types/node": "^24.0.0",
@@ -80,5 +81,10 @@
     ],
     "coverageDirectory": "../coverage",
     "testEnvironment": "node"
+  },
+  "allowScripts": {
+    "bcrypt@6.0.0": true,
+    "unrs-resolver@1.12.2": true,
+    "protobufjs@7.6.5": true
   }
 }

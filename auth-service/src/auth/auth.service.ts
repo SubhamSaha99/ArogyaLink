@@ -24,6 +24,7 @@ import {
   AuditAction,
   AuditStatus,
   Errors,
+  LOGIN_RATE_LIMIT,
   UserRole,
 } from '../common/util/constant';
 import { throwRpcException } from '../common/util/rpcException';
@@ -32,6 +33,8 @@ import { SessionService } from '../session/session.service';
 import { AuditService } from '../session/audit.service';
 import { HashUtil } from '../common/util/hash.util';
 import { randomUUID } from 'node:crypto';
+import { RateLimiterService } from '../common/rate-limiter/rate-limiter.service';
+import { buildRateLimitKey } from '../common/util/rate-limiter.util';
 
 @Injectable()
 export class AuthService {
@@ -41,6 +44,7 @@ export class AuthService {
     private readonly sessionService: SessionService,
     private readonly auditService: AuditService,
     private readonly hashUtil: HashUtil,
+    private readonly rateLimiterService: RateLimiterService,
   ) {}
 
   /**
@@ -94,6 +98,23 @@ export class AuthService {
     await queryRunner.startTransaction();
 
     try {
+      const identifier = request.healthInstituteId ?? request.email ?? '';
+
+      const rateLimitOptions = {
+        key: buildRateLimitKey(
+          'login',
+          UserRole.HEALTH_INSTITUTE,
+          identifier,
+          request.requestIp,
+        ),
+        maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
+        blockDuration: LOGIN_RATE_LIMIT.BLOCK_TIME_SECONDS,
+        message:
+          'Too many failed login attempts. Please try again after 15 minutes.',
+      };
+
+      await this.rateLimiterService.throwIfBlocked(rateLimitOptions);
+
       await queryRunner.query(
         `CALL login_health_institute($1, $2, 'login_cursor')`,
         [request.healthInstituteId, request.email],
@@ -110,6 +131,8 @@ export class AuthService {
       }
 
       if (procedureResult.status === Errors.invalidCredentialError) {
+        await this.rateLimiterService.recordFailure(rateLimitOptions);
+
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
 
@@ -123,6 +146,8 @@ export class AuthService {
       );
 
       if (!isPasswordValid) {
+        await this.rateLimiterService.recordFailure(rateLimitOptions);
+
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
 
@@ -168,6 +193,8 @@ export class AuthService {
           ipAddress: request.requestIp,
           userAgent: request.userAgent,
         }),
+
+        this.rateLimiterService.clear(rateLimitOptions.key),
       ]);
 
       return {
@@ -274,6 +301,22 @@ export class AuthService {
     await queryRunner.connect();
     await queryRunner.startTransaction();
     try {
+      const identifier = request.mobile ?? request.email ?? '';
+
+      const rateLimitOptions = {
+        key: buildRateLimitKey(
+          'login',
+          UserRole.DOCTOR,
+          identifier,
+          request.requestIp,
+        ),
+        maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
+        blockDuration: LOGIN_RATE_LIMIT.BLOCK_TIME_SECONDS,
+        message:
+          'Too many failed login attempts. Please try again after 15 minutes.',
+      };
+
+      await this.rateLimiterService.throwIfBlocked(rateLimitOptions);
       await queryRunner.query(`CALL login_doctor($1, $2, 'login_cursor')`, [
         request.email,
         request.mobile,
@@ -289,6 +332,8 @@ export class AuthService {
         throwRpcException(status.INTERNAL, 'Invalid response from procedure');
       }
       if (procedureResult.status === Errors.invalidCredentialError) {
+        await this.rateLimiterService.recordFailure(rateLimitOptions);
+
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
       if (procedureResult.status === Errors.dbError) {
@@ -301,9 +346,10 @@ export class AuthService {
       );
 
       if (!isPasswordValid) {
+        await this.rateLimiterService.recordFailure(rateLimitOptions);
+
         throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
       }
-
       //   TODO: Generate Session & JWT
 
       const sessionId = randomUUID();
@@ -346,6 +392,8 @@ export class AuthService {
           ipAddress: request.requestIp,
           userAgent: request.userAgent,
         }),
+        
+        this.rateLimiterService.clear(rateLimitOptions.key),
       ]);
 
       return {

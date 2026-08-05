@@ -1,7 +1,6 @@
 import { Global, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import Redis from 'ioredis';
-
 import { REDIS_CLIENT } from '../common/util/constant';
 import { RedisService } from './redis.service';
 
@@ -16,14 +15,12 @@ import { RedisService } from './redis.service';
         const env = configService.get<string>('DEV_ENV') || 'local';
         const host =
           env === 'container'
-            ? configService.get<string>('REDIS_HOST') || 'redis'
-            : configService.get<string>('REDIS_HOST') ||
-              configService.get<string>('REDIS_HOST_DEV') ||
-              '127.0.0.1';
+            ? configService.getOrThrow<string>('REDIS_HOST')
+            : '127.0.0.1';
         const port =
           env === 'container'
-            ? Number(configService.get<number>('REDIS_PORT') || 6379)
-            : Number(configService.get<number>('REDIS_PORT') || 6379);
+            ? Number(configService.getOrThrow<number>('REDIS_PORT'))
+            : 6379;
         const redis = new Redis({
           host,
           port,
