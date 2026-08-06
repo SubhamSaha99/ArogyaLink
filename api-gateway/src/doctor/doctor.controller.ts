@@ -2,6 +2,8 @@ import {
   Body,
   Controller,
   Get,
+  HttpCode,
+  HttpStatus,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -92,9 +94,21 @@ export class DoctorController {
     };
   }
 
-  @Get('getDoctorProfile')
+  /**
+   * * Get Doctor Details
+   * @param user 
+   * @returns json
+   */
+  @Get('getDoctorDetails')
+  @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
-  getProfile(@CurrentUser() user: JwtPayload) {
-    return user;
+  async getDoctorDetails(@CurrentUser() user: JwtPayload) {
+    const result = await this.doctorService.getDoctorDetails(user.userBusinessId);
+
+    return {
+      success: true,
+      message: 'Doctor Details Fetched Successfully.',
+      data: result,
+    };
   }
 }

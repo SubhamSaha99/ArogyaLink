@@ -3,6 +3,8 @@ import { DataSource } from 'typeorm';
 import {
   DoctorProfileReq,
   DoctorProfileRes,
+  GetDoctorDetailsReq,
+  GetDoctorDetailsRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
@@ -128,7 +130,7 @@ export class DoctorService {
 
   /**
    * * Update Doctor Qualifications
-   * @param request 
+   * @param request
    * @returns UpdateDoctorQualificationsRes
    */
   async updateDoctorQualifications(
@@ -167,6 +169,96 @@ export class DoctorService {
       };
     } catch (error) {
       throw error;
+    }
+  }
+
+  /**
+   * * Get Doctor Details
+   * @param user 
+   * @returns GetDoctorDetailsRes
+   */
+  async getDoctorDetails(
+    request: GetDoctorDetailsReq,
+  ): Promise<GetDoctorDetailsRes> {
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+    try {
+      await queryRunner.query(`CALL get_doctor_details($1, 'doctor_cursor')`, [
+        request.doctorId,
+      ]);
+
+      const [procedureResult] = await queryRunner.query(
+        `FETCH ALL FROM doctor_cursor`,
+      );
+
+      await queryRunner.query(`CLOSE doctor_cursor`);
+      await queryRunner.commitTransaction();
+
+      if (!procedureResult) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+
+      switch (procedureResult.status) {
+        case Errors.invalidIdError:
+          throwRpcException(status.NOT_FOUND, 'Doctor not found');
+
+        case Errors.dbError:
+          throwRpcException(status.INTERNAL, 'Database error');
+      }
+
+      const {
+        doctor_id,
+        profile_details,
+        professional_details,
+        qualification_details = [],
+      } = procedureResult;
+
+      return {
+        doctorId: doctor_id,
+
+        profileDetails: {
+          doctorProfileId: profile_details.doctorProfileId,
+          email: profile_details.email,
+          mobile: profile_details.mobile,
+          firstName: profile_details.firstName,
+          middleName: profile_details.middleName ?? '',
+          lastName: profile_details.lastName,
+          gender: profile_details.gender ?? 0,
+          profileImage: profile_details.profileImage ?? '',
+        },
+
+        professionalDetails: {
+          doctorProfessionalDetailsId:
+            professional_details?.doctorProfessionalDetailsId ?? 0,
+          medicalRegistration: professional_details?.medicalRegistration ?? '',
+          registrationCouncilId:
+            professional_details?.registrationCouncilId ?? 0,
+          registrationStateId: professional_details?.registrationStateId ?? 0,
+          registrationYear: professional_details?.registrationYear ?? 0,
+          licenseStatus: professional_details?.licenseStatus ?? 0,
+        },
+
+        qualificationDetails: qualification_details.map(
+          (qualification: any) => ({
+            doctorQualificationId: qualification.doctorQualificationId,
+            qualificationId: qualification.qualificationId,
+            specializationId: qualification.specializationId ?? 0,
+            institutionName: qualification.institutionName ?? '',
+            universityName: qualification.universityName ?? '',
+            yearOfCompletion: qualification.yearOfCompletion ?? 0,
+          }),
+        ),
+      };
+    } catch (error) {
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      throw error;
+    } finally {
+      await queryRunner.release();
     }
   }
 }

@@ -4,6 +4,8 @@ import {
   DoctorProfileRes,
   DoctorServiceController,
   DoctorServiceControllerMethods,
+  GetDoctorDetailsReq,
+  GetDoctorDetailsRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
@@ -12,7 +14,6 @@ import {
   UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
 import { DoctorService } from './doctor.service';
-
 @Controller()
 @DoctorServiceControllerMethods()
 export class DoctorController implements DoctorServiceController {
@@ -40,5 +41,9 @@ export class DoctorController implements DoctorServiceController {
     request: UpdateDoctorQualificationsReq,
   ): Promise<UpdateDoctorQualificationsRes> {
     return this.doctorService.updateDoctorQualifications(request);
+  }
+
+  async getDoctorDetails(request: GetDoctorDetailsReq): Promise<GetDoctorDetailsRes> {
+      return this.doctorService.getDoctorDetails(request)
   }
 }

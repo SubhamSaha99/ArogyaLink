@@ -66,6 +66,46 @@ export interface UpdateDoctorQualificationsRes {
   doctorId: string;
 }
 
+export interface GetDoctorDetailsReq {
+  doctorId: string;
+}
+
+export interface GetDoctorProfileDetails {
+  doctorProfileId: number;
+  email: string;
+  mobile: string;
+  firstName: string;
+  middleName?: string | undefined;
+  lastName: string;
+  gender?: number | undefined;
+  profileImage?: string | undefined;
+}
+
+export interface GetDoctorProfessionalDetails {
+  doctorProfessionalDetailsId?: number | undefined;
+  medicalRegistration?: string | undefined;
+  registrationCouncilId?: number | undefined;
+  registrationStateId?: number | undefined;
+  registrationYear?: number | undefined;
+  licenseStatus?: number | undefined;
+}
+
+export interface GetDoctorQualificationDetails {
+  doctorQualificationId?: number | undefined;
+  qualificationId?: number | undefined;
+  specializationId?: number | undefined;
+  institutionName?: string | undefined;
+  universityName?: string | undefined;
+  yearOfCompletion?: number | undefined;
+}
+
+export interface GetDoctorDetailsRes {
+  doctorId: string;
+  profileDetails: GetDoctorProfileDetails | undefined;
+  professionalDetails: GetDoctorProfessionalDetails | undefined;
+  qualificationDetails: GetDoctorQualificationDetails[];
+}
+
 export const DOCTOR_PACKAGE_NAME = "doctor";
 
 export interface DoctorServiceClient {
@@ -78,6 +118,8 @@ export interface DoctorServiceClient {
   ): Observable<UpdateDoctorProfessionalDetailsRes>;
 
   updateDoctorQualifications(request: UpdateDoctorQualificationsReq): Observable<UpdateDoctorQualificationsRes>;
+
+  getDoctorDetails(request: GetDoctorDetailsReq): Observable<GetDoctorDetailsRes>;
 }
 
 export interface DoctorServiceController {
@@ -99,6 +141,10 @@ export interface DoctorServiceController {
   updateDoctorQualifications(
     request: UpdateDoctorQualificationsReq,
   ): Promise<UpdateDoctorQualificationsRes> | Observable<UpdateDoctorQualificationsRes> | UpdateDoctorQualificationsRes;
+
+  getDoctorDetails(
+    request: GetDoctorDetailsReq,
+  ): Promise<GetDoctorDetailsRes> | Observable<GetDoctorDetailsRes> | GetDoctorDetailsRes;
 }
 
 export function DoctorServiceControllerMethods() {
@@ -108,6 +154,7 @@ export function DoctorServiceControllerMethods() {
       "updateDoctorBasicDetails",
       "updateDoctorProfessionalDetails",
       "updateDoctorQualifications",
+      "getDoctorDetails",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

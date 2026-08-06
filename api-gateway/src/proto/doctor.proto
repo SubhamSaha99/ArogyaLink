@@ -14,6 +14,9 @@ service DoctorService {
 
   rpc UpdateDoctorQualifications(UpdateDoctorQualificationsReq)
   returns(UpdateDoctorQualificationsRes);
+
+  rpc GetDoctorDetails(GetDoctorDetailsReq)
+  returns (GetDoctorDetailsRes);
 }
 
 message DoctorProfileReq {
@@ -71,4 +74,44 @@ message UpdateDoctorQualificationsReq {
 
 message UpdateDoctorQualificationsRes {
   string doctorId = 1;
+}
+
+message GetDoctorDetailsReq {
+  string doctorId = 1;
+}
+
+message GetDoctorProfileDetails {
+  int32           doctorProfileId = 1;
+  string          email           = 2;
+  string          mobile          = 3;
+  string          firstName       = 4;
+  optional string middleName      = 5;
+  string          lastName        = 6;
+  optional int32  gender          = 7;
+  optional string profileImage    = 8;
+}
+
+message GetDoctorProfessionalDetails {
+  optional int32  doctorProfessionalDetailsId = 1;
+  optional string medicalRegistration         = 2;
+  optional int32  registrationCouncilId       = 3;
+  optional int32  registrationStateId         = 4;
+  optional int32  registrationYear            = 5;
+  optional int32  licenseStatus               = 6;
+}
+
+message GetDoctorQualificationDetails {
+  optional int32  doctorQualificationId = 1;
+  optional int32  qualificationId       = 2;
+  optional int32  specializationId      = 3;
+  optional string institutionName       = 4;
+  optional string universityName        = 5;
+  optional int32  yearOfCompletion      = 6;
+}
+
+message GetDoctorDetailsRes {
+  string                                 doctorId             = 1;
+  GetDoctorProfileDetails                profileDetails       = 2;
+  GetDoctorProfessionalDetails           professionalDetails  = 3;
+  repeated GetDoctorQualificationDetails qualificationDetails = 4;
 }

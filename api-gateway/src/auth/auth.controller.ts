@@ -1,6 +1,8 @@
 import {
   Body,
   Controller,
+  HttpCode,
+  HttpStatus,
   Post,
   Req,
   Ip,
@@ -48,6 +50,7 @@ export class AuthController {
    * @returns json
    */
   @Post('healthInstituteLogin')
+  @HttpCode(HttpStatus.OK)
   async healthInstituteLogin(
     @Body() request: HealthInstituteLoginDto,
     @Req() httpRequest: Request,
@@ -99,6 +102,7 @@ export class AuthController {
    * @returns json
    */
   @Post('doctorLogin')
+  @HttpCode(HttpStatus.OK)
   async doctorLogin(
     @Body() request: DoctorLoginDto,
     @Req() httpRequest: Request,
@@ -133,6 +137,7 @@ export class AuthController {
    * @returns json
    */
   @Post('refreshToken')
+  @HttpCode(HttpStatus.OK)
   async refreshToken(@Body() request: RefreshTokenDto) {
     const result = await this.authService.refreshToken(request);
 
@@ -144,6 +149,7 @@ export class AuthController {
   }
 
   @Get('logout')
+  @HttpCode(HttpStatus.OK)
   @UseGuards(JwtAuthGuard)
   async logout(@CurrentUser() user: JwtPayload) {
     await this.authService.logout(user.sessionId);

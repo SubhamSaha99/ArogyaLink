@@ -3,6 +3,8 @@ import type { ClientGrpc } from '@nestjs/microservices';
 import {
   DOCTOR_SERVICE_NAME,
   DoctorServiceClient,
+  GetDoctorDetailsReq,
+  GetDoctorDetailsRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
@@ -86,12 +88,12 @@ export class DoctorService implements OnModuleInit {
 
   /**
    * * Update Doctor Qualifications
-   * @param request 
+   * @param request
    * @returns UpdateDoctorQualificationsRes
    */
   async updateDoctorQualifications(
     request: DoctorQualificationsDto,
-    user: JwtPayload
+    user: JwtPayload,
   ): Promise<UpdateDoctorQualificationsRes> {
     const doctorQualifications: UpdateDoctorQualificationsReq = {
       ...request,
@@ -108,5 +110,17 @@ export class DoctorService implements OnModuleInit {
     return await firstValueFrom(
       this.doctorGrpcService.updateDoctorQualifications(doctorQualifications),
     );
+  }
+
+  /**
+   * * Get Doctor Details
+   * @param user 
+   * @returns GetDoctorDetailsRes
+   */
+  async getDoctorDetails(doctorId: string): Promise<GetDoctorDetailsRes> {
+    const id: GetDoctorDetailsReq = {
+      doctorId,
+    };
+    return await firstValueFrom(this.doctorGrpcService.getDoctorDetails(id));
   }
 }

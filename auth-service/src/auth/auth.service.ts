@@ -356,7 +356,7 @@ export class AuthService {
 
       const jwtPayload = {
         sessionId,
-        userBusinessId: procedureResult.health_institute_id,
+        userBusinessId: procedureResult.doctor_id,
         role: UserRole.DOCTOR,
       };
 
