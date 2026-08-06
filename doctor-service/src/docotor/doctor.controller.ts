@@ -8,6 +8,8 @@ import {
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
+  UpdateDoctorQualificationsReq,
+  UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
 import { DoctorService } from './doctor.service';
 
@@ -32,5 +34,11 @@ export class DoctorController implements DoctorServiceController {
     request: UpdateDoctorProfessionalDetailsReq,
   ): Promise<UpdateDoctorProfessionalDetailsRes> {
     return this.doctorService.updateDoctorProfessionalDetails(request);
+  }
+
+  async updateDoctorQualifications(
+    request: UpdateDoctorQualificationsReq,
+  ): Promise<UpdateDoctorQualificationsRes> {
+    return this.doctorService.updateDoctorQualifications(request);
   }
 }

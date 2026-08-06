@@ -1,16 +1,13 @@
 import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class UpdateDoctorProfessionalDetails1785133750759 implements MigrationInterface {
+export class UpdateDoctorQualifications1785999210982 implements MigrationInterface {
 
     public async up(queryRunner: QueryRunner): Promise<void> {
+
         await queryRunner.query(`
-                CREATE OR REPLACE PROCEDURE update_doctor_professional_details(
+                CREATE OR REPLACE PROCEDURE update_doctor_qualifications(
                     IN p_doctorId VARCHAR(20),
-                    IN p_medicalRegistration VARCHAR(30),
-                    IN p_registrationCouncilId SMALLINT,
-                    IN p_registrationStateId SMALLINT,
-                    IN p_registrationYear SMALLINT,
-                    IN p_licenseStatus SMALLINT,
+                    IN p_qualifications JSONB,
                     OUT p_result VARCHAR(50)
                 )
                 LANGUAGE plpgsql
@@ -32,33 +29,39 @@ export class UpdateDoctorProfessionalDetails1785133750759 implements MigrationIn
                         RETURN;
                     END IF;
 
-                    -- Insert or Update professional details
-                    INSERT INTO doctor_professional_details (
+                    -- Remove existing qualifications
+                    DELETE
+                    FROM doctor_qualifications
+                    WHERE doctor_id = p_doctorId;
+
+                    -- Bulk Insert qualifications
+                    INSERT INTO doctor_qualifications
+                    (
                         doctor_id,
-                        medical_registration,
-                        registration_council_id,
-                        registration_state_id,
-                        registration_year,
-                        license_status,
+                        qualification_id,
+                        specialization_id,
+                        institution_name,
+                        university_name,
+                        year_of_completion,
                         created_at
                     )
-                    VALUES (
+                    SELECT
                         p_doctorId,
-                        p_medicalRegistration,
-                        p_registrationCouncilId,
-                        p_registrationStateId,
-                        p_registrationYear,
-                        p_licenseStatus,
+                        qualification_id,
+                        specialization_id,
+                        institution_name,
+                        university_name,
+                        year_of_completion,
                         NOW()
-                    )
-                    ON CONFLICT (doctor_id)
-                    DO UPDATE SET
-                        medical_registration = EXCLUDED.medical_registration,
-                        registration_council_id = EXCLUDED.registration_council_id,
-                        registration_state_id = EXCLUDED.registration_state_id,
-                        registration_year = EXCLUDED.registration_year,
-                        license_status = EXCLUDED.license_status,
-                        updated_at = NOW();
+                    FROM jsonb_to_recordset(p_qualifications)
+                    AS qualification
+                    (
+                        qualification_id INT,
+                        specialization_id INT,
+                        institution_name VARCHAR(200),
+                        university_name VARCHAR(200),
+                        year_of_completion SMALLINT
+                    );
 
                     p_result := p_doctorId;
 
@@ -69,15 +72,17 @@ export class UpdateDoctorProfessionalDetails1785133750759 implements MigrationIn
                             v_message = MESSAGE_TEXT,
                             v_detail = PG_EXCEPTION_DETAIL;
 
-                        INSERT INTO db_exception_log (
+                        INSERT INTO db_exception_log
+                        (
                             procedure_name,
                             error_code,
                             error_message,
                             error_details,
                             created_at
                         )
-                        VALUES (
-                            'update_doctor_professional_details',
+                        VALUES
+                        (
+                            'update_doctor_qualifications',
                             v_sqlstate,
                             v_message,
                             COALESCE(v_detail, ''),
@@ -91,7 +96,7 @@ export class UpdateDoctorProfessionalDetails1785133750759 implements MigrationIn
     }
 
     public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query( `DROP PROCEDURE IF EXISTS update_doctor_professional_details(VARCHAR, VARCHAR, SMALLINT, SMALLINT, SMALLINT, SMALLINT, VARCHAR);`);
+        await queryRunner.query( `DROP PROCEDURE IF EXISTS update_doctor_qualifications(VARCHAR, JSONB, VARCHAR);`);
     }
 
 }

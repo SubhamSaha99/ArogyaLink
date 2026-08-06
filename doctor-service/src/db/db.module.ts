@@ -5,6 +5,7 @@ import { DatabaseService } from './db.service';
 import { DoctorProfile } from './entities/doctorProfile.entity';
 import { DbExceptionLog } from './entities/dbExceptionLog.entity';
 import { DoctorProfessionalDetails } from './entities/doctorProfessionalDetails.entity';
+import { DoctorQualification } from './entities/doctorQualifications.entity';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { DoctorProfessionalDetails } from './entities/doctorProfessionalDetails.
         synchronize: true,
         migrationsRun: false,
         migrations: ['dist/db/migrations/*.js'],
-        entities:[DoctorProfile, DoctorProfessionalDetails, DbExceptionLog],
+        entities:[DoctorProfile, DoctorProfessionalDetails, DoctorQualification, DbExceptionLog],
         logging: true,
       }),
     }),

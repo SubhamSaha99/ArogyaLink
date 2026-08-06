@@ -7,14 +7,18 @@ import {
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
+  UpdateDoctorQualificationsReq,
+  UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
 import {
   DoctorBasicDetailsDto,
   DoctorProfessionalDetailsDto,
+  DoctorQualificationsDto,
 } from './doctor.dto';
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/util/file.util';
 import { moveFile } from '../common/util/uploadFile';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {
@@ -77,6 +81,32 @@ export class DoctorService implements OnModuleInit {
       this.doctorGrpcService.updateDoctorProfessionalDetails(
         doctorProfesionalDetails,
       ),
+    );
+  }
+
+  /**
+   * * Update Doctor Qualifications
+   * @param request 
+   * @returns UpdateDoctorQualificationsRes
+   */
+  async updateDoctorQualifications(
+    request: DoctorQualificationsDto,
+    user: JwtPayload
+  ): Promise<UpdateDoctorQualificationsRes> {
+    const doctorQualifications: UpdateDoctorQualificationsReq = {
+      ...request,
+      qualifications:
+        request.qualifications?.map((qualification) => ({
+          ...qualification,
+          specializationId: qualification.specializationId ?? 0,
+          institutionName: qualification.institutionName ?? '',
+          universityName: qualification.universityName ?? '',
+          yearOfCompletion: qualification.yearOfCompletion ?? 0,
+        })) ?? [],
+    };
+
+    return await firstValueFrom(
+      this.doctorGrpcService.updateDoctorQualifications(doctorQualifications),
     );
   }
 }

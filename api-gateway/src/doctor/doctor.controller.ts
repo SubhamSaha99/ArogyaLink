@@ -10,6 +10,7 @@ import { DoctorService } from './doctor.service';
 import {
   DoctorBasicDetailsDto,
   DoctorProfessionalDetailsDto,
+  DoctorQualificationsDto,
 } from './doctor.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../common/util/multer.config';
@@ -66,6 +67,23 @@ export class DoctorController {
   ) {
     const result =
       await this.doctorService.updateDoctorProfessinalDetails(request);
+
+    return {
+      success: true,
+      message: 'Deatils Updated Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * * Update Doctor Qualifications
+   * @param request 
+   * @returns json
+   */
+  @Post('updateDoctorQualifications')
+  @Auth(UserRole.DOCTOR)
+  async updateDoctorQualifications(@Body() request: DoctorQualificationsDto, @CurrentUser() user: JwtPayload) {
+    const result = await this.doctorService.updateDoctorQualifications(request, user);
 
     return {
       success: true,

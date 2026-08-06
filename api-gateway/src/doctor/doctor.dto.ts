@@ -7,7 +7,10 @@ import {
   IsString,
   Length,
   Matches,
+  Max,
+  MaxLength,
   Min,
+  ValidateNested,
 } from 'class-validator';
 
 export class DoctorBasicDetailsDto {
@@ -76,4 +79,40 @@ export class DoctorProfessionalDetailsDto {
   @Type(() => Number)
   @IsInt()
   licenseStatus!: number;
+}
+
+
+export class DoctorQualification {
+  @IsInt()
+  qualificationId!: number;
+
+  @IsOptional()
+  @IsInt()
+  specializationId?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  institutionName?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  universityName?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(1900)
+  @Max(new Date().getFullYear())
+  yearOfCompletion?: number;
+}
+
+export class DoctorQualificationsDto {
+  @IsString()
+  @IsNotEmpty()
+  doctorId!: string;
+
+  @ValidateNested({ each: true })
+  @Type(() => DoctorQualification)
+  qualifications!: DoctorQualification[];
 }

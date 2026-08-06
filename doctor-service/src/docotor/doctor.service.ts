@@ -7,6 +7,8 @@ import {
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
+  UpdateDoctorQualificationsReq,
+  UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
 import { throwRpcException } from '../util/rpcException';
 import { status } from '@grpc/grpc-js';
@@ -122,5 +124,49 @@ export class DoctorService {
     return {
       doctorId: procedureResult,
     };
+  }
+
+  /**
+   * * Update Doctor Qualifications
+   * @param request 
+   * @returns UpdateDoctorQualificationsRes
+   */
+  async updateDoctorQualifications(
+    request: UpdateDoctorQualificationsReq,
+  ): Promise<UpdateDoctorQualificationsRes> {
+    try {
+      const qualifications = request.qualifications.map((qualification) => ({
+        qualification_id: qualification.qualificationId,
+        specialization_id: qualification.specializationId || null,
+        institution_name: qualification.institutionName || null,
+        university_name: qualification.universityName || null,
+        year_of_completion: qualification.yearOfCompletion || null,
+      }));
+
+      const result = await this.dataSource.query(
+        `CALL update_doctor_qualifications($1, $2, $3)`,
+        [request.doctorId, JSON.stringify(qualifications), null],
+      );
+
+      const procedureResult = result?.[0]?.p_result;
+
+      if (procedureResult === Errors.invalidIdError) {
+        throwRpcException(status.NOT_FOUND, 'Doctor not found');
+      }
+
+      if (procedureResult === Errors.dbError) {
+        throwRpcException(status.INTERNAL, 'Database error');
+      }
+
+      if (!/^DOC\d{6}$/.test(procedureResult)) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+
+      return {
+        doctorId: procedureResult,
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 }
