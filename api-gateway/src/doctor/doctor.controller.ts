@@ -79,13 +79,19 @@ export class DoctorController {
 
   /**
    * * Update Doctor Qualifications
-   * @param request 
+   * @param request
    * @returns json
    */
   @Post('updateDoctorQualifications')
   @Auth(UserRole.DOCTOR)
-  async updateDoctorQualifications(@Body() request: DoctorQualificationsDto, @CurrentUser() user: JwtPayload) {
-    const result = await this.doctorService.updateDoctorQualifications(request, user);
+  async updateDoctorQualifications(
+    @Body() request: DoctorQualificationsDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result = await this.doctorService.updateDoctorQualifications(
+      request,
+      user,
+    );
 
     return {
       success: true,
@@ -96,19 +102,26 @@ export class DoctorController {
 
   /**
    * * Get Doctor Details
-   * @param user 
+   * @param user
    * @returns json
    */
   @Get('getDoctorDetails')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   async getDoctorDetails(@CurrentUser() user: JwtPayload) {
-    const result = await this.doctorService.getDoctorDetails(user.userBusinessId);
+    const result = await this.doctorService.getDoctorDetails(
+      user.userBusinessId,
+    );
 
     return {
       success: true,
       message: 'Doctor Details Fetched Successfully.',
-      data: result,
+      data: {
+        doctorId: result.doctorId,
+        profileDetails: result.profileDetails,
+        professionalDetails: result.professionalDetails,
+        qualificationDetails: result.qualificationDetails,
+      },
     };
   }
 }

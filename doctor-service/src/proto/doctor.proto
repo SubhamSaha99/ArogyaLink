@@ -95,18 +95,22 @@ message GetDoctorProfessionalDetails {
   optional int32  doctorProfessionalDetailsId = 1;
   optional string medicalRegistration         = 2;
   optional int32  registrationCouncilId       = 3;
-  optional int32  registrationStateId         = 4;
-  optional int32  registrationYear            = 5;
-  optional int32  licenseStatus               = 6;
+  optional string registrationCouncilName     = 4;
+  optional int32  registrationStateId         = 5;
+  optional string registrationStateName       = 6;
+  optional int32  registrationYear            = 7;
+  optional int32  licenseStatus               = 8;
 }
 
 message GetDoctorQualificationDetails {
   optional int32  doctorQualificationId = 1;
   optional int32  qualificationId       = 2;
-  optional int32  specializationId      = 3;
-  optional string institutionName       = 4;
-  optional string universityName        = 5;
-  optional int32  yearOfCompletion      = 6;
+  optional string qualificationName     = 3;
+  optional int32  specializationId      = 4;
+  optional string specializationName    = 5;
+  optional string institutionName       = 6;
+  optional string universityName        = 7;
+  optional int32  yearOfCompletion      = 8;
 }
 
 message GetDoctorDetailsRes {

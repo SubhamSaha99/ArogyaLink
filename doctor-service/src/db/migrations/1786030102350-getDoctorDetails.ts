@@ -45,47 +45,64 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
                             'email', dp.email,
                             'mobile', dp.mobile,
                             'firstName', dp.first_name,
-                            'middleName', dp.middle_name,
+                            'middleName', COALESCE(dp.middle_name, null),
                             'lastName', dp.last_name,
-                            'gender', dp.gender,
-                            'profileImage', dp.profile_image
+                            'gender', COALESCE(dp.gender, null),
+                            'profileImage', COALESCE(dp.profile_image, null)
                         ) AS profile_details,
 
                         jsonb_build_object(
-                            'doctorProfessionalDetailsId', pd.id,
-                            'medicalRegistration', pd.medical_registration,
-                            'registrationCouncilId', pd.registration_council_id,
-                            'registrationStateId', pd.registration_state_id,
-                            'registrationYear', pd.registration_year,
-                            'licenseStatus', pd.license_status
+                            'doctorProfessionalDetailsId', COALESCE(pd.id, null),
+                            'medicalRegistration', COALESCE(pd.medical_registration, null),
+                            'registrationCouncilId', COALESCE(pd.registration_council_id, null),
+                            'registrationCouncilName', COALESCE(rcm.council_name, null),
+                            'registrationStateId', COALESCE(pd.registration_state_id, null),
+                            'registrationStateName', COALESCE(sm.state_name, null),
+                            'registrationYear', COALESCE(pd.registration_year, null),
+                            'licenseStatus', COALESCE(pd.license_status, null)
                         ) AS professional_details,
 
                         COALESCE(
                             (
                                 SELECT jsonb_agg(
                                     jsonb_build_object(
-                                        'doctorQualificationId', dq.id,
-                                        'qualificationId', dq.qualification_id,
-                                        'specializationId', dq.specialization_id,
-                                        'institutionName', dq.institution_name,
-                                        'universityName', dq.university_name,
-                                        'yearOfCompletion', dq.year_of_completion
+                                        'doctorQualificationId', COALESCE(dq.id, null),
+                                        'qualificationId', COALESCE(dq.qualification_id, null),
+                                        'qualificationName', COALESCE(qm.qualification_name, null),
+                                        'specializationId', COALESCE(dq.specialization_id, null),
+                                        'specializationName', COALESCE(spm.specialization_name, null),
+                                        'institutionName', COALESCE(dq.institution_name, null),
+                                        'universityName', COALESCE(dq.university_name, null),
+                                        'yearOfCompletion', COALESCE(dq.year_of_completion, null)
                                     )
-                                    ORDER BY dq.year_of_completion
+                                    ORDER BY dq.year_of_completion DESC
                                 )
                                 FROM doctor_qualifications dq
+                                LEFT JOIN qualification_master qm
+                                    ON qm.id = dq.qualification_id
+                                LEFT JOIN specialization_master spm
+                                    ON spm.id = dq.specialization_id
                                 WHERE dq.doctor_id = dp.doctor_id
                             ),
                             '[]'::jsonb
                         ) AS qualification_details
 
                     FROM doctor_profile dp
+
                     LEFT JOIN doctor_professional_details pd
                         ON dp.doctor_id = pd.doctor_id
+
+                    LEFT JOIN registration_council_master rcm
+                        ON rcm.id = pd.registration_council_id
+
+                    LEFT JOIN state_master sm
+                        ON sm.id = pd.registration_state_id
+
                     WHERE dp.doctor_id = p_doctorId;
 
                 EXCEPTION
                     WHEN OTHERS THEN
+
                         GET STACKED DIAGNOSTICS
                             v_sqlstate = RETURNED_SQLSTATE,
                             v_message = MESSAGE_TEXT,

@@ -13,6 +13,14 @@ async function bootstrap() {
         package: DOCTOR_PACKAGE_NAME,
         protoPath: join(__dirname, 'proto/doctor.proto'),
         url: process.env.AUTH_SERVICE_GRPC_URL ?? '0.0.0.0:50052',
+        loader: {
+          keepCase: false,
+          longs: String,
+          enums: String,
+          defaults: true,
+          oneofs: false,
+          arrays: true,
+        },
       },
     },
   );

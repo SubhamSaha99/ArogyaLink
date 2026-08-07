@@ -21,6 +21,14 @@ import { RolesGuard } from '../common/guards/roles.guard';
             url:
               configService.get<string>('DOCTOR_SERVICE_GRPC_URL') ??
               '0.0.0.0:50052',
+            loader: {
+              keepCase: false,
+              longs: String,
+              enums: String,
+              defaults: true,
+              oneofs: false,
+              arrays: true,
+            },
           },
         }),
       },

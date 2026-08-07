@@ -15,10 +15,14 @@ import {
 import { throwRpcException } from '../util/rpcException';
 import { status } from '@grpc/grpc-js';
 import { Errors } from '../util/constants';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class DoctorService {
-  constructor(private readonly dataSource: DataSource) {}
+  constructor(
+    private readonly dataSource: DataSource,
+    private readonly configService: ConfigService,
+  ) {}
 
   /**
    * * Create Doctor Profile
@@ -174,7 +178,7 @@ export class DoctorService {
 
   /**
    * * Get Doctor Details
-   * @param user 
+   * @param user
    * @returns GetDoctorDetailsRes
    */
   async getDoctorDetails(
@@ -215,41 +219,17 @@ export class DoctorService {
         qualification_details = [],
       } = procedureResult;
 
+      const profileImage = profile_details.profileImage
+        ? `${this.configService.get('API_BASE_URL')}/uploads/${profile_details.profileImage}`
+        : null;
       return {
         doctorId: doctor_id,
-
         profileDetails: {
-          doctorProfileId: profile_details.doctorProfileId,
-          email: profile_details.email,
-          mobile: profile_details.mobile,
-          firstName: profile_details.firstName,
-          middleName: profile_details.middleName ?? '',
-          lastName: profile_details.lastName,
-          gender: profile_details.gender ?? 0,
-          profileImage: profile_details.profileImage ?? '',
+          ...profile_details,
+          profileImage,
         },
-
-        professionalDetails: {
-          doctorProfessionalDetailsId:
-            professional_details?.doctorProfessionalDetailsId ?? 0,
-          medicalRegistration: professional_details?.medicalRegistration ?? '',
-          registrationCouncilId:
-            professional_details?.registrationCouncilId ?? 0,
-          registrationStateId: professional_details?.registrationStateId ?? 0,
-          registrationYear: professional_details?.registrationYear ?? 0,
-          licenseStatus: professional_details?.licenseStatus ?? 0,
-        },
-
-        qualificationDetails: qualification_details.map(
-          (qualification: any) => ({
-            doctorQualificationId: qualification.doctorQualificationId,
-            qualificationId: qualification.qualificationId,
-            specializationId: qualification.specializationId ?? 0,
-            institutionName: qualification.institutionName ?? '',
-            universityName: qualification.universityName ?? '',
-            yearOfCompletion: qualification.yearOfCompletion ?? 0,
-          }),
-        ),
+        professionalDetails: professional_details,
+        qualificationDetails: qualification_details,
       };
     } catch (error) {
       if (queryRunner.isTransactionActive) {

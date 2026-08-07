@@ -85,7 +85,9 @@ export interface GetDoctorProfessionalDetails {
   doctorProfessionalDetailsId?: number | undefined;
   medicalRegistration?: string | undefined;
   registrationCouncilId?: number | undefined;
+  registrationCouncilName?: string | undefined;
   registrationStateId?: number | undefined;
+  registrationStateName?: string | undefined;
   registrationYear?: number | undefined;
   licenseStatus?: number | undefined;
 }
@@ -93,7 +95,9 @@ export interface GetDoctorProfessionalDetails {
 export interface GetDoctorQualificationDetails {
   doctorQualificationId?: number | undefined;
   qualificationId?: number | undefined;
+  qualificationName?: string | undefined;
   specializationId?: number | undefined;
+  specializationName?: string | undefined;
   institutionName?: string | undefined;
   universityName?: string | undefined;
   yearOfCompletion?: number | undefined;

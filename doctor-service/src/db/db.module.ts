@@ -2,10 +2,14 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseService } from './db.service';
-import { DoctorProfile } from './entities/doctorProfile.entity';
-import { DbExceptionLog } from './entities/dbExceptionLog.entity';
-import { DoctorProfessionalDetails } from './entities/doctorProfessionalDetails.entity';
-import { DoctorQualification } from './entities/doctorQualifications.entity';
+import { DoctorProfile } from './entities/doctor-profile.entity';
+import { DbExceptionLog } from './entities/db-exception-log.entity';
+import { DoctorProfessionalDetails } from './entities/doctor-professional-details.entity';
+import { DoctorQualification } from './entities/doctor-qualifications.entity';
+import { RegistrationCouncil } from './entities/registration-council.entity';
+import { State } from './entities/state.entity';
+import { Qualification } from './entities/qualification.entity';
+import { Specialization } from './entities/specialization.entity';
 
 @Module({
   imports: [
@@ -23,7 +27,16 @@ import { DoctorQualification } from './entities/doctorQualifications.entity';
         synchronize: true,
         migrationsRun: false,
         migrations: ['dist/db/migrations/*.js'],
-        entities:[DoctorProfile, DoctorProfessionalDetails, DoctorQualification, DbExceptionLog],
+        entities: [
+          DoctorProfile,
+          DoctorProfessionalDetails,
+          DoctorQualification,
+          RegistrationCouncil,
+          State,
+          Qualification,
+          Specialization,
+          DbExceptionLog,
+        ],
         logging: true,
       }),
     }),
