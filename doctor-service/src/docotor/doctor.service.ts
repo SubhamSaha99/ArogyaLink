@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {
   DoctorProfileReq,
@@ -16,12 +16,15 @@ import { throwRpcException } from '../util/rpcException';
 import { status } from '@grpc/grpc-js';
 import { Errors } from '../util/constants';
 import { ConfigService } from '@nestjs/config';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class DoctorService {
+  private readonly logger = new Logger(DoctorService.name);
   constructor(
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
 
   /**
@@ -90,6 +93,8 @@ export class DoctorService {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
+    await this.redisService.delete(`doctor:profile:${request.doctorId}`);
+
     return {
       doctorId: procedureResult,
     };
@@ -126,6 +131,8 @@ export class DoctorService {
     if (!/^DOC\d{6}$/.test(procedureResult)) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
+
+    await this.redisService.delete(`doctor:profile:${request.doctorId}`);
 
     return {
       doctorId: procedureResult,
@@ -168,6 +175,8 @@ export class DoctorService {
         throwRpcException(status.INTERNAL, 'Invalid response from procedure');
       }
 
+      await this.redisService.delete(`doctor:profile:${request.doctorId}`);
+
       return {
         doctorId: procedureResult,
       };
@@ -184,10 +193,27 @@ export class DoctorService {
   async getDoctorDetails(
     request: GetDoctorDetailsReq,
   ): Promise<GetDoctorDetailsRes> {
+    // TODO: Checking Cache
+    const cacheKey = `doctor:profile:${request.doctorId}`;
+
+    try {
+      const cachedDoctor = await this.redisService.get(cacheKey);
+
+      if (cachedDoctor) {
+        return JSON.parse(cachedDoctor) as GetDoctorDetailsRes;
+      }
+    } catch (error) {
+      this.logger.warn(
+        `Redis cache read failed for doctor ${request.doctorId}`,
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+
     const queryRunner = this.dataSource.createQueryRunner();
 
     await queryRunner.connect();
     await queryRunner.startTransaction();
+
     try {
       await queryRunner.query(`CALL get_doctor_details($1, 'doctor_cursor')`, [
         request.doctorId,
@@ -198,7 +224,6 @@ export class DoctorService {
       );
 
       await queryRunner.query(`CLOSE doctor_cursor`);
-      await queryRunner.commitTransaction();
 
       if (!procedureResult) {
         throwRpcException(status.INTERNAL, 'Invalid response from procedure');
@@ -220,17 +245,36 @@ export class DoctorService {
       } = procedureResult;
 
       const profileImage = profile_details.profileImage
-        ? `${this.configService.get('API_BASE_URL')}/uploads/${profile_details.profileImage}`
-        : null;
-      return {
+        ? `${this.configService.get<string>(
+            'API_BASE_URL',
+          )}/uploads/${profile_details.profileImage}`
+        : undefined;
+
+      const response: GetDoctorDetailsRes = {
         doctorId: doctor_id,
+
         profileDetails: {
           ...profile_details,
           profileImage,
         },
+
         professionalDetails: professional_details,
+
         qualificationDetails: qualification_details,
       };
+
+      await queryRunner.commitTransaction();
+
+      try {
+        await this.redisService.set(cacheKey, JSON.stringify(response), 300);
+      } catch (error) {
+        this.logger.warn(
+          `Redis cache write failed for doctor ${request.doctorId}`,
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+
+      return response;
     } catch (error) {
       if (queryRunner.isTransactionActive) {
         await queryRunner.rollbackTransaction();

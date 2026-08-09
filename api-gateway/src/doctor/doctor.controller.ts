@@ -43,10 +43,12 @@ export class DoctorController {
   )
   async updateDoctorBasicDetails(
     @Body() request: DoctorBasicDetailsDto,
+    @CurrentUser() user: JwtPayload,
     @UploadedFile() profileImage?: Express.Multer.File,
   ) {
     const result = await this.doctorService.updateDoctorBasicDetails(
       request,
+      user.userBusinessId,
       profileImage,
     );
 
@@ -66,9 +68,12 @@ export class DoctorController {
   @Auth(UserRole.DOCTOR)
   async updateDoctorProfessinalDetails(
     @Body() request: DoctorProfessionalDetailsDto,
+    @CurrentUser() user: JwtPayload,
   ) {
-    const result =
-      await this.doctorService.updateDoctorProfessinalDetails(request);
+    const result = await this.doctorService.updateDoctorProfessinalDetails(
+      request,
+      user.userBusinessId,
+    );
 
     return {
       success: true,
@@ -90,7 +95,7 @@ export class DoctorController {
   ) {
     const result = await this.doctorService.updateDoctorQualifications(
       request,
-      user,
+      user.userBusinessId,
     );
 
     return {

@@ -42,6 +42,7 @@ export class DoctorService implements OnModuleInit {
    */
   async updateDoctorBasicDetails(
     request: DoctorBasicDetailsDto,
+    doctorId: string,
     profileImage?: Express.Multer.File,
   ): Promise<UpdateDoctorBasicDeatilsRes> {
     let uploadedImagePath: string | undefined;
@@ -49,6 +50,7 @@ export class DoctorService implements OnModuleInit {
     try {
       const doctorBasicDetails: UpdateDoctorBasicDeatilsReq = {
         ...request,
+        doctorId,
       };
 
       if (profileImage) {
@@ -75,9 +77,11 @@ export class DoctorService implements OnModuleInit {
    */
   async updateDoctorProfessinalDetails(
     request: DoctorProfessionalDetailsDto,
+    doctorId: string,
   ): Promise<UpdateDoctorProfessionalDetailsRes> {
     const doctorProfesionalDetails: UpdateDoctorProfessionalDetailsReq = {
       ...request,
+      doctorId,
     };
     return await firstValueFrom(
       this.doctorGrpcService.updateDoctorProfessionalDetails(
@@ -93,10 +97,11 @@ export class DoctorService implements OnModuleInit {
    */
   async updateDoctorQualifications(
     request: DoctorQualificationsDto,
-    user: JwtPayload,
+    doctorId: string,
   ): Promise<UpdateDoctorQualificationsRes> {
     const doctorQualifications: UpdateDoctorQualificationsReq = {
       ...request,
+      doctorId,
       qualifications:
         request.qualifications?.map((qualification) => ({
           ...qualification,
@@ -114,7 +119,7 @@ export class DoctorService implements OnModuleInit {
 
   /**
    * * Get Doctor Details
-   * @param user 
+   * @param user
    * @returns GetDoctorDetailsRes
    */
   async getDoctorDetails(doctorId: string): Promise<GetDoctorDetailsRes> {
