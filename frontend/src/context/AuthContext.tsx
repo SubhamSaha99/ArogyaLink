@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { setInMemoryToken, callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 import { setCookie, getCookie, deleteCookie } from "@/utils/cookies";
@@ -34,6 +34,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
   const [user, setUser] = useState<DoctorUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const hasInitAuthRef = useRef(false);
+  const refreshPromiseRef = useRef<Promise<string | null> | null>(null);
 
   // Keep React state and Axios in-memory token synchronized
   const updateAccessToken = (token: string | null) => {
@@ -71,51 +74,65 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const refreshAccessToken = async (): Promise<string | null> => {
-    try {
-      const storedRefreshToken = getCookie("refreshToken");
-      if (!storedRefreshToken) {
+    // Deduplicate concurrent refresh calls by returning existing in-flight promise
+    if (refreshPromiseRef.current) {
+      return refreshPromiseRef.current;
+    }
+
+    refreshPromiseRef.current = (async () => {
+      try {
+        const storedRefreshToken = getCookie("refreshToken");
+        if (!storedRefreshToken) {
+          updateAccessToken(null);
+          setUser(null);
+          return null;
+        }
+
+        // Send POST request to /api/auth/refreshToken with body { refreshToken }
+        const res = await callApi(
+          API_ROUTES.refreshToken,
+          { refreshToken: storedRefreshToken },
+          "POST"
+        );
+
+        const data = res?.data || res;
+        if (data?.accessToken) {
+          // Update in-memory Access Token
+          updateAccessToken(data.accessToken);
+
+          // Update Refresh Token cookie if a new rotated refresh token is returned
+          if (data?.refreshToken) {
+            setCookie("refreshToken", data.refreshToken, 7);
+          }
+
+          if (data?.doctorId || data?.email || data?.mobile) {
+            setUser((prev) => ({
+              doctorId: data.doctorId || prev?.doctorId || "",
+              email: data.email || prev?.email || "",
+              mobile: data.mobile || prev?.mobile || "",
+            }));
+          }
+
+          return data.accessToken;
+        }
+      } catch (e) {
+        deleteCookie("refreshToken");
         updateAccessToken(null);
         setUser(null);
-        return null;
+      } finally {
+        refreshPromiseRef.current = null;
       }
+      return null;
+    })();
 
-      // Send POST request to /api/auth/refreshToken with body { refreshToken }
-      const res = await callApi(
-        API_ROUTES.refreshToken,
-        { refreshToken: storedRefreshToken },
-        "POST"
-      );
-
-      const data = res?.data || res;
-      if (data?.accessToken) {
-        // Update in-memory Access Token
-        updateAccessToken(data.accessToken);
-
-        // Update Refresh Token cookie if a new rotated refresh token is returned
-        if (data?.refreshToken) {
-          setCookie("refreshToken", data.refreshToken, 7);
-        }
-
-        if (data?.doctorId || data?.email || data?.mobile) {
-          setUser((prev) => ({
-            doctorId: data.doctorId || prev?.doctorId || "",
-            email: data.email || prev?.email || "",
-            mobile: data.mobile || prev?.mobile || "",
-          }));
-        }
-
-        return data.accessToken;
-      }
-    } catch (e) {
-      deleteCookie("refreshToken");
-      updateAccessToken(null);
-      setUser(null);
-    }
-    return null;
+    return refreshPromiseRef.current;
   };
 
   // 1. Initial auth check on app load / page reload
   useEffect(() => {
+    if (hasInitAuthRef.current) return;
+    hasInitAuthRef.current = true;
+
     const initAuth = async () => {
       await refreshAccessToken();
       setIsLoading(false);

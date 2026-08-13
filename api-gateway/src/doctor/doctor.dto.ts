@@ -14,12 +14,6 @@ import {
 } from 'class-validator';
 
 export class DoctorBasicDetailsDto {
-  @IsString()
-  @Matches(/^DOC\d{6}$/, {
-    message: 'Invalid Doctor ID',
-  })
-  doctorId!: string;
-
   @IsOptional()
   @IsString()
   @Length(2, 100)
