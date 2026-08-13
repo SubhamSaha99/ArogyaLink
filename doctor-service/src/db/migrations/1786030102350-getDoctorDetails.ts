@@ -1,9 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class GetDoctorDetails1786030102350 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
                 CREATE OR REPLACE PROCEDURE get_doctor_details(
                     IN p_doctorId VARCHAR(20),
                     INOUT p_result REFCURSOR
@@ -135,11 +134,12 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
 
                 END;
                 $$;
-            `)
-    }
+            `);
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-         await queryRunner.query(`DROP PROCEDURE IF EXISTS get_doctor_details(VARCHAR, REFCURSOR);`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `DROP PROCEDURE IF EXISTS get_doctor_details(VARCHAR, REFCURSOR);`,
+    );
+  }
 }

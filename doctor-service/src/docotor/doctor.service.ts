@@ -5,6 +5,7 @@ import {
   DoctorProfileRes,
   GetDoctorDetailsReq,
   GetDoctorDetailsRes,
+  GetDoctorMasterDataRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
@@ -270,6 +271,96 @@ export class DoctorService {
       } catch (error) {
         this.logger.warn(
           `Redis cache write failed for doctor ${request.doctorId}`,
+          error instanceof Error ? error.message : String(error),
+        );
+      }
+
+      return response;
+    } catch (error) {
+      if (queryRunner.isTransactionActive) {
+        await queryRunner.rollbackTransaction();
+      }
+
+      throw error;
+    } finally {
+      await queryRunner.release();
+    }
+  }
+
+  /**
+   * * Get Doctor Master Data
+   * @returns GetDoctorMasterDataRes
+   */
+  async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
+    const cacheKey = 'doctor:master-data';
+
+    // 1. Check Redis
+    try {
+      const cachedData = await this.redisService.get(cacheKey);
+
+      if (cachedData) {
+        return JSON.parse(cachedData) as GetDoctorMasterDataRes;
+      }
+    } catch (error) {
+      this.logger.warn(
+        'Redis cache read failed for doctor master data',
+        error instanceof Error ? error.message : String(error),
+      );
+    }
+
+    // 2. Cache miss -> Fetch from database
+    const queryRunner = this.dataSource.createQueryRunner();
+
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+      // 3. Execute procedure
+      await queryRunner.query(
+        `CALL get_doctor_master_data('master_data_cursor')`,
+      );
+
+      // 4. Fetch cursor
+      const [procedureResult] = await queryRunner.query(
+        `FETCH ALL FROM master_data_cursor`,
+      );
+
+      // 5. Close cursor
+      await queryRunner.query(`CLOSE master_data_cursor`);
+
+      if (!procedureResult) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+
+      // 6. Handle procedure status
+      switch (procedureResult.status) {
+        case Errors.dbError:
+          throwRpcException(status.INTERNAL, 'Database error');
+      }
+
+      const response: GetDoctorMasterDataRes = {
+        registrationCouncils: procedureResult.registration_councils ?? [],
+
+        states: procedureResult.states ?? [],
+
+        qualifications: procedureResult.qualifications ?? [],
+
+        specializations: procedureResult.specializations ?? [],
+      };
+
+      // 7. Commit transaction
+      await queryRunner.commitTransaction();
+
+      // 8. Cache the result
+      try {
+        await this.redisService.set(
+          cacheKey,
+          JSON.stringify(response),
+          3600, // 1 hour
+        );
+      } catch (error) {
+        this.logger.warn(
+          'Redis cache write failed for doctor master data',
           error instanceof Error ? error.message : String(error),
         );
       }

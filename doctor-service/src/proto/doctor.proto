@@ -3,20 +3,17 @@ syntax = "proto3";
 package doctor;
 
 service DoctorService {
-  rpc CreateDoctorProfile(DoctorProfileReq)
-  returns (DoctorProfileRes);
+  rpc CreateDoctorProfile(DoctorProfileReq) returns (DoctorProfileRes);
 
-  rpc UpdateDoctorBasicDetails(UpdateDoctorBasicDeatilsReq)
-  returns (UpdateDoctorBasicDeatilsRes);
+  rpc UpdateDoctorBasicDetails(UpdateDoctorBasicDeatilsReq) returns (UpdateDoctorBasicDeatilsRes);
 
-  rpc UpdateDoctorProfessionalDetails(UpdateDoctorProfessionalDetailsReq)
-  returns (UpdateDoctorProfessionalDetailsRes);
+  rpc UpdateDoctorProfessionalDetails(UpdateDoctorProfessionalDetailsReq) returns (UpdateDoctorProfessionalDetailsRes);
 
-  rpc UpdateDoctorQualifications(UpdateDoctorQualificationsReq)
-  returns(UpdateDoctorQualificationsRes);
+  rpc UpdateDoctorQualifications(UpdateDoctorQualificationsReq) returns (UpdateDoctorQualificationsRes);
 
-  rpc GetDoctorDetails(GetDoctorDetailsReq)
-  returns (GetDoctorDetailsRes);
+  rpc GetDoctorDetails(GetDoctorDetailsReq) returns (GetDoctorDetailsRes);
+
+  rpc GetDoctorMasterData(GetDoctorMasterDataReq) returns (GetDoctorMasterDataRes);
 }
 
 message DoctorProfileReq {
@@ -118,4 +115,19 @@ message GetDoctorDetailsRes {
   GetDoctorProfileDetails                profileDetails       = 2;
   GetDoctorProfessionalDetails           professionalDetails  = 3;
   repeated GetDoctorQualificationDetails qualificationDetails = 4;
+}
+
+message GetDoctorMasterDataReq {}
+
+message MasterDataItem {
+  int32  id   = 1;
+  string name = 2;
+  string code = 3;
+}
+
+message GetDoctorMasterDataRes {
+  repeated MasterDataItem registrationCouncils = 1;
+  repeated MasterDataItem states               = 2;
+  repeated MasterDataItem qualifications       = 3;
+  repeated MasterDataItem specializations      = 4;
 }

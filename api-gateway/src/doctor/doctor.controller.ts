@@ -129,4 +129,20 @@ export class DoctorController {
       },
     };
   }
+
+  /**
+   * Get Doctor Master Data
+   * @returns json
+   */
+  @Get('getDoctorMasterData')
+  @Auth(UserRole.DOCTOR)
+  async getDoctorMasterData() {
+    const result = await this.doctorService.getDoctorMasterData();
+
+    return {
+      success: true,
+      message: 'Doctor Master Data Fetched Successfully.',
+      data: result,
+    };
+  }
 }

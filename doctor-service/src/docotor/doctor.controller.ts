@@ -6,6 +6,7 @@ import {
   DoctorServiceControllerMethods,
   GetDoctorDetailsReq,
   GetDoctorDetailsRes,
+  GetDoctorMasterDataRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
@@ -43,7 +44,13 @@ export class DoctorController implements DoctorServiceController {
     return this.doctorService.updateDoctorQualifications(request);
   }
 
-  async getDoctorDetails(request: GetDoctorDetailsReq): Promise<GetDoctorDetailsRes> {
-      return this.doctorService.getDoctorDetails(request)
+  async getDoctorDetails(
+    request: GetDoctorDetailsReq,
+  ): Promise<GetDoctorDetailsRes> {
+    return this.doctorService.getDoctorDetails(request);
+  }
+
+  async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
+    return this.doctorService.getDoctorMasterData();
   }
 }

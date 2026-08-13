@@ -1,9 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class CreateDoctorProfile1784178631611 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
                 CREATE OR REPLACE PROCEDURE create_doctor_profile(
 					IN p_doctorId VARCHAR(20),
                     IN p_email VARCHAR(255),
@@ -23,7 +22,7 @@ export class CreateDoctorProfile1784178631611 implements MigrationInterface {
                 BEGIN
                     -- Default value
                     p_result := NULL;
-                
+
                     -- Insert record
                     INSERT INTO doctor_profile (
                         doctor_id,
@@ -43,7 +42,7 @@ export class CreateDoctorProfile1784178631611 implements MigrationInterface {
 						p_lastName,
                         NOW()
                     );
-                    
+
                     p_result := p_doctorId;
                 EXCEPTION
                     WHEN OTHERS THEN
@@ -69,11 +68,12 @@ export class CreateDoctorProfile1784178631611 implements MigrationInterface {
                         p_result := 'dbError';
                 END;
                 $$;
-            `)
-    }
+            `);
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query( `DROP PROCEDURE IF EXISTS create_doctor_profile(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR);`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `DROP PROCEDURE IF EXISTS create_doctor_profile(VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR, VARCHAR);`,
+    );
+  }
 }

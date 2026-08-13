@@ -5,6 +5,7 @@ import {
   DoctorServiceClient,
   GetDoctorDetailsReq,
   GetDoctorDetailsRes,
+  GetDoctorMasterDataRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
@@ -20,7 +21,6 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/util/file.util';
 import { moveFile } from '../common/util/uploadFile';
-import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {
@@ -127,5 +127,13 @@ export class DoctorService implements OnModuleInit {
       doctorId,
     };
     return await firstValueFrom(this.doctorGrpcService.getDoctorDetails(id));
+  }
+
+  /**
+   * * Get Doctor Master Data
+   * @returns GetDoctorMasterDataRes
+   */
+  async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
+    return await firstValueFrom(this.doctorGrpcService.getDoctorMasterData({}));
   }
 }

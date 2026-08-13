@@ -110,6 +110,22 @@ export interface GetDoctorDetailsRes {
   qualificationDetails: GetDoctorQualificationDetails[];
 }
 
+export interface GetDoctorMasterDataReq {
+}
+
+export interface MasterDataItem {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface GetDoctorMasterDataRes {
+  registrationCouncils: MasterDataItem[];
+  states: MasterDataItem[];
+  qualifications: MasterDataItem[];
+  specializations: MasterDataItem[];
+}
+
 export const DOCTOR_PACKAGE_NAME = "doctor";
 
 export interface DoctorServiceClient {
@@ -124,6 +140,8 @@ export interface DoctorServiceClient {
   updateDoctorQualifications(request: UpdateDoctorQualificationsReq): Observable<UpdateDoctorQualificationsRes>;
 
   getDoctorDetails(request: GetDoctorDetailsReq): Observable<GetDoctorDetailsRes>;
+
+  getDoctorMasterData(request: GetDoctorMasterDataReq): Observable<GetDoctorMasterDataRes>;
 }
 
 export interface DoctorServiceController {
@@ -149,6 +167,10 @@ export interface DoctorServiceController {
   getDoctorDetails(
     request: GetDoctorDetailsReq,
   ): Promise<GetDoctorDetailsRes> | Observable<GetDoctorDetailsRes> | GetDoctorDetailsRes;
+
+  getDoctorMasterData(
+    request: GetDoctorMasterDataReq,
+  ): Promise<GetDoctorMasterDataRes> | Observable<GetDoctorMasterDataRes> | GetDoctorMasterDataRes;
 }
 
 export function DoctorServiceControllerMethods() {
@@ -159,6 +181,7 @@ export function DoctorServiceControllerMethods() {
       "updateDoctorProfessionalDetails",
       "updateDoctorQualifications",
       "getDoctorDetails",
+      "getDoctorMasterData",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

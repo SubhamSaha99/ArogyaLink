@@ -1,10 +1,8 @@
-import { MigrationInterface, QueryRunner } from "typeorm";
+import { MigrationInterface, QueryRunner } from 'typeorm';
 
 export class UpdateDoctorQualifications1785999210982 implements MigrationInterface {
-
-    public async up(queryRunner: QueryRunner): Promise<void> {
-
-        await queryRunner.query(`
+  public async up(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(`
                 CREATE OR REPLACE PROCEDURE update_doctor_qualifications(
                     IN p_doctorId VARCHAR(20),
                     IN p_qualifications JSONB,
@@ -92,11 +90,12 @@ export class UpdateDoctorQualifications1785999210982 implements MigrationInterfa
                         p_result := 'dbError';
                 END;
                 $$;
-            `)
-    }
+            `);
+  }
 
-    public async down(queryRunner: QueryRunner): Promise<void> {
-        await queryRunner.query( `DROP PROCEDURE IF EXISTS update_doctor_qualifications(VARCHAR, JSONB, VARCHAR);`);
-    }
-
+  public async down(queryRunner: QueryRunner): Promise<void> {
+    await queryRunner.query(
+      `DROP PROCEDURE IF EXISTS update_doctor_qualifications(VARCHAR, JSONB, VARCHAR);`,
+    );
+  }
 }
