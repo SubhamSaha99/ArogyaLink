@@ -46,12 +46,6 @@ export class DoctorBasicDetailsDto {
 
 export class DoctorProfessionalDetailsDto {
   @IsString()
-  @Matches(/^DOC\d{6}$/, {
-    message: 'Invalid Doctor ID',
-  })
-  doctorId!: string;
-
-  @IsString()
   @IsNotEmpty()
   medicalRegistration!: string;
 
@@ -74,7 +68,6 @@ export class DoctorProfessionalDetailsDto {
   @IsInt()
   licenseStatus!: number;
 }
-
 
 export class DoctorQualification {
   @IsInt()
@@ -102,10 +95,6 @@ export class DoctorQualification {
 }
 
 export class DoctorQualificationsDto {
-  @IsString()
-  @IsNotEmpty()
-  doctorId!: string;
-
   @ValidateNested({ each: true })
   @Type(() => DoctorQualification)
   qualifications!: DoctorQualification[];
