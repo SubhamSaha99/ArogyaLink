@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import Redis from 'ioredis';
 
-import { REDIS_CLIENT } from '../util/constants';
+import { REDIS_CLIENT } from '../common/utils/constants';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {

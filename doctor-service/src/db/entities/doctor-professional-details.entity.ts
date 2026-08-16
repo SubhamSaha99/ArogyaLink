@@ -8,7 +8,9 @@ import {
 } from 'typeorm';
 
 @Entity({ name: 'doctor_professional_details' })
-@Index('idx_doctor_professional_details_doctor_id', ['doctorId'], { unique: true })
+@Index('idx_doctor_professional_details_doctor_id', ['doctorId'], {
+  unique: true,
+})
 export class DoctorProfessionalDetails {
   @PrimaryGeneratedColumn('increment')
   id!: number;

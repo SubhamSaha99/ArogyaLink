@@ -3,44 +3,46 @@ import { MigrationInterface, QueryRunner } from 'typeorm';
 export class UpdateDoctorBasicDetails1784717769032 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-                CREATE OR REPLACE PROCEDURE update_doctor_basic_details(
-                    IN p_doctorId VARCHAR(20),
-                    IN p_firstName VARCHAR(255),
-                    IN p_middleName VARCHAR(255),
-                    IN p_lastName VARCHAR(255),
-                    IN p_gender INT,
-                    IN p_profileImage VARCHAR(255),
-                    OUT p_result VARCHAR(50)
+                CREATE OR REPLACE FUNCTION update_doctor_basic_details(
+                    p_doctor_id VARCHAR(20),
+                    p_first_name VARCHAR(255),
+                    p_middle_name VARCHAR(255),
+                    p_last_name VARCHAR(255),
+                    p_gender INT,
+                    p_profile_image VARCHAR(255)
                 )
+                RETURNS VARCHAR(50)
                 LANGUAGE plpgsql
                 AS $$
                 DECLARE
                     v_sqlstate TEXT;
                     v_message TEXT;
                     v_detail TEXT;
+                    v_doctor_id VARCHAR(20);
                 BEGIN
-                    p_result := NULL;
 
-                    -- Update doctor profile
                     UPDATE doctor_profile
                     SET
-                        first_name = COALESCE(p_firstName, first_name),
-                        middle_name = COALESCE(p_middleName, middle_name),
-                        last_name = COALESCE(p_lastName, last_name),
+                        first_name = COALESCE(p_first_name, first_name),
+                        middle_name = COALESCE(p_middle_name, middle_name),
+                        last_name = COALESCE(p_last_name, last_name),
                         gender = COALESCE(p_gender, gender),
-                        profile_image = COALESCE(p_profileImage, profile_image),
+                        profile_image = COALESCE(p_profile_image, profile_image),
                         updated_at = NOW()
-                    WHERE doctor_id = p_doctorId;
+                    WHERE doctor_id = p_doctor_id
 
-                    IF NOT FOUND THEN
-                        p_result := 'invalidIdError';
-                        RETURN;
+                    RETURNING doctor_id INTO v_doctor_id;
+
+                    -- Doctor not found
+                    IF v_doctor_id IS NULL THEN
+                        RETURN 'invalidIdError';
                     END IF;
 
-                    p_result := p_doctorId;
+                    RETURN v_doctor_id;
 
                 EXCEPTION
                     WHEN OTHERS THEN
+
                         GET STACKED DIAGNOSTICS
                             v_sqlstate = RETURNED_SQLSTATE,
                             v_message = MESSAGE_TEXT,
@@ -57,11 +59,12 @@ export class UpdateDoctorBasicDetails1784717769032 implements MigrationInterface
                             'update_doctor_basic_details',
                             v_sqlstate,
                             v_message,
-                            COALESCE(v_detail, ''),
+                            v_detail,
                             NOW()
                         );
 
-                        p_result := 'dbError';
+                        RETURN 'dbError';
+
                 END;
                 $$;
             `);
@@ -69,7 +72,7 @@ export class UpdateDoctorBasicDetails1784717769032 implements MigrationInterface
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DROP PROCEDURE IF EXISTS update_doctor_basic_details(VARCHAR, VARCHAR, VARCHAR, VARCHAR, INT, VARCHAR, VARCHAR);`,
+      `DROP FUNCTION IF EXISTS update_doctor_basic_details(VARCHAR, VARCHAR, VARCHAR, VARCHAR, INT, VARCHAR);`,
     );
   }
 }

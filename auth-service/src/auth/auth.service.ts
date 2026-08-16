@@ -35,6 +35,14 @@ import { HashUtil } from '../common/util/hash.util';
 import { randomUUID } from 'node:crypto';
 import { RateLimiterService } from '../common/rate-limiter/rate-limiter.service';
 import { buildRateLimitKey } from '../common/util/rate-limiter.util';
+import {
+  healthInstituteLoginQueryInterface,
+  authQueryInterface,
+  rateLimitOptionsInterface,
+  doctorLoginQueryInterface,
+} from '../common/interfaces/auth.interface';
+import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { UserSession } from '../db/entities/user-session.entity';
 
 @Injectable()
 export class AuthService {
@@ -57,19 +65,21 @@ export class AuthService {
   ): Promise<HealthInstituteRegRes> {
     const hashedPassword = await bcrypt.hash(request.password, 10);
 
-    const result = await this.dataSource.query(
-      `CALL register_health_institute($1, $2, $3, $4, $5)`,
+    const result = await this.dataSource.query<authQueryInterface[]>(
+      `SELECT register_health_institute($1, $2, $3, $4) AS f_result`,
       [
         request.healthInstituteType,
         request.email,
         request.healthInstituteName,
         hashedPassword,
-        null,
       ],
     );
 
-    const procedureResult = result?.[0]?.p_result;
+    const procedureResult: string = result[0]?.f_result;
 
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
     if (procedureResult === Errors.emailExistError) {
       throwRpcException(status.ALREADY_EXISTS, 'Email already exists');
     }
@@ -92,128 +102,111 @@ export class AuthService {
   async healthInstituteLogin(
     request: HealthInstituteLoginReq,
   ): Promise<HealthInstituteLoginRes> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    const identifier = request.healthInstituteId ?? request.email ?? '';
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+    const rateLimitOptions = {
+      key: buildRateLimitKey(
+        'login',
+        UserRole.HEALTH_INSTITUTE,
+        identifier,
+        request.requestIp,
+      ),
+      maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
+      blockDuration: LOGIN_RATE_LIMIT.BLOCK_TIME_SECONDS,
+      message:
+        'Too many failed login attempts. Please try again after 15 minutes.',
+    };
 
-    try {
-      const identifier = request.healthInstituteId ?? request.email ?? '';
+    await this.rateLimiterService.throwIfBlocked(rateLimitOptions);
 
-      const rateLimitOptions = {
-        key: buildRateLimitKey(
-          'login',
-          UserRole.HEALTH_INSTITUTE,
-          identifier,
-          request.requestIp,
-        ),
-        maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
-        blockDuration: LOGIN_RATE_LIMIT.BLOCK_TIME_SECONDS,
-        message:
-          'Too many failed login attempts. Please try again after 15 minutes.',
-      };
+    const result = await this.dataSource.query<
+      healthInstituteLoginQueryInterface[]
+    >(`SELECT * FROM login_health_institute($1, $2)`, [
+      request.healthInstituteId,
+      request.email,
+    ]);
 
-      await this.rateLimiterService.throwIfBlocked(rateLimitOptions);
+    const procedureResult = result?.[0];
 
-      await queryRunner.query(
-        `CALL login_health_institute($1, $2, 'login_cursor')`,
-        [request.healthInstituteId, request.email],
-      );
-
-      const result = await queryRunner.query(`FETCH ALL FROM login_cursor`);
-      const procedureResult = result?.[0];
-
-      await queryRunner.query(`CLOSE login_cursor`);
-      await queryRunner.commitTransaction();
-
-      if (!procedureResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-      }
-
-      if (procedureResult.status === Errors.invalidCredentialError) {
-        await this.rateLimiterService.recordFailure(rateLimitOptions);
-
-        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
-      }
-
-      if (procedureResult.status === Errors.dbError) {
-        throwRpcException(status.INTERNAL, 'Database error');
-      }
-
-      const isPasswordValid = await this.hashUtil.verify(
-        request.password,
-        procedureResult.password,
-      );
-
-      if (!isPasswordValid) {
-        await this.rateLimiterService.recordFailure(rateLimitOptions);
-
-        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
-      }
-
-      //   TODO: Generate Session & JWT
-
-      const sessionId = randomUUID();
-
-      const jwtPayload = {
-        sessionId,
-        userBusinessId: procedureResult.health_institute_id,
-        role: UserRole.HEALTH_INSTITUTE,
-      };
-
-      const [accessToken, refreshToken] = await Promise.all([
-        this.jwtUtil.generateAccessToken(jwtPayload),
-        this.jwtUtil.generateRefreshToken(jwtPayload),
-      ]);
-
-      const refreshTokenHash = await this.hashUtil.hash(refreshToken);
-
-      //   TODO: Store Session & Audit
-
-      const refreshExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-      await Promise.all([
-        this.sessionService.createSession({
-          sessionId,
-          userBusinessId: procedureResult.health_institute_id,
-          role: UserRole.HEALTH_INSTITUTE,
-          refreshTokenHash,
-          ipAddress: request.requestIp,
-          userAgent: request.userAgent,
-          deviceName: request.deviceName,
-          expiresAt: refreshExpiry,
-        }),
-
-        this.auditService.log({
-          userBusinessId: procedureResult.health_institute_id,
-          role: UserRole.HEALTH_INSTITUTE,
-          sessionId,
-          action: AuditAction.LOGIN_SUCCESS,
-          status: AuditStatus.SUCCESS,
-          ipAddress: request.requestIp,
-          userAgent: request.userAgent,
-        }),
-
-        this.rateLimiterService.clear(rateLimitOptions.key),
-      ]);
-
-      return {
-        healthInstituteId: procedureResult.health_institute_id,
-        healthInstituteName: procedureResult.health_institute_name,
-        healthInstituteType: String(procedureResult.health_institute_type),
-        email: procedureResult.email,
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
-      }
-
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
+
+    if (procedureResult.status === Errors.invalidCredentialError) {
+      await this.rateLimiterService.recordFailure(rateLimitOptions);
+
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+    }
+
+    if (procedureResult.status === Errors.dbError) {
+      throwRpcException(status.INTERNAL, 'Database error');
+    }
+
+    const isPasswordValid: boolean = await this.hashUtil.verify(
+      request.password,
+      procedureResult.password,
+    );
+
+    if (!isPasswordValid) {
+      await this.rateLimiterService.recordFailure(rateLimitOptions);
+
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+    }
+
+    //   TODO: Generate Session & JWT
+
+    const sessionId = randomUUID();
+
+    const jwtPayload: JwtPayload = {
+      sessionId,
+      userBusinessId: procedureResult.healthInstituteId,
+      role: UserRole.HEALTH_INSTITUTE,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtUtil.generateAccessToken(jwtPayload),
+      this.jwtUtil.generateRefreshToken(jwtPayload),
+    ]);
+
+    const refreshTokenHash: string = await this.hashUtil.hash(refreshToken);
+
+    //   TODO: Store Session & Audit
+
+    const refreshExpiry: Date = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await Promise.all([
+      this.sessionService.createSession({
+        sessionId,
+        userBusinessId: procedureResult.healthInstituteId,
+        role: UserRole.HEALTH_INSTITUTE,
+        refreshTokenHash,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+        deviceName: request.deviceName,
+        expiresAt: refreshExpiry,
+      }),
+
+      this.auditService.log({
+        userBusinessId: procedureResult.healthInstituteId,
+        role: UserRole.HEALTH_INSTITUTE,
+        sessionId,
+        action: AuditAction.LOGIN_SUCCESS,
+        status: AuditStatus.SUCCESS,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+      }),
+
+      this.rateLimiterService.clear(rateLimitOptions.key),
+    ]);
+
+    return {
+      healthInstituteId: procedureResult.healthInstituteId,
+      healthInstituteName: procedureResult.healthInstituteName,
+      healthInstituteType: String(procedureResult.healthInstituteType),
+      email: procedureResult.email,
+      accessToken,
+      refreshToken,
+    };
   }
 
   /**
@@ -226,12 +219,12 @@ export class AuthService {
   ): Promise<DoctorRegistrationRes> {
     const hashedPassword = await this.hashUtil.hash(request.password);
 
-    const result = await this.dataSource.query(
-      `CALL create_doctor_auth($1, $2, $3, $4)`,
-      [request.email, request.mobile, hashedPassword, null],
+    const result = await this.dataSource.query<authQueryInterface[]>(
+      `SELECT create_doctor_auth($1, $2, $3) AS f_result`,
+      [request.email, request.mobile, hashedPassword],
     );
 
-    const procedureResult = result?.[0]?.p_result;
+    const procedureResult = result?.[0]?.f_result;
 
     if (procedureResult === Errors.emailExistError) {
       throwRpcException(status.ALREADY_EXISTS, 'Email already exists');
@@ -269,12 +262,12 @@ export class AuthService {
 
     const doctorPk = Number(match[1]);
 
-    const result = await this.dataSource.query(
-      `CALL compensate_doctor_registration($1, $2)`,
-      [doctorPk, null],
+    const result = await this.dataSource.query<authQueryInterface[]>(
+      `SELECT compensate_doctor_registration($1) AS f_result`,
+      [doctorPk],
     );
 
-    const procedureResult = result?.[0]?.p_result;
+    const procedureResult: string = result[0]?.f_result;
 
     if (procedureResult === Errors.doctorNotFoundError)
       throwRpcException(status.NOT_FOUND, 'Doctor auth record not found');
@@ -296,122 +289,106 @@ export class AuthService {
    * @returns DoctorLoginRes
    */
   async doctorLogin(request: DoctorLoginReq): Promise<DoctorLoginRes> {
-    const queryRunner = this.dataSource.createQueryRunner();
+    // TODO: Implement rate limiting for doctor login attempts
+    const identifier = request.mobile ?? request.email ?? '';
 
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-    try {
-      const identifier = request.mobile ?? request.email ?? '';
+    const rateLimitOptions: rateLimitOptionsInterface = {
+      key: buildRateLimitKey(
+        'login',
+        UserRole.DOCTOR,
+        identifier,
+        request.requestIp,
+      ),
+      maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
+      blockDuration: LOGIN_RATE_LIMIT.BLOCK_TIME_SECONDS,
+      message:
+        'Too many failed login attempts. Please try again after 15 minutes.',
+    };
 
-      const rateLimitOptions = {
-        key: buildRateLimitKey(
-          'login',
-          UserRole.DOCTOR,
-          identifier,
-          request.requestIp,
-        ),
-        maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
-        blockDuration: LOGIN_RATE_LIMIT.BLOCK_TIME_SECONDS,
-        message:
-          'Too many failed login attempts. Please try again after 15 minutes.',
-      };
+    await this.rateLimiterService.throwIfBlocked(rateLimitOptions);
 
-      await this.rateLimiterService.throwIfBlocked(rateLimitOptions);
-      await queryRunner.query(`CALL login_doctor($1, $2, 'login_cursor')`, [
-        request.email,
-        request.mobile,
-      ]);
+    // TODO: Call the stored procedure to validate the doctor login credentials
+    const result = await this.dataSource.query<doctorLoginQueryInterface[]>(
+      `SELECT * FROM login_doctor($1, $2)`,
+      [request.email, request.mobile],
+    );
 
-      const result = await queryRunner.query(`FETCH ALL FROM login_cursor`);
-      const procedureResult = result?.[0];
+    const procedureResult = result?.[0];
 
-      await queryRunner.query(`CLOSE login_cursor`);
-      await queryRunner.commitTransaction();
-
-      if (!procedureResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-      }
-      if (procedureResult.status === Errors.invalidCredentialError) {
-        await this.rateLimiterService.recordFailure(rateLimitOptions);
-
-        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
-      }
-      if (procedureResult.status === Errors.dbError) {
-        throwRpcException(status.INTERNAL, 'Database error');
-      }
-
-      const isPasswordValid = await bcrypt.compare(
-        request.password,
-        procedureResult.password,
-      );
-
-      if (!isPasswordValid) {
-        await this.rateLimiterService.recordFailure(rateLimitOptions);
-
-        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
-      }
-      //   TODO: Generate Session & JWT
-
-      const sessionId = randomUUID();
-
-      const jwtPayload = {
-        sessionId,
-        userBusinessId: procedureResult.doctor_id,
-        role: UserRole.DOCTOR,
-      };
-
-      const [accessToken, refreshToken] = await Promise.all([
-        this.jwtUtil.generateAccessToken(jwtPayload),
-        this.jwtUtil.generateRefreshToken(jwtPayload),
-      ]);
-
-      const refreshTokenHash = await this.hashUtil.hash(refreshToken);
-
-      //   TODO: Store Session & Audit
-
-      const refreshExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
-
-      await Promise.all([
-        this.sessionService.createSession({
-          sessionId,
-          userBusinessId: procedureResult.doctor_id,
-          role: UserRole.DOCTOR,
-          refreshTokenHash,
-          ipAddress: request.requestIp,
-          userAgent: request.userAgent,
-          deviceName: request.deviceName,
-          expiresAt: refreshExpiry,
-        }),
-
-        this.auditService.log({
-          userBusinessId: procedureResult.doctor_id,
-          role: UserRole.DOCTOR,
-          sessionId,
-          action: AuditAction.LOGIN_SUCCESS,
-          status: AuditStatus.SUCCESS,
-          ipAddress: request.requestIp,
-          userAgent: request.userAgent,
-        }),
-        
-        this.rateLimiterService.clear(rateLimitOptions.key),
-      ]);
-
-      return {
-        doctorId: procedureResult.doctor_id,
-        email: procedureResult.email,
-        mobile: procedureResult.mobile,
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
-      }
-
-      throw error;
-    } finally {
-      await queryRunner.release();
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
+    if (procedureResult.status === Errors.invalidCredentialError) {
+      await this.rateLimiterService.recordFailure(rateLimitOptions);
+
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+    }
+    if (procedureResult.status === Errors.dbError) {
+      throwRpcException(status.INTERNAL, 'Database error');
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      request.password,
+      procedureResult.password,
+    );
+
+    if (!isPasswordValid) {
+      await this.rateLimiterService.recordFailure(rateLimitOptions);
+
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+    }
+    //   TODO: Generate Session & JWT
+
+    const sessionId = randomUUID();
+
+    const jwtPayload: JwtPayload = {
+      sessionId,
+      userBusinessId: procedureResult.doctorId,
+      role: UserRole.DOCTOR,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtUtil.generateAccessToken(jwtPayload),
+      this.jwtUtil.generateRefreshToken(jwtPayload),
+    ]);
+
+    const refreshTokenHash = await this.hashUtil.hash(refreshToken);
+
+    //   TODO: Store Session & Audit
+    const refreshExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await Promise.all([
+      this.sessionService.createSession({
+        sessionId,
+        userBusinessId: procedureResult.doctorId,
+        role: UserRole.DOCTOR,
+        refreshTokenHash,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+        deviceName: request.deviceName,
+        expiresAt: refreshExpiry,
+      }),
+
+      this.auditService.log({
+        userBusinessId: procedureResult.doctorId,
+        role: UserRole.DOCTOR,
+        sessionId,
+        action: AuditAction.LOGIN_SUCCESS,
+        status: AuditStatus.SUCCESS,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+      }),
+
+      this.rateLimiterService.clear(rateLimitOptions.key),
+    ]);
+
+    return {
+      doctorId: procedureResult.doctorId,
+      email: procedureResult.email,
+      mobile: procedureResult.mobile,
+      accessToken,
+      refreshToken,
+    };
   }
 
   /**
@@ -420,75 +397,67 @@ export class AuthService {
    * @returns RefreshTokenRes
    */
   async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
-    try {
-      const payload = await this.jwtUtil.verifyRefreshToken(
-        request.refreshToken,
-      );
+    const payload: JwtPayload = await this.jwtUtil.verifyRefreshToken(
+      request.refreshToken,
+    );
 
-      const session = await this.sessionService.findSessionBySessionId(
-        payload.sessionId,
-      );
+    const session: UserSession | null =
+      await this.sessionService.findSessionBySessionId(payload.sessionId);
 
-      if (!session) {
-        throwRpcException(status.UNAUTHENTICATED, 'Invalid session');
-      } else if (!session.isActive) {
-        throwRpcException(
-          status.UNAUTHENTICATED,
-          'Session has been logged out',
-        );
-      } else if (session.expiresAt.getTime() < Date.now()) {
-        throwRpcException(status.UNAUTHENTICATED, 'Session expired');
-      }
+    if (!session) {
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid session');
+    } else if (!session.isActive) {
+      throwRpcException(status.UNAUTHENTICATED, 'Session has been logged out');
+    } else if (session.expiresAt.getTime() < Date.now()) {
+      throwRpcException(status.UNAUTHENTICATED, 'Session expired');
+    }
 
-      const isValidRefreshToken = await this.hashUtil.verify(
-        request.refreshToken,
-        session!.refreshTokenHash,
-      );
+    const isValidRefreshToken: boolean = await this.hashUtil.verify(
+      request.refreshToken,
+      session!.refreshTokenHash,
+    );
 
-      if (!isValidRefreshToken) {
-        throwRpcException(status.UNAUTHENTICATED, 'Invalid refresh token');
-      }
+    if (!isValidRefreshToken) {
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid refresh token');
+    }
 
-      const jwtPayload = {
-        sessionId: session!.sessionId,
+    const jwtPayload: JwtPayload = {
+      sessionId: session!.sessionId,
+      userBusinessId: session!.userBusinessId,
+      role: session!.role,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtUtil.generateAccessToken(jwtPayload),
+      this.jwtUtil.generateRefreshToken(jwtPayload),
+    ]);
+
+    const refreshTokenHash = await this.hashUtil.hash(refreshToken);
+
+    await Promise.all([
+      this.sessionService.updateRefreshToken(
+        session!.sessionId,
+        refreshTokenHash,
+        session!.expiresAt,
+      ),
+
+      this.sessionService.updateLastActivity(session!.sessionId),
+
+      this.auditService.log({
         userBusinessId: session!.userBusinessId,
         role: session!.role,
-      };
+        sessionId: session!.sessionId,
+        action: AuditAction.TOKEN_REFRESH,
+        status: AuditStatus.SUCCESS,
+        ipAddress: session!.ipAddress,
+        userAgent: session!.userAgent,
+      }),
+    ]);
 
-      const [accessToken, refreshToken] = await Promise.all([
-        this.jwtUtil.generateAccessToken(jwtPayload),
-        this.jwtUtil.generateRefreshToken(jwtPayload),
-      ]);
-
-      const refreshTokenHash = await this.hashUtil.hash(refreshToken);
-
-      await Promise.all([
-        this.sessionService.updateRefreshToken(
-          session!.sessionId,
-          refreshTokenHash,
-          session!.expiresAt,
-        ),
-
-        this.sessionService.updateLastActivity(session!.sessionId),
-
-        this.auditService.log({
-          userBusinessId: session!.userBusinessId,
-          role: session!.role,
-          sessionId: session!.sessionId,
-          action: AuditAction.TOKEN_REFRESH,
-          status: AuditStatus.SUCCESS,
-          ipAddress: session!.ipAddress,
-          userAgent: session!.userAgent,
-        }),
-      ]);
-
-      return {
-        accessToken,
-        refreshToken,
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      accessToken,
+      refreshToken,
+    };
   }
 
   /**
@@ -497,31 +466,32 @@ export class AuthService {
    * @returns LogoutRes
    */
   async logout(request: LogoutReq): Promise<LogoutRes> {
-    try {
-      const session = await this.sessionService.validateSession(
-        request.sessionId,
-      );
+    const session: UserSession = await this.sessionService.validateSession(
+      request.sessionId,
+    );
 
-      await this.sessionService.deactivateSession(request.sessionId);
+    await this.sessionService.deactivateSession(request.sessionId);
 
-      await this.auditService.log({
-        userBusinessId: session.userBusinessId,
-        role: session.role,
-        sessionId: session.sessionId,
-        action: AuditAction.LOGOUT,
-        status: AuditStatus.SUCCESS,
-        ipAddress: session.ipAddress,
-        userAgent: session.userAgent,
-      });
+    await this.auditService.log({
+      userBusinessId: session.userBusinessId,
+      role: session.role,
+      sessionId: session.sessionId,
+      action: AuditAction.LOGOUT,
+      status: AuditStatus.SUCCESS,
+      ipAddress: session.ipAddress,
+      userAgent: session.userAgent,
+    });
 
-      return {
-        success: true,
-      };
-    } catch (error) {
-      throw error;
-    }
+    return {
+      success: true,
+    };
   }
 
+  /**
+   * * Validate Access Token
+   * @param request
+   * @returns ValidateAccessTokenRes
+   */
   async validateAccessToken(
     request: ValidateAccessTokenReq,
   ): Promise<ValidateAccessTokenRes> {

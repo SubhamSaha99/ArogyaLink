@@ -77,17 +77,14 @@ export class DoctorQualification {
   @IsInt()
   specializationId?: number;
 
-  @IsOptional()
   @IsString()
   @MaxLength(200)
   institutionName?: string;
 
-  @IsOptional()
   @IsString()
   @MaxLength(200)
   universityName?: string;
 
-  @IsOptional()
   @IsInt()
   @Min(1900)
   @Max(new Date().getFullYear())

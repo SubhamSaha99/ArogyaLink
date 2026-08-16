@@ -17,7 +17,7 @@ async function bootstrap() {
           keepCase: false,
           longs: String,
           enums: String,
-          defaults: true,
+          defaults: false,
           oneofs: false,
           arrays: true,
         },

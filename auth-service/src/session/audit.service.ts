@@ -1,7 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-
 import { SecurityAuditLog } from '../db/entities/security-audit-log.entity';
 import { CreateAuditLogDto } from './session.dto';
 
@@ -13,7 +12,7 @@ export class AuditService {
   ) {}
 
   async log(dto: CreateAuditLogDto): Promise<void> {
-    const audit = this.auditRepository.create({
+    const audit: SecurityAuditLog = this.auditRepository.create({
       userBusinessId: dto.userBusinessId,
       role: dto.role,
       sessionId: dto.sessionId,

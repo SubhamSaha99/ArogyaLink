@@ -1,10 +1,11 @@
-export enum Errors {
-  emailExistError = 'emailExist',
-  mobileExistError = 'mobileExist',
-  invalidCredentialError = 'invalidCredential',
-  doctorNotFoundError = 'doctorNotFound',
-  dbError = 'dbError',
-}
+export const Errors = {
+  emailExistError: 'emailExist',
+  mobileExistError: 'mobileExist',
+  invalidCredentialError: 'invalidCredential',
+  doctorNotFoundError: 'doctorNotFound',
+  dbError: 'dbError',
+} as const;
+
 export enum UserRole {
   DOCTOR = 'DOCTOR',
   PATIENT = 'PATIENT',

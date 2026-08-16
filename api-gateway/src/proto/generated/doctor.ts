@@ -93,14 +93,14 @@ export interface GetDoctorProfessionalDetails {
 }
 
 export interface GetDoctorQualificationDetails {
-  doctorQualificationId?: number | undefined;
-  qualificationId?: number | undefined;
-  qualificationName?: string | undefined;
+  doctorQualificationId: number;
+  qualificationId: number;
+  qualificationName: string;
   specializationId?: number | undefined;
   specializationName?: string | undefined;
-  institutionName?: string | undefined;
-  universityName?: string | undefined;
-  yearOfCompletion?: number | undefined;
+  institutionName: string;
+  universityName: string;
+  yearOfCompletion: number;
 }
 
 export interface GetDoctorDetailsRes {

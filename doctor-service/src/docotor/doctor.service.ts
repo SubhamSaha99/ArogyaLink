@@ -13,11 +13,17 @@ import {
   UpdateDoctorQualificationsReq,
   UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
-import { throwRpcException } from '../util/rpcException';
+import { throwRpcException } from '../common/utils/rpcException';
 import { status } from '@grpc/grpc-js';
-import { Errors } from '../util/constants';
+import { Errors } from '../common/utils/constants';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
+import {
+  DoctorQualifications,
+  UpdateDoctorResponse,
+  GetDoctorDetailsResponse,
+  GetDoctorMasterDataResponse,
+} from '../common/interfaces/doctor.interface';
 
 @Injectable()
 export class DoctorService {
@@ -36,8 +42,8 @@ export class DoctorService {
   async createDoctorProfile(
     request: DoctorProfileReq,
   ): Promise<DoctorProfileRes> {
-    const result = await this.dataSource.query(
-      `CALL create_doctor_profile($1, $2, $3, $4, $5, $6, $7)`,
+    const result = await this.dataSource.query<UpdateDoctorResponse[]>(
+      `SELECT create_doctor_profile($1, $2, $3, $4, $5, $6) AS f_result`,
       [
         request.doctorId,
         request.email,
@@ -45,15 +51,23 @@ export class DoctorService {
         request.firstName,
         request.middleName,
         request.lastName,
-        null,
       ],
     );
 
-    const procedureResult = result?.[0]?.p_result;
+    const procedureResult: string = result[0]?.f_result;
+
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
+
     if (procedureResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
-    if (!/^DOC\d{6}$/.test(procedureResult)) {
+
+    if (
+      typeof procedureResult === 'string' &&
+      !/^DOC\d{6}$/.test(procedureResult)
+    ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
@@ -70,8 +84,8 @@ export class DoctorService {
   async updateDoctorBasicDetails(
     request: UpdateDoctorBasicDeatilsReq,
   ): Promise<UpdateDoctorBasicDeatilsRes> {
-    const result = await this.dataSource.query(
-      `CALL update_doctor_basic_details($1, $2, $3, $4, $5, $6, $7)`,
+    const result = await this.dataSource.query<UpdateDoctorResponse[]>(
+      `SELECT update_doctor_basic_details($1, $2, $3, $4, $5, $6) AS f_result`,
       [
         request.doctorId,
         request.firstName,
@@ -79,18 +93,20 @@ export class DoctorService {
         request.lastName,
         request.gender,
         request.profileImage,
-        null,
       ],
     );
 
-    const procedureResult = result?.[0]?.p_result;
+    const procedureResult: string = result?.[0]?.f_result;
     if (procedureResult === Errors.invalidIdError) {
       throwRpcException(status.INVALID_ARGUMENT, 'Invalid Doctor ID');
     }
     if (procedureResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
-    if (!/^DOC\d{6}$/.test(procedureResult)) {
+    if (
+      typeof procedureResult === 'string' &&
+      !/^DOC\d{6}$/.test(procedureResult)
+    ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
@@ -109,8 +125,8 @@ export class DoctorService {
   async updateDoctorProfessionalDetails(
     request: UpdateDoctorProfessionalDetailsReq,
   ): Promise<UpdateDoctorProfessionalDetailsRes> {
-    const result = await this.dataSource.query(
-      `CALL update_doctor_professional_details($1, $2, $3, $4, $5, $6, $7)`,
+    const result = await this.dataSource.query<UpdateDoctorResponse[]>(
+      `SELECT update_doctor_professional_details($1, $2, $3, $4, $5, $6) AS f_result`,
       [
         request.doctorId,
         request.medicalRegistration,
@@ -118,18 +134,20 @@ export class DoctorService {
         request.registrationState,
         request.registrationYear,
         request.licenseStatus,
-        null,
       ],
     );
 
-    const procedureResult = result?.[0]?.p_result;
+    const procedureResult: string = result?.[0]?.f_result;
     if (procedureResult === Errors.invalidIdError) {
       throwRpcException(status.INVALID_ARGUMENT, 'Invalid Doctor ID');
     }
     if (procedureResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
-    if (!/^DOC\d{6}$/.test(procedureResult)) {
+    if (
+      typeof procedureResult === 'string' &&
+      !/^DOC\d{6}$/.test(procedureResult)
+    ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
@@ -148,42 +166,43 @@ export class DoctorService {
   async updateDoctorQualifications(
     request: UpdateDoctorQualificationsReq,
   ): Promise<UpdateDoctorQualificationsRes> {
-    try {
-      const qualifications = request.qualifications.map((qualification) => ({
+    const qualifications: DoctorQualifications[] = request.qualifications.map(
+      (qualification) => ({
         qualification_id: qualification.qualificationId,
-        specialization_id: qualification.specializationId || null,
-        institution_name: qualification.institutionName || null,
-        university_name: qualification.universityName || null,
-        year_of_completion: qualification.yearOfCompletion || null,
-      }));
+        specialization_id: qualification.specializationId ?? null,
+        institution_name: qualification.institutionName ?? null,
+        university_name: qualification.universityName,
+        year_of_completion: qualification.yearOfCompletion,
+      }),
+    );
 
-      const result = await this.dataSource.query(
-        `CALL update_doctor_qualifications($1, $2, $3)`,
-        [request.doctorId, JSON.stringify(qualifications), null],
-      );
+    const result = await this.dataSource.query<UpdateDoctorResponse[]>(
+      `SELECT update_doctor_qualifications($1, $2) AS f_result`,
+      [request.doctorId, JSON.stringify(qualifications)],
+    );
 
-      const procedureResult = result?.[0]?.p_result;
+    const procedureResult: string = result?.[0]?.f_result;
 
-      if (procedureResult === Errors.invalidIdError) {
-        throwRpcException(status.NOT_FOUND, 'Doctor not found');
-      }
-
-      if (procedureResult === Errors.dbError) {
-        throwRpcException(status.INTERNAL, 'Database error');
-      }
-
-      if (!/^DOC\d{6}$/.test(procedureResult)) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-      }
-
-      await this.redisService.delete(`doctor:profile:${request.doctorId}`);
-
-      return {
-        doctorId: procedureResult,
-      };
-    } catch (error) {
-      throw error;
+    if (procedureResult === Errors.invalidIdError) {
+      throwRpcException(status.NOT_FOUND, 'Doctor not found');
     }
+
+    if (procedureResult === Errors.dbError) {
+      throwRpcException(status.INTERNAL, 'Database error');
+    }
+
+    if (
+      typeof procedureResult === 'string' &&
+      !/^DOC\d{6}$/.test(procedureResult)
+    ) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
+
+    await this.redisService.delete(`doctor:profile:${request.doctorId}`);
+
+    return {
+      doctorId: procedureResult,
+    };
   }
 
   /**
@@ -194,7 +213,6 @@ export class DoctorService {
   async getDoctorDetails(
     request: GetDoctorDetailsReq,
   ): Promise<GetDoctorDetailsRes> {
-    // TODO: Checking Cache
     const cacheKey = `doctor:profile:${request.doctorId}`;
 
     try {
@@ -203,87 +221,71 @@ export class DoctorService {
       if (cachedDoctor) {
         return JSON.parse(cachedDoctor) as GetDoctorDetailsRes;
       }
-    } catch (error) {
-      this.logger.warn(
-        `Redis cache read failed for doctor ${request.doctorId}`,
-        error instanceof Error ? error.message : String(error),
-      );
-    }
 
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      await queryRunner.query(`CALL get_doctor_details($1, 'doctor_cursor')`, [
-        request.doctorId,
-      ]);
-
-      const [procedureResult] = await queryRunner.query(
-        `FETCH ALL FROM doctor_cursor`,
+      const result = await this.dataSource.query<GetDoctorDetailsResponse[]>(
+        `SELECT * FROM get_doctor_details($1)`,
+        [request.doctorId],
       );
 
-      await queryRunner.query(`CLOSE doctor_cursor`);
-
-      if (!procedureResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      const doctorResult = result?.[0];
+      console.log(`Doctor Result: ${JSON.stringify(doctorResult)}`);
+      if (!doctorResult) {
+        throwRpcException(status.INTERNAL, 'Invalid response from database');
       }
 
-      switch (procedureResult.status) {
+      switch (doctorResult.status) {
         case Errors.invalidIdError:
           throwRpcException(status.NOT_FOUND, 'Doctor not found');
+          break;
 
         case Errors.dbError:
           throwRpcException(status.INTERNAL, 'Database error');
+          break;
       }
 
       const {
-        doctor_id,
-        profile_details,
-        professional_details,
-        qualification_details = [],
-      } = procedureResult;
+        doctorId,
+        profileDetails,
+        professionalDetails,
+        qualificationDetails = [],
+      } = doctorResult;
 
-      const profileImage = profile_details.profileImage
+      const profileImage = profileDetails.profileImage
         ? `${this.configService.get<string>(
             'API_BASE_URL',
-          )}/uploads/${profile_details.profileImage}`
-        : undefined;
+          )}/uploads/${profileDetails.profileImage}`
+        : '';
 
       const response: GetDoctorDetailsRes = {
-        doctorId: doctor_id,
-
+        doctorId,
         profileDetails: {
-          ...profile_details,
+          ...profileDetails,
           profileImage,
         },
-
-        professionalDetails: professional_details,
-
-        qualificationDetails: qualification_details,
+        professionalDetails,
+        qualificationDetails,
+        // qualificationDetails: qualificationDetails.map((qualification) => ({
+        //   ...qualification,
+        //   specializationId: qualification.specializationId ?? undefined,
+        //   specializationName: qualification.specializationName ?? undefined,
+        // })),
       };
 
-      await queryRunner.commitTransaction();
-
-      try {
-        await this.redisService.set(cacheKey, JSON.stringify(response), 300);
-      } catch (error) {
-        this.logger.warn(
-          `Redis cache write failed for doctor ${request.doctorId}`,
-          error instanceof Error ? error.message : String(error),
-        );
-      }
+      await this.redisService.set(cacheKey, JSON.stringify(response), 300);
 
       return response;
     } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          `Redis operation failed for doctor ${request.doctorId}`,
+          error.message,
+        );
       }
 
       throw error;
-    } finally {
-      await queryRunner.release();
     }
   }
 
@@ -292,88 +294,48 @@ export class DoctorService {
    * @returns GetDoctorMasterDataRes
    */
   async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
-    const cacheKey = 'doctor:master-data';
-
-    // 1. Check Redis
     try {
+      const cacheKey = 'doctor:master-data';
       const cachedData = await this.redisService.get(cacheKey);
 
       if (cachedData) {
         return JSON.parse(cachedData) as GetDoctorMasterDataRes;
       }
-    } catch (error) {
-      this.logger.warn(
-        'Redis cache read failed for doctor master data',
-        error instanceof Error ? error.message : String(error),
-      );
-    }
 
-    // 2. Cache miss -> Fetch from database
-    const queryRunner = this.dataSource.createQueryRunner();
-
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
-
-    try {
-      // 3. Execute procedure
-      await queryRunner.query(
-        `CALL get_doctor_master_data('master_data_cursor')`,
+      const result = await this.dataSource.query<GetDoctorMasterDataResponse[]>(
+        `SELECT * FROM get_doctor_master_data()`,
       );
 
-      // 4. Fetch cursor
-      const [procedureResult] = await queryRunner.query(
-        `FETCH ALL FROM master_data_cursor`,
-      );
+      const masterDataResult = result?.[0];
 
-      // 5. Close cursor
-      await queryRunner.query(`CLOSE master_data_cursor`);
-
-      if (!procedureResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      if (!masterDataResult) {
+        throwRpcException(status.INTERNAL, 'Invalid response from database');
       }
 
-      // 6. Handle procedure status
-      switch (procedureResult.status) {
-        case Errors.dbError:
-          throwRpcException(status.INTERNAL, 'Database error');
+      if (masterDataResult.status === Errors.dbError) {
+        throwRpcException(status.INTERNAL, 'Database error');
       }
 
       const response: GetDoctorMasterDataRes = {
-        registrationCouncils: procedureResult.registration_councils ?? [],
-
-        states: procedureResult.states ?? [],
-
-        qualifications: procedureResult.qualifications ?? [],
-
-        specializations: procedureResult.specializations ?? [],
+        registrationCouncils: masterDataResult.registrationCouncils ?? [],
+        states: masterDataResult.states ?? [],
+        qualifications: masterDataResult.qualifications ?? [],
+        specializations: masterDataResult.specializations ?? [],
       };
-
-      // 7. Commit transaction
-      await queryRunner.commitTransaction();
-
-      // 8. Cache the result
-      try {
-        await this.redisService.set(
-          cacheKey,
-          JSON.stringify(response),
-          3600, // 1 hour
-        );
-      } catch (error) {
-        this.logger.warn(
-          'Redis cache write failed for doctor master data',
-          error instanceof Error ? error.message : String(error),
-        );
-      }
-
+      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
       return response;
     } catch (error) {
-      if (queryRunner.isTransactionActive) {
-        await queryRunner.rollbackTransaction();
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          'Redis operation failed for doctor master data',
+          error.message,
+        );
       }
 
       throw error;
-    } finally {
-      await queryRunner.release();
     }
   }
 }

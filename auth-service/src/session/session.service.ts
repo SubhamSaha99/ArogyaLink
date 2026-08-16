@@ -1,4 +1,4 @@
-import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 
@@ -15,7 +15,7 @@ export class SessionService {
   ) {}
 
   async createSession(dto: CreateSessionDto): Promise<UserSession> {
-    const session = this.sessionRepository.create({
+    const session: UserSession = this.sessionRepository.create({
       sessionId: dto.sessionId,
       userBusinessId: dto.userBusinessId,
       role: dto.role,
@@ -33,7 +33,8 @@ export class SessionService {
   }
 
   async validateSession(sessionId: string): Promise<UserSession> {
-    const session = await this.findSessionBySessionId(sessionId);
+    const session: UserSession | null =
+      await this.findSessionBySessionId(sessionId);
 
     if (!session) {
       throwRpcException(status.UNAUTHENTICATED, 'Invalid session.');
