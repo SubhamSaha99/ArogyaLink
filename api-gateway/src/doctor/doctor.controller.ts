@@ -15,10 +15,10 @@ import {
   DoctorQualificationsDto,
 } from './doctor.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { multerConfig } from '../common/util/multer.config';
+import { multerConfig } from '../common/utils/multer.config';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { UserRole } from '../common/util/constant';
+import { UserRole } from '../common/utils/constant';
 import { Auth } from '../common/decorators/auth.decorator';
 
 @Controller('doctor')

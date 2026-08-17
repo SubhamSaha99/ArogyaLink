@@ -11,19 +11,25 @@ import { Observable } from "rxjs";
 export const protobufPackage = "auth";
 
 export interface HealthInstituteRegReq {
-  healthInstituteType: number;
   email: string;
-  healthInstituteName: string;
   password: string;
+  healthInstituteType: number;
 }
 
 export interface HealthInstituteRegRes {
   healthInstituteId: string;
 }
 
+export interface CompensateHealthInstituteRegistrationReq {
+  healthInstituteId: string;
+}
+
+export interface CompensateHealthInstituteRegistrationRes {
+  success: boolean;
+}
+
 export interface HealthInstituteLoginReq {
-  healthInstituteId?: string | undefined;
-  email?: string | undefined;
+  email: string;
   password: string;
   requestIp: string;
   userAgent: string;
@@ -33,7 +39,7 @@ export interface HealthInstituteLoginReq {
 export interface HealthInstituteLoginRes {
   healthInstituteId: string;
   healthInstituteName: string;
-  healthInstituteType: string;
+  healthInstituteType: number;
   email: string;
   accessToken: string;
   refreshToken: string;
@@ -104,6 +110,10 @@ export const AUTH_PACKAGE_NAME = "auth";
 export interface AuthServiceClient {
   healthInstituteRegistration(request: HealthInstituteRegReq): Observable<HealthInstituteRegRes>;
 
+  compensateHealthInstituteRegistration(
+    request: CompensateHealthInstituteRegistrationReq,
+  ): Observable<CompensateHealthInstituteRegistrationRes>;
+
   healthInstituteLogin(request: HealthInstituteLoginReq): Observable<HealthInstituteLoginRes>;
 
   createDoctorAuth(request: DoctorRegistrationReq): Observable<DoctorRegistrationRes>;
@@ -123,6 +133,13 @@ export interface AuthServiceController {
   healthInstituteRegistration(
     request: HealthInstituteRegReq,
   ): Promise<HealthInstituteRegRes> | Observable<HealthInstituteRegRes> | HealthInstituteRegRes;
+
+  compensateHealthInstituteRegistration(
+    request: CompensateHealthInstituteRegistrationReq,
+  ):
+    | Promise<CompensateHealthInstituteRegistrationRes>
+    | Observable<CompensateHealthInstituteRegistrationRes>
+    | CompensateHealthInstituteRegistrationRes;
 
   healthInstituteLogin(
     request: HealthInstituteLoginReq,
@@ -154,6 +171,7 @@ export function AuthServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       "healthInstituteRegistration",
+      "compensateHealthInstituteRegistration",
       "healthInstituteLogin",
       "createDoctorAuth",
       "compensateDoctorRegistration",

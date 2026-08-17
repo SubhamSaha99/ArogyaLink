@@ -228,7 +228,6 @@ export class DoctorService {
       );
 
       const doctorResult = result?.[0];
-      console.log(`Doctor Result: ${JSON.stringify(doctorResult)}`);
       if (!doctorResult) {
         throwRpcException(status.INTERNAL, 'Invalid response from database');
       }

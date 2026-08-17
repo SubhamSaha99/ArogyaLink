@@ -6,7 +6,6 @@ import {
   IsOptional,
   IsString,
   Length,
-  Matches,
   Max,
   MaxLength,
   Min,
@@ -17,23 +16,29 @@ export class DoctorBasicDetailsDto {
   @IsOptional()
   @IsString()
   @Length(2, 100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   firstName?: string;
 
   @IsOptional()
   @IsString()
   @Length(1, 100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   middleName?: string;
 
   @IsOptional()
   @IsString()
   @Length(1, 100)
-  @Transform(({ value }) => value?.trim())
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
   lastName?: string;
 
   @IsOptional()
-  @Transform(({ value }) =>
+  @Transform(({ value }: { value: unknown }) =>
     value === undefined || value === null || value === ''
       ? value
       : Number(value),

@@ -3,64 +3,63 @@ syntax = "proto3";
 package auth;
 
 service AuthService {
-  rpc HealthInstituteRegistration(HealthInstituteRegReq)
-  returns (HealthInstituteRegRes);
+  rpc HealthInstituteRegistration(HealthInstituteRegReq) returns (HealthInstituteRegRes);
 
-  rpc HealthInstituteLogin(HealthInstituteLoginReq)
-  returns (HealthInstituteLoginRes);
+  rpc CompensateHealthInstituteRegistration(CompensateHealthInstituteRegistrationReq) returns (CompensateHealthInstituteRegistrationRes);
 
-  rpc CreateDoctorAuth(DoctorRegistrationReq)
-  returns (DoctorRegistrationRes);
+  rpc HealthInstituteLogin(HealthInstituteLoginReq) returns (HealthInstituteLoginRes);
 
-  rpc CompensateDoctorRegistration(CompensateDoctorRegistrationReq)
-  returns (CompensateDoctorRegistrationRes);
+  rpc CreateDoctorAuth(DoctorRegistrationReq) returns (DoctorRegistrationRes);
 
-  rpc DoctorLogin(DoctorLoginReq)
-  returns (DoctorLoginRes);
+  rpc CompensateDoctorRegistration(CompensateDoctorRegistrationReq) returns (CompensateDoctorRegistrationRes);
 
-  rpc RefreshToken(RefreshTokenReq)
-  returns (RefreshTokenRes);
+  rpc DoctorLogin(DoctorLoginReq) returns (DoctorLoginRes);
 
-  rpc Logout(LogoutReq)
-  returns (LogoutRes);
+  rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenRes);
 
-  rpc ValidateAccessToken(ValidateAccessTokenReq)
-  returns (ValidateAccessTokenRes);
+  rpc Logout(LogoutReq) returns (LogoutRes);
 
+  rpc ValidateAccessToken(ValidateAccessTokenReq) returns (ValidateAccessTokenRes);
 }
 
 message HealthInstituteRegReq {
-  int32  healthInstituteType = 1;
-  string email               = 2;
-  string healthInstituteName = 3;
-  string password            = 4;
+  string email = 1;
+  string password = 2;
+  int32 healthInstituteType = 3;
 }
 
 message HealthInstituteRegRes {
   string healthInstituteId = 1;
 }
 
+message CompensateHealthInstituteRegistrationReq {
+  string healthInstituteId = 1;
+}
+
+message CompensateHealthInstituteRegistrationRes {
+  bool success = 1;
+}
+
 message HealthInstituteLoginReq {
-  optional string healthInstituteId = 1;
-  optional string email             = 2;
-  string          password          = 3;
-  string          requestIp         = 4;
-  string          userAgent         = 5;
-  optional string deviceName        = 6;
+  string email = 1;
+  string password = 2;
+  string requestIp = 3;
+  string userAgent = 4;
+  optional string deviceName = 5;
 }
 
 message HealthInstituteLoginRes {
-  string healthInstituteId   = 1;
+  string healthInstituteId = 1;
   string healthInstituteName = 2;
-  string healthInstituteType = 3;
-  string email               = 4;
-  string accessToken         = 5;
-  string refreshToken        = 6;
+  int32 healthInstituteType = 3;
+  string email = 4;
+  string accessToken = 5;
+  string refreshToken = 6;
 }
 
 message DoctorRegistrationReq {
-  string email    = 1;
-  string mobile   = 2;
+  string email = 1;
+  string mobile = 2;
   string password = 3;
 }
 
@@ -77,28 +76,28 @@ message CompensateDoctorRegistrationRes {
 }
 
 message DoctorLoginReq {
-  optional string email      = 1;
-  optional string mobile     = 2;
-  string          password   = 3;
-  string          requestIp  = 4;
-  string          userAgent  = 5;
+  optional string email = 1;
+  optional string mobile = 2;
+  string password = 3;
+  string requestIp = 4;
+  string userAgent = 5;
   optional string deviceName = 6;
 }
 
 message DoctorLoginRes {
-  string doctorId     = 1;
-  string email        = 2;
-  string mobile       = 3;
-  string accessToken  = 4;
+  string doctorId = 1;
+  string email = 2;
+  string mobile = 3;
+  string accessToken = 4;
   string refreshToken = 5;
 }
 
-message RefreshTokenReq{
+message RefreshTokenReq {
   string refreshToken = 1;
 }
 
-message RefreshTokenRes{
-  string accessToken  = 1;
+message RefreshTokenRes {
+  string accessToken = 1;
   string refreshToken = 2;
 }
 

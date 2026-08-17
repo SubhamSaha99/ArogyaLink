@@ -17,14 +17,8 @@ export class HealthInstitute {
   @Column({ type: 'varchar', length: 255, unique: true, nullable: true })
   health_institute_id!: string;
 
-  @Column({ type: 'int' })
-  health_institute_type!: number;
-
   @Column({ type: 'varchar', length: 255, unique: true })
   email!: string;
-
-  @Column({ type: 'varchar', length: 255 })
-  health_institute_name!: string;
 
   @Column({ type: 'varchar', length: 255 })
   password!: string;

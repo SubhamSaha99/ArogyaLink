@@ -9,9 +9,6 @@ import {
 } from 'class-validator';
 
 export class HealthInstituteRegDto {
-  @IsInt()
-  healthInstituteType!: number;
-
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
@@ -25,6 +22,9 @@ export class HealthInstituteRegDto {
   @MinLength(1)
   healthInstituteName!: string;
 
+  @IsInt()
+  healthInstituteType!: number;
+
   @IsString()
   @MinLength(6)
   password!: string;
@@ -34,19 +34,8 @@ export class HealthInstituteLoginDto {
   @Transform(({ value }: { value: unknown }) =>
     typeof value === 'string' ? value.trim() : value,
   )
-  @IsOptional()
-  @IsString()
-  @Matches(/^[HND]\d{6}$/, {
-    message: 'Invalid healthInstituteId',
-  })
-  healthInstituteId?: string;
-
-  @Transform(({ value }: { value: unknown }) =>
-    typeof value === 'string' ? value.trim() : value,
-  )
-  @IsOptional()
   @IsEmail()
-  email?: string;
+  email!: string;
 
   @IsString()
   @MinLength(6)

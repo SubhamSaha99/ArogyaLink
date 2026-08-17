@@ -19,6 +19,8 @@ import {
   LogoutRes,
   ValidateAccessTokenReq,
   ValidateAccessTokenRes,
+  CompensateHealthInstituteRegistrationReq,
+  CompensateHealthInstituteRegistrationRes,
 } from '../proto/generated/auth';
 
 @Controller()
@@ -30,6 +32,12 @@ export class AuthController implements AuthServiceController {
     request: HealthInstituteRegReq,
   ): Promise<HealthInstituteRegRes> {
     return this.authService.healthInstituteRegistration(request);
+  }
+
+  async compensateHealthInstituteRegistration(
+    request: CompensateHealthInstituteRegistrationReq,
+  ): Promise<CompensateHealthInstituteRegistrationRes> {
+    return this.authService.compensateHealthInstituteRegistration(request);
   }
 
   async healthInstituteLogin(

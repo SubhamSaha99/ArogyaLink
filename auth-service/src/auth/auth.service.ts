@@ -19,6 +19,7 @@ import {
   LogoutRes,
   ValidateAccessTokenReq,
   ValidateAccessTokenRes,
+  CompensateHealthInstituteRegistrationReq,
 } from '../proto/generated/auth';
 import {
   AuditAction,
@@ -66,15 +67,9 @@ export class AuthService {
     const hashedPassword = await bcrypt.hash(request.password, 10);
 
     const result = await this.dataSource.query<authQueryInterface[]>(
-      `SELECT register_health_institute($1, $2, $3, $4) AS f_result`,
-      [
-        request.healthInstituteType,
-        request.email,
-        request.healthInstituteName,
-        hashedPassword,
-      ],
+      `SELECT register_health_institute($1, $2, $3) AS f_result`,
+      [request.email, hashedPassword, request.healthInstituteType],
     );
-
     const procedureResult: string = result[0]?.f_result;
 
     if (!procedureResult) {
@@ -94,6 +89,40 @@ export class AuthService {
     };
   }
 
+  async compensateHealthInstituteRegistration(
+    request: CompensateHealthInstituteRegistrationReq,
+  ): Promise<CompensateDoctorRegistrationRes> {
+    const match = request.healthInstituteId.match(/^[HND](\d{6})$/);
+
+    if (!match) {
+      return throwRpcException(
+        status.INVALID_ARGUMENT,
+        'Invalid health institute ID format',
+      );
+    }
+    const healthInstitutePk = Number(match[1]);
+
+    const result = await this.dataSource.query<authQueryInterface[]>(
+      `SELECT compensate_health_institute_registration($1) AS f_result`,
+      [healthInstitutePk],
+    );
+
+    const procedureResult: string = result[0]?.f_result;
+
+    if (procedureResult === Errors.helathInstituteNotFoundError)
+      throwRpcException(
+        status.NOT_FOUND,
+        'Health Institute auth record not found',
+      );
+    if (procedureResult === Errors.dbError)
+      throwRpcException(
+        status.INTERNAL,
+        'Failed to compensate doctor registration',
+      );
+    return {
+      success: true,
+    };
+  }
   /**
    * * Health Institute Login
    * @param request
@@ -102,13 +131,11 @@ export class AuthService {
   async healthInstituteLogin(
     request: HealthInstituteLoginReq,
   ): Promise<HealthInstituteLoginRes> {
-    const identifier = request.healthInstituteId ?? request.email ?? '';
-
     const rateLimitOptions = {
       key: buildRateLimitKey(
         'login',
         UserRole.HEALTH_INSTITUTE,
-        identifier,
+        request.email,
         request.requestIp,
       ),
       maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
@@ -121,10 +148,7 @@ export class AuthService {
 
     const result = await this.dataSource.query<
       healthInstituteLoginQueryInterface[]
-    >(`SELECT * FROM login_health_institute($1, $2)`, [
-      request.healthInstituteId,
-      request.email,
-    ]);
+    >(`SELECT * FROM login_health_institute($1)`, [request.email]);
 
     const procedureResult = result?.[0];
 
@@ -202,7 +226,7 @@ export class AuthService {
     return {
       healthInstituteId: procedureResult.healthInstituteId,
       healthInstituteName: procedureResult.healthInstituteName,
-      healthInstituteType: String(procedureResult.healthInstituteType),
+      healthInstituteType: procedureResult.healthInstituteType,
       email: procedureResult.email,
       accessToken,
       refreshToken,

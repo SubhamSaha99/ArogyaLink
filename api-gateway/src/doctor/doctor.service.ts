@@ -19,8 +19,8 @@ import {
   DoctorQualificationsDto,
 } from './doctor.dto';
 import { firstValueFrom } from 'rxjs';
-import { deleteFile } from '../common/util/file.util';
-import { moveFile } from '../common/util/uploadFile';
+import { deleteFile } from '../common/utils/file.util';
+import { moveFile } from '../common/utils/uploadFile';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {

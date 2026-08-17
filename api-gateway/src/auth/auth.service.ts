@@ -16,7 +16,6 @@ import {
   DoctorRegistrationRes,
   HealthInstituteLoginReq,
   HealthInstituteLoginRes,
-  HealthInstituteRegReq,
   HealthInstituteRegRes,
   LogoutRes,
   RefreshTokenReq,
@@ -27,16 +26,24 @@ import {
   DOCTOR_SERVICE_NAME,
   DoctorServiceClient,
 } from '../proto/generated/doctor';
+import { GrpcServiceName } from '../common/utils/constant';
+import {
+  HEALTH_INSTITUTE_SERVICE_NAME,
+  HealthInstituteServiceClient,
+} from '../proto/generated/health-institute';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
   private logger = new Logger(AuthService.name);
   private authGrpcService!: AuthServiceClient;
   private doctorGrpcService!: DoctorServiceClient;
+  private healthInstituteGrpcService!: HealthInstituteServiceClient;
 
   constructor(
-    @Inject('AUTH_PACKAGE') private readonly authClient: ClientGrpc,
-    @Inject('DOCTOR_PACKAGE') private readonly doctorClient: ClientGrpc,
+    @Inject(GrpcServiceName.AUTH) private readonly authClient: ClientGrpc,
+    @Inject(GrpcServiceName.DOCTOR) private readonly doctorClient: ClientGrpc,
+    @Inject(GrpcServiceName.HEALTH_INSTITUTE)
+    private readonly healthInstituteClient: ClientGrpc,
   ) {}
 
   onModuleInit() {
@@ -44,6 +51,10 @@ export class AuthService implements OnModuleInit {
       this.authClient.getService<AuthServiceClient>(AUTH_SERVICE_NAME);
     this.doctorGrpcService =
       this.doctorClient.getService<DoctorServiceClient>(DOCTOR_SERVICE_NAME);
+    this.healthInstituteGrpcService =
+      this.healthInstituteClient.getService<HealthInstituteServiceClient>(
+        HEALTH_INSTITUTE_SERVICE_NAME,
+      );
   }
 
   /**
@@ -51,19 +62,47 @@ export class AuthService implements OnModuleInit {
    * @param request
    * @returns HealthInstituteRegRes
    */
-  healthInstituteRegistration(
+  async healthInstituteRegistration(
     request: HealthInstituteRegDto,
   ): Promise<HealthInstituteRegRes> {
-    const registrationRequest: HealthInstituteRegReq = {
-      healthInstituteType: request.healthInstituteType,
-      email: request.email,
-      healthInstituteName: request.healthInstituteName,
-      password: request.password,
-    };
+    let healthInstituteId: string | null = null;
+    try {
+      const authResponse = await firstValueFrom(
+        this.authGrpcService.healthInstituteRegistration({
+          email: request.email,
+          password: request.password,
+          healthInstituteType: request.healthInstituteType,
+        }),
+      );
+      healthInstituteId = authResponse.healthInstituteId;
 
-    return firstValueFrom(
-      this.authGrpcService.healthInstituteRegistration(registrationRequest),
-    );
+      await firstValueFrom(
+        this.healthInstituteGrpcService.createHealthInstituteProfile({
+          healthInstituteId,
+          healthInstituteName: request.healthInstituteName,
+          healthInstituteType: request.healthInstituteType,
+          email: request.email,
+        }),
+      );
+      return authResponse;
+    } catch (error) {
+      if (healthInstituteId) {
+        try {
+          await firstValueFrom(
+            this.authGrpcService.compensateHealthInstituteRegistration({
+              healthInstituteId,
+            }),
+          );
+        } catch (rollbackError) {
+          this.logger.error(
+            `Rollback failed for Health Institute ID: ${healthInstituteId}`,
+            rollbackError,
+          );
+        }
+      }
+
+      throw error;
+    }
   }
 
   /**
@@ -79,8 +118,7 @@ export class AuthService implements OnModuleInit {
     deviceName?: string,
   ): Promise<HealthInstituteLoginRes> {
     const loginRequest: HealthInstituteLoginReq = {
-      healthInstituteId: request.healthInstituteId || '',
-      email: request.email || '',
+      email: request.email,
       password: request.password,
       requestIp,
       userAgent,

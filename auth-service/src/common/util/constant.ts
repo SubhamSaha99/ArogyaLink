@@ -3,6 +3,7 @@ export const Errors = {
   mobileExistError: 'mobileExist',
   invalidCredentialError: 'invalidCredential',
   doctorNotFoundError: 'doctorNotFound',
+  helathInstituteNotFoundError: 'helathInstituteNotFound',
   dbError: 'dbError',
 } as const;
 

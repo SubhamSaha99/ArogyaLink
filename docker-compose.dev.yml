@@ -29,6 +29,20 @@ services:
         networks:
             - arogyalink-network
 
+    health_institute_postgres:
+        image: postgres:16
+        container_name: postgres_health_institute
+        restart: always
+        environment:
+            POSTGRES_USER: postgres
+            POSTGRES_PASSWORD: postgres
+            POSTGRES_DB: health_institute_db
+        ports:
+            - "5434:5432"
+        volumes:
+            - health_institute_postgres_data:/var/lib/postgresql/data
+        networks:
+            - arogyalink-network
     redis:
         image: redis:latest
         container_name: redis
@@ -48,4 +62,5 @@ networks:
 volumes:
     auth_postgres_data:
     doctor_postgres_data:
+    health_institute_postgres_data:
     redis_data:
