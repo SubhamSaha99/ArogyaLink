@@ -6,6 +6,8 @@ service HealthInstituteService {
   rpc CreateHealthInstituteProfile(HealthInstituteProfileReq) returns (HealthInstituteProfileRes);
 
   rpc UpdateHealthInstituteProfile(UpdateHealthInstituteProfileReq) returns (UpdateHealthInstituteProfileRes);
+
+  rpc GetHealthInstituteDetails(GetHealthInstituteDetailsReq) returns (GetHealthInstituteDetailsRes);
 }
 
 message HealthInstituteProfileReq {
@@ -31,4 +33,26 @@ message UpdateHealthInstituteProfileReq {
 
 message UpdateHealthInstituteProfileRes {
   string healthInstituteId = 1;
+}
+
+message GetHealthInstituteDetailsReq {
+  string healthInstituteId = 1;
+}
+
+message HealthInstituteProfileDetails {
+  int32           id                  = 1;
+  string          healthInstituteName = 2;
+  int32           healthInstituteType = 3;
+  optional string registrationNumber  = 4;
+  string          email               = 5;
+  optional string phone               = 6;
+  optional string address             = 7;
+  optional int32  stateId             = 8;
+  optional int32  districtId          = 9;
+  optional string pincode             = 10;
+}
+
+message GetHealthInstituteDetailsRes {
+  string                        healthInstituteId = 1;
+  HealthInstituteProfileDetails profileDetails    = 2;
 }

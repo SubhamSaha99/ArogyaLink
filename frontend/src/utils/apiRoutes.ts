@@ -13,6 +13,10 @@ export const API_ROUTES = {
   updateDoctorQualifications: "/api/doctor/updateDoctorQualifications",
   getDoctorDetails: "/api/doctor/getDoctorDetails",
   getDoctorMasterData: "/api/doctor/getDoctorMasterData",
+
+  // Health Institute Routes
+  updateHealthInstituteProfile: "/api/healthInstitute/updateHealthInstituteProfile",
+  getHealthInstituteDetails: "/api/healthInstitute/getHealthInstituteDetails",
 } as const;
 
 export type ApiRoute = (typeof API_ROUTES)[keyof typeof API_ROUTES] | string;

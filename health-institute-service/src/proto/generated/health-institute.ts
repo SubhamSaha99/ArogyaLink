@@ -35,12 +35,36 @@ export interface UpdateHealthInstituteProfileRes {
   healthInstituteId: string;
 }
 
+export interface GetHealthInstituteDetailsReq {
+  healthInstituteId: string;
+}
+
+export interface HealthInstituteProfileDetails {
+  id: number;
+  healthInstituteName: string;
+  healthInstituteType: number;
+  registrationNumber?: string | undefined;
+  email: string;
+  phone?: string | undefined;
+  address?: string | undefined;
+  stateId?: number | undefined;
+  districtId?: number | undefined;
+  pincode?: string | undefined;
+}
+
+export interface GetHealthInstituteDetailsRes {
+  healthInstituteId: string;
+  profileDetails: HealthInstituteProfileDetails | undefined;
+}
+
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
   createHealthInstituteProfile(request: HealthInstituteProfileReq): Observable<HealthInstituteProfileRes>;
 
   updateHealthInstituteProfile(request: UpdateHealthInstituteProfileReq): Observable<UpdateHealthInstituteProfileRes>;
+
+  getHealthInstituteDetails(request: GetHealthInstituteDetailsReq): Observable<GetHealthInstituteDetailsRes>;
 }
 
 export interface HealthInstituteServiceController {
@@ -54,11 +78,19 @@ export interface HealthInstituteServiceController {
     | Promise<UpdateHealthInstituteProfileRes>
     | Observable<UpdateHealthInstituteProfileRes>
     | UpdateHealthInstituteProfileRes;
+
+  getHealthInstituteDetails(
+    request: GetHealthInstituteDetailsReq,
+  ): Promise<GetHealthInstituteDetailsRes> | Observable<GetHealthInstituteDetailsRes> | GetHealthInstituteDetailsRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createHealthInstituteProfile", "updateHealthInstituteProfile"];
+    const grpcMethods: string[] = [
+      "createHealthInstituteProfile",
+      "updateHealthInstituteProfile",
+      "getHealthInstituteDetails",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("HealthInstituteService", method)(constructor.prototype[method], method, descriptor);

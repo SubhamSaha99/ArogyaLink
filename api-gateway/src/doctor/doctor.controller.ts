@@ -135,6 +135,7 @@ export class DoctorController {
    * @returns json
    */
   @Get('getDoctorMasterData')
+  @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   async getDoctorMasterData() {
     const result = await this.doctorService.getDoctorMasterData();

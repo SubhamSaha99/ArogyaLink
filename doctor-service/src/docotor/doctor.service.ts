@@ -227,12 +227,12 @@ export class DoctorService {
         [request.doctorId],
       );
 
-      const doctorResult = result?.[0];
-      if (!doctorResult) {
+      const procedureResult = result?.[0];
+      if (!procedureResult) {
         throwRpcException(status.INTERNAL, 'Invalid response from database');
       }
 
-      switch (doctorResult.status) {
+      switch (procedureResult.status) {
         case Errors.invalidIdError:
           throwRpcException(status.NOT_FOUND, 'Doctor not found');
           break;
@@ -247,7 +247,7 @@ export class DoctorService {
         profileDetails,
         professionalDetails,
         qualificationDetails = [],
-      } = doctorResult;
+      } = procedureResult;
 
       const profileImage = profileDetails.profileImage
         ? `${this.configService.get<string>(

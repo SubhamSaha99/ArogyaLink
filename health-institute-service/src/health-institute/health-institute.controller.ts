@@ -1,5 +1,7 @@
 import { Controller } from '@nestjs/common';
 import {
+    GetHealthInstituteDetailsReq,
+  GetHealthInstituteDetailsRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
   HealthInstituteServiceController,
@@ -26,5 +28,11 @@ export class HealthInstituteController implements HealthInstituteServiceControll
     request: UpdateHealthInstituteProfileReq,
   ): Promise<UpdateHealthInstituteProfileRes> {
     return this.healthInstituteService.updateHealthInstituteProfile(request);
+  }
+
+  async getHealthInstituteDetails(
+    request: GetHealthInstituteDetailsReq,
+  ): Promise<GetHealthInstituteDetailsRes> {
+    return this.healthInstituteService.getHealthInstituteDetails(request);
   }
 }

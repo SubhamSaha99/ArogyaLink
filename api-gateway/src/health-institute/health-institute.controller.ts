@@ -1,4 +1,11 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Post,
+} from '@nestjs/common';
 import { UpdateHealthInstituteProfileDto } from './health-institute.dto';
 import { HealthInstituteService } from './health-institute.service';
 import { Auth } from '../common/decorators/auth.decorator';
@@ -14,8 +21,8 @@ export class HealthInstituteController {
 
   /**
    * * Update health institute profile
-   * @param request 
-   * @param user 
+   * @param request
+   * @param user
    * @returns json
    */
   @Post('updateHealthInstituteProfile')
@@ -24,11 +31,30 @@ export class HealthInstituteController {
     @Body() request: UpdateHealthInstituteProfileDto,
     @CurrentUser() user: JwtPayload,
   ) {
-    const result = await this.healthInstituteService.updateHealthInstituteProfile(request, user.userBusinessId);
+    const result =
+      await this.healthInstituteService.updateHealthInstituteProfile(
+        request,
+        user.userBusinessId,
+      );
 
     return {
       success: true,
       message: 'Deatils Updated Successfully.',
+      data: result,
+    };
+  }
+
+  @Get('getHealthInstituteDetails')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getHealthInstituteDetails(@CurrentUser() user: JwtPayload) {
+    const result = await this.healthInstituteService.getHealthInstituteDetails(
+      user.userBusinessId,
+    );
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
       data: result,
     };
   }

@@ -2,15 +2,21 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import {
+  GetHealthInstituteDetailsReq,
+  GetHealthInstituteDetailsRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
   UpdateHealthInstituteProfileReq,
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
-import { UpdateHealthInstituteResponse } from '../common/interfaces/health-institute.interface';
+import {
+  GetHealthInstituteDetailsResponse,
+  UpdateHealthInstituteResponse,
+} from '../common/interfaces/health-institute.interface';
 import { status } from '@grpc/grpc-js';
 import { throwRpcException } from '../common/utils/rpc-exception';
 import { Errors } from '../common/utils/constant';
+import { RedisService } from '../redis/redis.service';
 
 @Injectable()
 export class HealthInstituteService {
@@ -18,7 +24,7 @@ export class HealthInstituteService {
 
   constructor(
     private readonly dataSource: DataSource,
-    private readonly configService: ConfigService,
+    private readonly redisService: RedisService,
   ) {}
 
   /**
@@ -101,5 +107,62 @@ export class HealthInstituteService {
     return {
       healthInstituteId: procedureResult,
     };
+  }
+
+  async getHealthInstituteDetails(
+    request: GetHealthInstituteDetailsReq,
+  ): Promise<GetHealthInstituteDetailsRes> {
+    const cacheKey = `healthInstitute:profile:${request.healthInstituteId}`;
+
+    try {
+      const cachedDoctor = await this.redisService.get(cacheKey);
+
+      if (cachedDoctor) {
+        return JSON.parse(cachedDoctor) as GetHealthInstituteDetailsRes;
+      }
+
+      const result = await this.dataSource.query<
+        GetHealthInstituteDetailsResponse[]
+      >(`SELECT * FROM get_health_institute_details($1)`, [
+        request.healthInstituteId,
+      ]);
+      
+      const procedureResult = result[0];
+
+      if (!procedureResult) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+
+      switch (procedureResult.status) {
+        case Errors.invalidIdError:
+          throwRpcException(status.NOT_FOUND, 'Health institute not found');
+          break;
+
+        case Errors.dbError:
+          throwRpcException(status.INTERNAL, 'Database error');
+          break;
+      }
+
+      const response: GetHealthInstituteDetailsRes = {
+        healthInstituteId: procedureResult.healthInstituteId,
+        profileDetails: procedureResult.profileDetails,
+      };
+
+      await this.redisService.set(cacheKey, JSON.stringify(response), 300);
+
+      return response;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          `Redis operation failed for health institute ${request.healthInstituteId}`,
+          error.message,
+        );
+      }
+
+      throw error;
+    }
   }
 }

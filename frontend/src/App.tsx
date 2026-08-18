@@ -11,22 +11,33 @@ import {
   DoctorDashboardPreview,
   DoctorProfilePage,
   DoctorLayout,
+  HealthInstituteLoginPage,
+  HealthInstituteRegisterPage,
+  HealthInstituteLayout,
+  HealthInstituteProfilePage,
+  HealthInstituteDashboardPage,
 } from "@/pages/lazyPages";
 
 function AppLayout() {
   const location = useLocation();
   const isDoctorRoute =
     location.pathname.startsWith("/doctor") || location.pathname === "/dashboard";
+  const isHealthInstituteTerminalRoute =
+    location.pathname.startsWith("/health-institute/profile") ||
+    location.pathname.startsWith("/health-institute/dashboard");
+  const hidePublicNavAndFooter = isDoctorRoute || isHealthInstituteTerminalRoute;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-teal-500 selection:text-white">
-      {!isDoctorRoute && <Navbar />}
+      {!hidePublicNavAndFooter && <Navbar />}
       <div className="flex-1">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             <Route path="/" element={<LandingPage />} />
             <Route path="/login" element={<DoctorLoginPage />} />
             <Route path="/register" element={<DoctorRegisterPage />} />
+            <Route path="/health-institute/login" element={<HealthInstituteLoginPage />} />
+            <Route path="/health-institute/register" element={<HealthInstituteRegisterPage />} />
 
             {/* Redirect /dashboard to /doctor/profile */}
             <Route path="/dashboard" element={<Navigate to="/doctor/profile" replace />} />
@@ -36,10 +47,16 @@ function AppLayout() {
               <Route path="profile" element={<DoctorProfilePage />} />
               <Route path="dashboard" element={<DoctorDashboardPreview />} />
             </Route>
+
+            {/* Common Health Institute Side Navbar Layout & Separate Route Views */}
+            <Route path="/health-institute" element={<HealthInstituteLayout />}>
+              <Route path="profile" element={<HealthInstituteProfilePage />} />
+              <Route path="dashboard" element={<HealthInstituteDashboardPage />} />
+            </Route>
           </Routes>
         </Suspense>
       </div>
-      {!isDoctorRoute && <Footer />}
+      {!hidePublicNavAndFooter && <Footer />}
     </div>
   );
 }

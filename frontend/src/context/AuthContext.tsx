@@ -3,23 +3,29 @@ import { setInMemoryToken, callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 import { setCookie, getCookie, deleteCookie } from "@/utils/cookies";
 
-export interface DoctorUser {
-  doctorId: string;
+export interface User {
+  doctorId?: string;
+  healthInstituteId?: string;
+  healthInstituteName?: string;
+  healthInstituteType?: number;
   email: string;
-  mobile: string;
+  mobile?: string;
 }
 
 export interface LoginResponseData {
   accessToken: string;
   refreshToken?: string;
   doctorId?: string;
+  healthInstituteId?: string;
+  healthInstituteName?: string;
+  healthInstituteType?: number;
   email?: string;
   mobile?: string;
 }
 
 interface AuthContextType {
   accessToken: string | null;
-  user: DoctorUser | null;
+  user: User | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (data: LoginResponseData) => void;
@@ -32,7 +38,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   // Access Token: In-memory React State (Short-lived, not saved to disk/localStorage)
   const [accessToken, setAccessTokenState] = useState<string | null>(null);
-  const [user, setUser] = useState<DoctorUser | null>(null);
+  const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   const hasInitAuthRef = useRef(false);
@@ -55,9 +61,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 3. User details in React state
     setUser({
-      doctorId: data.doctorId || "",
+      doctorId: data.doctorId,
+      healthInstituteId: data.healthInstituteId,
+      healthInstituteName: data.healthInstituteName,
+      healthInstituteType: data.healthInstituteType,
       email: data.email || "",
-      mobile: data.mobile || "",
+      mobile: data.mobile,
     });
   };
 
