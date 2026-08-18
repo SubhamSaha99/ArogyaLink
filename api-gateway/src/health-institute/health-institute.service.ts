@@ -51,9 +51,9 @@ export class HealthInstituteService implements OnModuleInit {
   }
 
   /**
-   * * Get health institute by id
+   * * Get health institute details
    * @param healthInstituteId 
-   * @returns GetHealthInstituteByIdRes
+   * @returns GetHealthInstituteDetailsRes
    */
   async getHealthInstituteDetails(
     healthInstituteId: string,

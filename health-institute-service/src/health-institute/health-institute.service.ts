@@ -109,6 +109,11 @@ export class HealthInstituteService {
     };
   }
 
+  /**
+   * @description Get health institute details
+   * @param request 
+   * @returns GetHealthInstituteDetailsRes
+   */
   async getHealthInstituteDetails(
     request: GetHealthInstituteDetailsReq,
   ): Promise<GetHealthInstituteDetailsRes> {
@@ -126,7 +131,7 @@ export class HealthInstituteService {
       >(`SELECT * FROM get_health_institute_details($1)`, [
         request.healthInstituteId,
       ]);
-      
+
       const procedureResult = result[0];
 
       if (!procedureResult) {

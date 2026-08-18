@@ -44,6 +44,11 @@ export class HealthInstituteController {
     };
   }
 
+  /**
+   * * Get health institute details
+   * @param user 
+   * @returns json
+   */
   @Get('getHealthInstituteDetails')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
