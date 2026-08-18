@@ -4,6 +4,8 @@ import {
   HealthInstituteProfileRes,
   HealthInstituteServiceController,
   HealthInstituteServiceControllerMethods,
+  UpdateHealthInstituteProfileReq,
+  UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
 import { HealthInstituteService } from './health-institute.service';
 
@@ -18,5 +20,11 @@ export class HealthInstituteController implements HealthInstituteServiceControll
     request: HealthInstituteProfileReq,
   ): Promise<HealthInstituteProfileRes> {
     return this.healthInstituteService.createHealthInstituteProfile(request);
+  }
+
+  async updateHealthInstituteProfile(
+    request: UpdateHealthInstituteProfileReq,
+  ): Promise<UpdateHealthInstituteProfileRes> {
+    return this.healthInstituteService.updateHealthInstituteProfile(request);
   }
 }

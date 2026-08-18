@@ -18,7 +18,7 @@ export class HealthInstituteProfile {
   @Column({
     name: 'health_institute_id',
     type: 'varchar',
-    length: 255,
+    length: 50,
     unique: true,
   })
   healthInstituteId!: string;

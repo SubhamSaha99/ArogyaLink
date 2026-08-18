@@ -21,21 +21,44 @@ export interface HealthInstituteProfileRes {
   healthInstituteId: string;
 }
 
+export interface UpdateHealthInstituteProfileReq {
+  healthInstituteId: string;
+  registrationNumber: string;
+  phone?: string | undefined;
+  address?: string | undefined;
+  stateId: number;
+  districtId: number;
+  pincode: string;
+}
+
+export interface UpdateHealthInstituteProfileRes {
+  healthInstituteId: string;
+}
+
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
   createHealthInstituteProfile(request: HealthInstituteProfileReq): Observable<HealthInstituteProfileRes>;
+
+  updateHealthInstituteProfile(request: UpdateHealthInstituteProfileReq): Observable<UpdateHealthInstituteProfileRes>;
 }
 
 export interface HealthInstituteServiceController {
   createHealthInstituteProfile(
     request: HealthInstituteProfileReq,
   ): Promise<HealthInstituteProfileRes> | Observable<HealthInstituteProfileRes> | HealthInstituteProfileRes;
+
+  updateHealthInstituteProfile(
+    request: UpdateHealthInstituteProfileReq,
+  ):
+    | Promise<UpdateHealthInstituteProfileRes>
+    | Observable<UpdateHealthInstituteProfileRes>
+    | UpdateHealthInstituteProfileRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createHealthInstituteProfile"];
+    const grpcMethods: string[] = ["createHealthInstituteProfile", "updateHealthInstituteProfile"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("HealthInstituteService", method)(constructor.prototype[method], method, descriptor);

@@ -38,8 +38,6 @@ export interface HealthInstituteLoginReq {
 
 export interface HealthInstituteLoginRes {
   healthInstituteId: string;
-  healthInstituteName: string;
-  healthInstituteType: number;
   email: string;
   accessToken: string;
   refreshToken: string;

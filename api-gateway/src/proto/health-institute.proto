@@ -4,15 +4,31 @@ package health_institute;
 
 service HealthInstituteService {
   rpc CreateHealthInstituteProfile(HealthInstituteProfileReq) returns (HealthInstituteProfileRes);
+
+  rpc UpdateHealthInstituteProfile(UpdateHealthInstituteProfileReq) returns (UpdateHealthInstituteProfileRes);
 }
 
 message HealthInstituteProfileReq {
-    string healthInstituteId = 1;
-    string healthInstituteName = 2;
-    int32 healthInstituteType = 3;
-    string email = 4;
+  string healthInstituteId   = 1;
+  string healthInstituteName = 2;
+  int32  healthInstituteType = 3;
+  string email               = 4;
 }
 
 message HealthInstituteProfileRes {
-    string healthInstituteId = 1;
+  string healthInstituteId = 1;
+}
+
+message UpdateHealthInstituteProfileReq {
+  string          healthInstituteId  = 1;
+  string          registrationNumber = 2;
+  optional string phone              = 3;
+  optional string address            = 4;
+  int32           stateId            = 5;
+  int32           districtId         = 6;
+  string          pincode            = 7;
+}
+
+message UpdateHealthInstituteProfileRes {
+  string healthInstituteId = 1;
 }

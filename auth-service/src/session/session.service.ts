@@ -4,7 +4,7 @@ import { Repository } from 'typeorm';
 
 import { UserSession } from '../db/entities/user-session.entity';
 import { CreateSessionDto } from './session.dto';
-import { throwRpcException } from '../common/util/rpcException';
+import { throwRpcException } from '../common/util/rpc-exception';
 import { status } from '@grpc/grpc-js';
 
 @Injectable()

@@ -5,8 +5,6 @@ export interface authQueryInterface {
 export interface healthInstituteLoginQueryInterface {
   status: string;
   healthInstituteId: string;
-  healthInstituteName: string;
-  healthInstituteType: number;
   email: string;
   password: string;
 }

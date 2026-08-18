@@ -9,8 +9,6 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
         RETURNS TABLE (
             status VARCHAR,
             "healthInstituteId" VARCHAR,
-            "healthInstituteName" VARCHAR,
-            "healthInstituteType" INT,
             email VARCHAR,
             password VARCHAR
         )
@@ -34,8 +32,6 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
                     'invalidCredential'::VARCHAR,
                     NULL::VARCHAR,
                     NULL::VARCHAR,
-                    NULL::INT,
-                    NULL::VARCHAR,
                     NULL::VARCHAR;
         
                 RETURN;
@@ -47,8 +43,6 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
             SELECT
                 'SUCCESS'::VARCHAR AS status,
                 hi.health_institute_id AS "healthInstituteId",
-                hi.health_institute_name AS "healthInstituteName",
-                hi.health_institute_type AS "healthInstituteType",
                 hi.email,
                 hi.password
             FROM health_institute hi
@@ -82,8 +76,6 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
                 SELECT
                     'dbError'::VARCHAR,
                     NULL::VARCHAR,
-                    NULL::VARCHAR,
-                    NULL::INT,
                     NULL::VARCHAR,
                     NULL::VARCHAR;
         

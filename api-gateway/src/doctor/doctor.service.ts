@@ -19,14 +19,15 @@ import {
   DoctorQualificationsDto,
 } from './doctor.dto';
 import { firstValueFrom } from 'rxjs';
-import { deleteFile } from '../common/utils/file.util';
-import { moveFile } from '../common/utils/uploadFile';
+import { deleteFile } from '../common/utils/file-util';
+import { moveFile } from '../common/utils/upload-file';
+import { GrpcServiceName } from '../common/utils/constant';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {
   private doctorGrpcService!: DoctorServiceClient;
   constructor(
-    @Inject('DOCTOR_PACKAGE') private readonly doctorClient: ClientGrpc,
+    @Inject(GrpcServiceName.DOCTOR) private readonly doctorClient: ClientGrpc,
   ) {}
 
   onModuleInit() {

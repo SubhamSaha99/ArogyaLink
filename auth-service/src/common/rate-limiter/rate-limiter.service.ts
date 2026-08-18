@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { RedisService } from '../../redis/redis.service';
 import { RateLimitOptions } from '../interfaces/rate-limiter.interface';
-import { throwRpcException } from '../util/rpcException';
+import { throwRpcException } from '../util/rpc-exception';
 import { status } from '@grpc/grpc-js';
 
 @Injectable()

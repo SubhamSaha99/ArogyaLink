@@ -28,7 +28,7 @@ import {
   LOGIN_RATE_LIMIT,
   UserRole,
 } from '../common/util/constant';
-import { throwRpcException } from '../common/util/rpcException';
+import { throwRpcException } from '../common/util/rpc-exception';
 import { JwtUtil } from '../common/util/jwt.util';
 import { SessionService } from '../session/session.service';
 import { AuditService } from '../session/audit.service';
@@ -225,8 +225,6 @@ export class AuthService {
 
     return {
       healthInstituteId: procedureResult.healthInstituteId,
-      healthInstituteName: procedureResult.healthInstituteName,
-      healthInstituteType: procedureResult.healthInstituteType,
       email: procedureResult.email,
       accessToken,
       refreshToken,

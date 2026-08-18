@@ -13,7 +13,7 @@ import {
   UpdateDoctorQualificationsReq,
   UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
-import { throwRpcException } from '../common/utils/rpcException';
+import { throwRpcException } from '../common/utils/rpc-exception';
 import { status } from '@grpc/grpc-js';
 import { Errors } from '../common/utils/constants';
 import { ConfigService } from '@nestjs/config';
