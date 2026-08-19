@@ -4,8 +4,10 @@ import { DataSource } from 'typeorm';
 import {
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
+  GetStatesRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
+  MasterDataItem,
   UpdateHealthInstituteProfileReq,
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
@@ -163,6 +165,50 @@ export class HealthInstituteService {
       ) {
         this.logger.warn(
           `Redis operation failed for health institute ${request.healthInstituteId}`,
+          error.message,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * @description Get states
+   * @returns GetStatesRes
+   */
+  async getStates(): Promise<GetStatesRes> {
+    const cacheKey = `states`;
+
+    try {
+      const cachedStates = await this.redisService.get(cacheKey);
+
+      if (cachedStates) {
+        return JSON.parse(cachedStates) as GetStatesRes;
+      }
+
+      const result = await this.dataSource.query<MasterDataItem[]>(
+        `SELECT * FROM get_states()`,
+      );
+
+      if (result.length === 0) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+
+      const response: GetStatesRes = {
+        states: result,
+      };
+
+      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
+
+      return response;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          `Redis operation failed for states`,
           error.message,
         );
       }

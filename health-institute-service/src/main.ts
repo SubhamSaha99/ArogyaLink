@@ -12,7 +12,7 @@ async function bootstrap() {
       options: {
         package: HEALTH_INSTITUTE_PACKAGE_NAME,
         protoPath: join(__dirname, 'proto/health-institute.proto'),
-        url: process.env.AUTH_SERVICE_GRPC_URL ?? '0.0.0.0:50053',
+        url: process.env.HEALTH_INSTITUTE_SERVICE_GRPC_URL ?? '0.0.0.0:50053',
       },
     },
   );

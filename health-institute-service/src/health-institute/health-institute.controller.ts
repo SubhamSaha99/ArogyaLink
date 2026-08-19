@@ -2,6 +2,8 @@ import { Controller } from '@nestjs/common';
 import {
     GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
+  GetStatesReq,
+  GetStatesRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
   HealthInstituteServiceController,
@@ -10,6 +12,7 @@ import {
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
 import { HealthInstituteService } from './health-institute.service';
+import { Observable } from 'rxjs';
 
 @Controller()
 @HealthInstituteServiceControllerMethods()
@@ -34,5 +37,9 @@ export class HealthInstituteController implements HealthInstituteServiceControll
     request: GetHealthInstituteDetailsReq,
   ): Promise<GetHealthInstituteDetailsRes> {
     return this.healthInstituteService.getHealthInstituteDetails(request);
+  }
+
+  async getStates(): Promise<GetStatesRes> {
+    return this.healthInstituteService.getStates();    
   }
 }

@@ -2,6 +2,7 @@ import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
+  GetStatesRes,
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteServiceClient,
   UpdateHealthInstituteProfileReq,
@@ -66,6 +67,16 @@ export class HealthInstituteService implements OnModuleInit {
       this.healthInstituteGrpcService.getHealthInstituteDetails(
         healInstituteProfileData,
       ),
+    );
+  }
+
+  /**
+   * * Get States
+   * @returns GetStatesRes
+   */
+  async getStates(): Promise<GetStatesRes> {
+    return await firstValueFrom(
+      this.healthInstituteGrpcService.getStates({}),
     );
   }
 }

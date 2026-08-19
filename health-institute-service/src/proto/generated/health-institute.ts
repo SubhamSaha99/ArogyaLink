@@ -57,6 +57,19 @@ export interface GetHealthInstituteDetailsRes {
   profileDetails: HealthInstituteProfileDetails | undefined;
 }
 
+export interface MasterDataItem {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface GetStatesReq {
+}
+
+export interface GetStatesRes {
+  states: MasterDataItem[];
+}
+
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
@@ -65,6 +78,8 @@ export interface HealthInstituteServiceClient {
   updateHealthInstituteProfile(request: UpdateHealthInstituteProfileReq): Observable<UpdateHealthInstituteProfileRes>;
 
   getHealthInstituteDetails(request: GetHealthInstituteDetailsReq): Observable<GetHealthInstituteDetailsRes>;
+
+  getStates(request: GetStatesReq): Observable<GetStatesRes>;
 }
 
 export interface HealthInstituteServiceController {
@@ -82,6 +97,8 @@ export interface HealthInstituteServiceController {
   getHealthInstituteDetails(
     request: GetHealthInstituteDetailsReq,
   ): Promise<GetHealthInstituteDetailsRes> | Observable<GetHealthInstituteDetailsRes> | GetHealthInstituteDetailsRes;
+
+  getStates(request: GetStatesReq): Promise<GetStatesRes> | Observable<GetStatesRes> | GetStatesRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {
@@ -90,6 +107,7 @@ export function HealthInstituteServiceControllerMethods() {
       "createHealthInstituteProfile",
       "updateHealthInstituteProfile",
       "getHealthInstituteDetails",
+      "getStates",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

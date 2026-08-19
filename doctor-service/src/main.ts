@@ -12,7 +12,7 @@ async function bootstrap() {
       options: {
         package: DOCTOR_PACKAGE_NAME,
         protoPath: join(__dirname, 'proto/doctor.proto'),
-        url: process.env.AUTH_SERVICE_GRPC_URL ?? '0.0.0.0:50052',
+        url: process.env.DOCTOR_SERVICE_GRPC_URL ?? '0.0.0.0:50052',
         loader: {
           keepCase: false,
           longs: String,

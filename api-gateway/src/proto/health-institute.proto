@@ -8,6 +8,8 @@ service HealthInstituteService {
   rpc UpdateHealthInstituteProfile(UpdateHealthInstituteProfileReq) returns (UpdateHealthInstituteProfileRes);
 
   rpc GetHealthInstituteDetails(GetHealthInstituteDetailsReq) returns (GetHealthInstituteDetailsRes);
+
+  rpc GetStates(GetStatesReq) returns (GetStatesRes);
 }
 
 message HealthInstituteProfileReq {
@@ -55,4 +57,16 @@ message HealthInstituteProfileDetails {
 message GetHealthInstituteDetailsRes {
   string                        healthInstituteId = 1;
   HealthInstituteProfileDetails profileDetails    = 2;
+}
+
+message MasterDataItem {
+  int32  id   = 1;
+  string name = 2;
+  string code = 3;
+}
+
+message GetStatesReq {}
+
+message GetStatesRes{
+  repeated MasterDataItem states = 1;
 }

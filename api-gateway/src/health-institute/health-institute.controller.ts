@@ -63,4 +63,21 @@ export class HealthInstituteController {
       data: result,
     };
   }
+
+  /**
+   * * Get States
+   * @returns 
+   */
+  @Get('states')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getStates() {
+    const result = await this.healthInstituteService.getStates();
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
 }

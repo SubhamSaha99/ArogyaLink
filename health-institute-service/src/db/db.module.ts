@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseService } from './db.service';
 import { HealthInstituteProfile } from './entities/health-institute-profile.entity';
 import { DbExceptionLog } from './entities/db-exception-log.entity';
+import { State } from './entities/states.entity';
 
 @Module({
   imports: [
@@ -19,9 +20,9 @@ import { DbExceptionLog } from './entities/db-exception-log.entity';
         database: configService.getOrThrow<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
-        migrationsRun: false,
+        migrationsRun: true,
         migrations: ['dist/db/migrations/*.js'],
-        entities: [HealthInstituteProfile, DbExceptionLog],
+        entities: [HealthInstituteProfile, State, DbExceptionLog],
         logging: true,
       }),
     }),
