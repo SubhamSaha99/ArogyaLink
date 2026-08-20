@@ -5,6 +5,7 @@ import { DatabaseService } from './db.service';
 import { HealthInstituteProfile } from './entities/health-institute-profile.entity';
 import { DbExceptionLog } from './entities/db-exception-log.entity';
 import { State } from './entities/states.entity';
+import { District } from './entities/districts.entity';
 
 @Module({
   imports: [
@@ -20,9 +21,9 @@ import { State } from './entities/states.entity';
         database: configService.getOrThrow<string>('DB_NAME'),
         autoLoadEntities: true,
         synchronize: true,
-        migrationsRun: true,
+        migrationsRun: false,
         migrations: ['dist/db/migrations/*.js'],
-        entities: [HealthInstituteProfile, State, DbExceptionLog],
+        entities: [HealthInstituteProfile, State, District, DbExceptionLog],
         logging: true,
       }),
     }),

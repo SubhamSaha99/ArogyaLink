@@ -2,35 +2,47 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
 
-@Entity({ name: 'state_master' })
-export class State {
+@Entity({ name: 'district_master' })
+@Index('idx_district_master_state_id', ['stateId'])
+@Index('idx_district_master_district_code', ['districtCode'], {
+  unique: true,
+})
+export class District {
   @PrimaryGeneratedColumn({
     type: 'int',
   })
   id!: number;
 
   @Column({
-    name: 'state_name',
-    type: 'varchar',
-    length: 100,
+    name: 'state_id',
+    type: 'int',
   })
-  stateName!: string;
+  stateId!: number;
 
   @Column({
-    name: 'state_code',
+    name: 'district_name',
     type: 'varchar',
-    length: 10,
-    nullable: true,
-    unique: true,
+    length: 255,
   })
-  stateCode!: string;
+  districtName!: string;
+
+  @Column({
+    name: 'district_code',
+    type: 'varchar',
+    length: 20,
+    unique: true,
+    nullable: true,
+  })
+  districtCode?: string;
 
   @Column({
     name: 'is_active',
+    type: 'boolean',
     default: true,
   })
   isActive!: boolean;

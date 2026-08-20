@@ -2,6 +2,8 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import {
+    GetDistrictsReq,
+  GetDistrictsRes,
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
   GetStatesRes,
@@ -106,6 +108,8 @@ export class HealthInstituteService {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
+    await this.redisService.delete(`healthInstitute:profile:${request.healthInstituteId}`);
+    
     return {
       healthInstituteId: procedureResult,
     };
@@ -209,6 +213,49 @@ export class HealthInstituteService {
       ) {
         this.logger.warn(
           `Redis operation failed for states`,
+          error.message,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  async getDistricts(
+    request: GetDistrictsReq,
+  ): Promise<GetDistrictsRes> {
+    const cacheKey = `districts:${request.stateId}`;
+
+    try {
+    //   const cachedDistricts = await this.redisService.get(cacheKey);
+
+    //   if (cachedDistricts) {
+    //     return JSON.parse(cachedDistricts) as GetDistrictsRes;
+    //   }
+
+      const result = await this.dataSource.query<MasterDataItem[]>(
+        `SELECT * FROM get_districts($1)`,
+        [request.stateId],
+      );
+      console.log(result);
+      if (result.length === 0) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+
+      const response: GetDistrictsRes = {
+        districts: result,
+      };
+
+    //   await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
+
+      return response;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          `Redis operation failed for districts ${request.stateId}`,
           error.message,
         );
       }

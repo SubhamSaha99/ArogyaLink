@@ -1,5 +1,6 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
+  GetDistrictsRes,
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
   GetStatesRes,
@@ -77,6 +78,19 @@ export class HealthInstituteService implements OnModuleInit {
   async getStates(): Promise<GetStatesRes> {
     return await firstValueFrom(
       this.healthInstituteGrpcService.getStates({}),
+    );
+  }
+
+  /**
+   * * Get Districts
+   * @param stateId 
+   * @returns GetDistrictsRes
+   */
+  async getDistricts(stateId: number): Promise<GetDistrictsRes> {
+    return await firstValueFrom(
+      this.healthInstituteGrpcService.getDistricts({
+        stateId,
+      }),
     );
   }
 }

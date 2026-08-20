@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
 } from '@nestjs/common';
 import { UpdateHealthInstituteProfileDto } from './health-institute.dto';
@@ -73,6 +74,19 @@ export class HealthInstituteController {
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getStates() {
     const result = await this.healthInstituteService.getStates();
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  @Get('districts/:id')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getDistricts(@Param('id') id: string) {
+    const result = await this.healthInstituteService.getDistricts(Number(id));
 
     return {
       success: true,

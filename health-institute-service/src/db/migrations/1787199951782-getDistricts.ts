@@ -1,9 +1,13 @@
-import { MigrationInterface, QueryRunner } from 'typeorm';
+import { MigrationInterface, QueryRunner } from "typeorm";
 
-export class GetStates1787148816243 implements MigrationInterface {
-  public async up(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-            CREATE OR REPLACE FUNCTION get_states()
+export class GetDistricts1787199951782 implements MigrationInterface {
+
+    public async up(queryRunner: QueryRunner): Promise<void> {
+
+        await queryRunner.query(`
+            CREATE OR REPLACE FUNCTION get_districts(
+                p_state_id INT
+            )
             RETURNS TABLE (
                 id INT,
                 name VARCHAR,
@@ -19,12 +23,13 @@ export class GetStates1787148816243 implements MigrationInterface {
 
                 RETURN QUERY
                 SELECT
-                    s.id,
-                    s.state_name AS name,
-                    s.state_code AS code
-                FROM state_master s
-                WHERE s.is_active = TRUE
-                ORDER BY s.id ASC;
+                    d.id,
+                    d.district_name AS name,
+                    d.district_code AS code
+                FROM district_master d
+                WHERE d.state_id = p_state_id
+                AND d.is_active = TRUE
+                ORDER BY d.id ASC;
 
 
             EXCEPTION
@@ -43,7 +48,7 @@ export class GetStates1787148816243 implements MigrationInterface {
                         created_at
                     )
                     VALUES (
-                        'get_states',
+                        'get_districts',
                         v_sqlstate,
                         v_message,
                         COALESCE(v_detail, ''),
@@ -54,12 +59,14 @@ export class GetStates1787148816243 implements MigrationInterface {
 
             END;
             $$;
-        `);
-  }
+        `)
+    }
 
-  public async down(queryRunner: QueryRunner): Promise<void> {
-    await queryRunner.query(`
-            DROP FUNCTION get_states();
-        `);
-  }
+    public async down(queryRunner: QueryRunner): Promise<void> {
+
+        await queryRunner.query(`
+            DROP FUNCTION IF EXISTS get_districts(SMALLINT);
+        `)
+    }
+
 }

@@ -10,6 +10,8 @@ service HealthInstituteService {
   rpc GetHealthInstituteDetails(GetHealthInstituteDetailsReq) returns (GetHealthInstituteDetailsRes);
 
   rpc GetStates(GetStatesReq) returns (GetStatesRes);
+
+  rpc GetDistricts(GetDistrictsReq) returns (GetDistrictsRes);
 }
 
 message HealthInstituteProfileReq {
@@ -69,4 +71,12 @@ message GetStatesReq {}
 
 message GetStatesRes{
   repeated MasterDataItem states = 1;
+}
+
+message GetDistrictsReq {
+  int32 stateId = 1;
+}
+
+message GetDistrictsRes {
+  repeated MasterDataItem districts = 1;
 }
