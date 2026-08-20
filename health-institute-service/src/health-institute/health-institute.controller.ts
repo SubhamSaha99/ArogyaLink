@@ -4,7 +4,6 @@ import {
     GetDistrictsRes,
     GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
-  GetStatesReq,
   GetStatesRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
@@ -14,7 +13,6 @@ import {
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
 import { HealthInstituteService } from './health-institute.service';
-import { Observable } from 'rxjs';
 
 @Controller()
 @HealthInstituteServiceControllerMethods()
