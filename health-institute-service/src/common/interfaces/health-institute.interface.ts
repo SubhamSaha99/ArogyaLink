@@ -11,7 +11,9 @@ export interface HealthInstituteProfileDetails {
   phone?: string;
   address?: string;
   stateId?: number;
+  stateName?: string;
   districtId?: number;
+  districtName?: string;
   pincode?: string;
 }
 

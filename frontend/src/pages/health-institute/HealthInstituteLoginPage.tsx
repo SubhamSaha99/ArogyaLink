@@ -8,7 +8,6 @@ import {
   Mail,
   Eye,
   EyeOff,
-  ShieldCheck,
   ArrowRight,
   Activity,
   AlertCircle,

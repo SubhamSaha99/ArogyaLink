@@ -52,8 +52,10 @@ message HealthInstituteProfileDetails {
   optional string phone               = 6;
   optional string address             = 7;
   optional int32  stateId             = 8;
-  optional int32  districtId          = 9;
-  optional string pincode             = 10;
+  optional string stateName           = 9;
+  optional int32  districtId          = 10;
+  optional string districtName        = 11;
+  optional string pincode             = 12;
 }
 
 message GetHealthInstituteDetailsRes {

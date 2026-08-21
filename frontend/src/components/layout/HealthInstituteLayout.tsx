@@ -1,49 +1,24 @@
-import React, { useState, useEffect } from "react";
+import React from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
 import { Building2, LogOut, Activity, LayoutDashboard } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
-import { callApi } from "@/utils/axios";
-import { API_ROUTES } from "@/utils/apiRoutes";
 
 export const HealthInstituteLayout: React.FC = () => {
   const navigate = useNavigate();
   const { logout, user } = useAuth();
-  const [instituteData, setInstituteData] = useState<any>(null);
-
-  useEffect(() => {
-    const fetchDetails = async () => {
-      try {
-        const response = await callApi(API_ROUTES.getHealthInstituteDetails, null, "GET");
-        const data = response?.data?.healthInstituteId
-          ? response.data
-          : response?.healthInstituteId
-          ? response
-          : response?.data;
-        if (data) {
-          setInstituteData(data);
-        }
-      } catch (err) {
-        console.error("Layout failed to fetch institute details:", err);
-      }
-    };
-    fetchDetails();
-  }, []);
 
   const handleLogout = async () => {
     await logout();
     navigate("/");
   };
 
-  const healthInstituteId =
-    instituteData?.healthInstituteId || user?.healthInstituteId || "N000001";
+  const healthInstituteId = user?.healthInstituteId || "N000001";
   const healthInstituteName =
-    instituteData?.profileDetails?.healthInstituteName ||
     user?.healthInstituteName ||
     localStorage.getItem("arogya_institute_name") ||
     "Divine Polyclinic";
   const instituteEmail =
-    instituteData?.profileDetails?.email ||
     user?.email ||
     localStorage.getItem("arogya_institute_email") ||
     "divine.polyclinic@gmail.com";

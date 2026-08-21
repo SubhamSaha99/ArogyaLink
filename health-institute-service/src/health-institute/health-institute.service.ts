@@ -227,17 +227,16 @@ export class HealthInstituteService {
     const cacheKey = `districts:${request.stateId}`;
 
     try {
-    //   const cachedDistricts = await this.redisService.get(cacheKey);
+      const cachedDistricts = await this.redisService.get(cacheKey);
 
-    //   if (cachedDistricts) {
-    //     return JSON.parse(cachedDistricts) as GetDistrictsRes;
-    //   }
+      if (cachedDistricts) {
+        return JSON.parse(cachedDistricts) as GetDistrictsRes;
+      }
 
       const result = await this.dataSource.query<MasterDataItem[]>(
         `SELECT * FROM get_districts($1)`,
         [request.stateId],
       );
-      console.log(result);
       if (result.length === 0) {
         throwRpcException(status.INTERNAL, 'Invalid response from procedure');
       }
@@ -246,7 +245,7 @@ export class HealthInstituteService {
         districts: result,
       };
 
-    //   await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
+      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
 
       return response;
     } catch (error) {

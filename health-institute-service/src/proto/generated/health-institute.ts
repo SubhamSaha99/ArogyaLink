@@ -48,7 +48,9 @@ export interface HealthInstituteProfileDetails {
   phone?: string | undefined;
   address?: string | undefined;
   stateId?: number | undefined;
+  stateName?: string | undefined;
   districtId?: number | undefined;
+  districtName?: string | undefined;
   pincode?: string | undefined;
 }
 

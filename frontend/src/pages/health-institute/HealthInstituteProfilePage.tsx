@@ -56,7 +56,9 @@ export interface HealthInstituteDetailsResponse {
     phone?: string;
     address?: string;
     stateId?: number;
+    stateName?: string;
     districtId?: number;
+    districtName?: string;
     pincode?: string;
   };
 }
@@ -73,8 +75,8 @@ interface EditInstituteProfileFormValues {
 const editProfileSchema = Yup.object({
   registrationNumber: Yup.string()
     .trim()
-    .max(50, "Registration Number cannot exceed 50 characters")
-    .optional(),
+    .required("Registration Number is required")
+    .max(50, "Registration Number cannot exceed 50 characters"),
   phone: Yup.string()
     .trim()
     .matches(/^\+?[0-9]{7,15}$/, "Please enter a valid phone number (7-15 digits)")
@@ -97,31 +99,23 @@ const editProfileSchema = Yup.object({
     .matches(/^[1-9][0-9]{5}$/, "Pincode must be a 6-digit valid postal code"),
 });
 
-// Sample States & Districts for dropdown options
-const SAMPLE_STATES = [
-  { id: 1, name: "West Bengal" },
-  { id: 2, name: "Maharashtra" },
-  { id: 3, name: "Delhi NCR" },
-  { id: 4, name: "Karnataka" },
-  { id: 5, name: "Tamil Nadu" },
-  { id: 6, name: "Gujarat" },
-];
-
-const SAMPLE_DISTRICTS = [
-  { id: 10, name: "Kolkata", stateId: 1 },
-  { id: 101, name: "Mumbai City", stateId: 2 },
-  { id: 102, name: "Pune", stateId: 2 },
-  { id: 201, name: "Central Delhi", stateId: 3 },
-  { id: 301, name: "Bengaluru Urban", stateId: 4 },
-  { id: 501, name: "Chennai", stateId: 5 },
-  { id: 601, name: "Ahmedabad", stateId: 6 },
-];
+export interface MasterDataItem {
+  id: number;
+  name: string;
+  code?: string;
+}
 
 export const HealthInstituteProfilePage: React.FC = () => {
   const { user } = useAuth();
   const [details, setDetails] = useState<HealthInstituteDetailsResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [fetchingError, setFetchingError] = useState<string | null>(null);
+
+  // States and Districts for Edit Modal
+  const [statesList, setStatesList] = useState<MasterDataItem[]>([]);
+  const [districtsList, setDistrictsList] = useState<MasterDataItem[]>([]);
+  const [loadingStates, setLoadingStates] = useState<boolean>(false);
+  const [loadingDistricts, setLoadingDistricts] = useState<boolean>(false);
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
@@ -130,13 +124,56 @@ export const HealthInstituteProfilePage: React.FC = () => {
 
   const hasFetchedRef = useRef(false);
 
-  // Fetch Health Institute Details API
+  // Fetch States API (called only when modal opens)
+  const fetchStates = async () => {
+    setLoadingStates(true);
+    try {
+      const response = await callApi(API_ROUTES.getHealthInstituteStates, null, "GET");
+      const list = response?.data?.states || response?.states || response?.data || [];
+      if (Array.isArray(list)) {
+        setStatesList(list);
+        return list;
+      }
+      return [];
+    } catch (err) {
+      console.error("Failed to fetch states:", err);
+      return [];
+    } finally {
+      setLoadingStates(false);
+    }
+  };
+
+  // Fetch Districts API by State ID (called only when modal opens or state changes)
+  const fetchDistricts = async (sId: number) => {
+    if (!sId) return [];
+    setLoadingDistricts(true);
+    try {
+      const response = await callApi(`${API_ROUTES.getHealthInstituteDistricts}/${sId}`, null, "GET");
+      const list = response?.data?.districts || response?.districts || response?.data || [];
+      if (Array.isArray(list)) {
+        setDistrictsList(list);
+        return list;
+      }
+      return [];
+    } catch (err) {
+      console.error(`Failed to fetch districts for state ${sId}:`, err);
+      return [];
+    } finally {
+      setLoadingDistricts(false);
+    }
+  };
+
+  // Fetch Health Institute Details API (called on page load)
   const fetchInstituteDetails = async () => {
     setLoading(true);
     setFetchingError(null);
     try {
       const response = await callApi(API_ROUTES.getHealthInstituteDetails, null, "GET");
-      const apiData = response?.data?.healthInstituteId ? response.data : (response?.healthInstituteId ? response : response?.data);
+      const apiData = response?.data?.healthInstituteId
+        ? response.data
+        : response?.healthInstituteId
+        ? response
+        : response?.data;
       if (apiData) {
         setDetails(apiData);
       }
@@ -188,8 +225,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
 
       try {
         const payload = {
-          healthInstituteId,
-          registrationNumber: values.registrationNumber.trim() || undefined,
+          registrationNumber: values.registrationNumber.trim(),
           phone: values.phone.trim() || undefined,
           address: values.address.trim() || undefined,
           stateId: Number(values.stateId),
@@ -225,31 +261,62 @@ export const HealthInstituteProfilePage: React.FC = () => {
     },
   });
 
-  const openEditModal = () => {
+  const openEditModal = async () => {
+    const currentStateId = profile?.stateId || "";
+    const currentDistrictId = profile?.districtId || "";
+
     formik.resetForm({
       values: {
         registrationNumber: profile?.registrationNumber || "",
         phone: profile?.phone || "",
         address: profile?.address || "",
-        stateId: profile?.stateId || 1,
-        districtId: profile?.districtId || 101,
+        stateId: currentStateId,
+        districtId: currentDistrictId,
         pincode: profile?.pincode || "",
       },
     });
+
     setUpdateError(null);
     setUpdateSuccess(null);
     setIsEditModalOpen(true);
+
+    // Fetch states & districts ONLY when edit modal opens
+    const fetchedStates = await fetchStates();
+    const activeStateId = currentStateId || (fetchedStates.length > 0 ? fetchedStates[0].id : null);
+    if (activeStateId) {
+      if (!currentStateId && fetchedStates.length > 0) {
+        formik.setFieldValue("stateId", activeStateId);
+      }
+      const fetchedDistricts = await fetchDistricts(Number(activeStateId));
+      if (!currentDistrictId && fetchedDistricts.length > 0) {
+        formik.setFieldValue("districtId", fetchedDistricts[0].id);
+      }
+    }
+  };
+
+  const handleModalStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
+    const newSId = Number(e.target.value);
+    formik.setFieldValue("stateId", newSId);
+    formik.setFieldValue("districtId", "");
+    if (newSId) {
+      const fetched = await fetchDistricts(newSId);
+      if (fetched.length > 0) {
+        formik.setFieldValue("districtId", fetched[0].id);
+      }
+    }
   };
 
   const getStateName = (sId?: number) => {
+    if (profile?.stateName) return profile.stateName;
     if (!sId) return "Not Specified";
-    const found = SAMPLE_STATES.find((s) => s.id === sId);
+    const found = statesList.find((s) => s.id === Number(sId));
     return found ? found.name : `State ID: ${sId}`;
   };
 
   const getDistrictName = (dId?: number) => {
+    if (profile?.districtName) return profile.districtName;
     if (!dId) return "Not Specified";
-    const found = SAMPLE_DISTRICTS.find((d) => d.id === dId);
+    const found = districtsList.find((d) => d.id === Number(dId));
     return found ? found.name : `District ID: ${dId}`;
   };
 
@@ -594,19 +661,28 @@ export const HealthInstituteProfilePage: React.FC = () => {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* State Select */}
                   <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      State *
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                        State *
+                      </label>
+                      {loadingStates && (
+                        <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                        </span>
+                      )}
+                    </div>
                     <select
                       name="stateId"
                       value={formik.values.stateId}
-                      onChange={formik.handleChange}
+                      onChange={handleModalStateChange}
                       onBlur={formik.handleBlur}
+                      disabled={loadingStates}
                       className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
                     >
-                      {SAMPLE_STATES.map((state) => (
+                      <option value="">Select State</option>
+                      {statesList.map((state) => (
                         <option key={state.id} value={state.id}>
-                          {state.name}
+                          {state.name} {state.code ? `(${state.code})` : ""}
                         </option>
                       ))}
                     </select>
@@ -619,19 +695,28 @@ export const HealthInstituteProfilePage: React.FC = () => {
 
                   {/* District Select */}
                   <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      District *
-                    </label>
+                    <div className="flex items-center justify-between">
+                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                        District *
+                      </label>
+                      {loadingDistricts && (
+                        <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
+                          <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                        </span>
+                      )}
+                    </div>
                     <select
                       name="districtId"
                       value={formik.values.districtId}
                       onChange={formik.handleChange}
                       onBlur={formik.handleBlur}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
+                      disabled={loadingDistricts || !formik.values.stateId}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
                     >
-                      {SAMPLE_DISTRICTS.map((dist) => (
+                      <option value="">Select District</option>
+                      {districtsList.map((dist) => (
                         <option key={dist.id} value={dist.id}>
-                          {dist.name}
+                          {dist.name} {dist.code ? `(${dist.code})` : ""}
                         </option>
                       ))}
                     </select>

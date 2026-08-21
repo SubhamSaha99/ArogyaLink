@@ -1,26 +1,17 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  Activity,
   ShieldCheck,
   AlertTriangle,
-  FileText,
   Search,
   CheckCircle2,
-  Hospital,
-  Heart,
   Stethoscope,
   Pill,
   Clock,
   ArrowRight,
   Sparkles,
   Zap,
-  Lock,
   UserCheck,
-  Building2,
-  Share2,
-  Layers,
-  ChevronDown,
   RefreshCw,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";

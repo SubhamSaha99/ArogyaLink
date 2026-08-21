@@ -64,7 +64,10 @@ const DASHBOARD_PATIENTS: Record<string, any> = {
 
 export const DoctorDashboardPreview: React.FC = () => {
   const { user } = useAuth();
-  const doctorName = localStorage.getItem("arogya_doctor_name") || "Dr. Subham Saha";
+  const doctorName =
+    (user?.doctorId ? `Doctor (${user.doctorId})` : null) ||
+    localStorage.getItem("arogya_doctor_name") ||
+    "Dr. Subham Saha";
 
   const [searchQuery, setSearchQuery] = useState("ABHA-9988-7712");
   const [activePatientKey, setActivePatientKey] = useState<string>("ABHA-9988-7712");

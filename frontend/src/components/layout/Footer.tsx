@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import { Activity, ShieldCheck, Lock, Hospital, Heart, PhoneCall, Award } from "lucide-react";
+import { Activity, ShieldCheck, Lock, PhoneCall } from "lucide-react";
 
 export const Footer: React.FC = () => {
   return (
