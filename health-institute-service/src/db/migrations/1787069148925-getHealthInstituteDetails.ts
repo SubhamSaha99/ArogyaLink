@@ -41,9 +41,7 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
                 RETURN QUERY
                 SELECT
                     'SUCCESS'::VARCHAR AS status,
-
                     hip.health_institute_id AS "healthInstituteId",
-
                     jsonb_build_object(
                         'id', hip.id,
                         'healthInstituteName', hip.health_institute_name,
@@ -53,12 +51,15 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
                         'phone', COALESCE(hip.phone, ''),
                         'address', COALESCE(hip.address, ''),
                         'stateId', COALESCE(hip.state_id, NULL),
+						'stateName', COALESCE(s.state_name, ''),
                         'districtId', COALESCE(hip.district_id, NULL),
+						'districtName', COALESCE(d.district_name, ''),
                         'pincode', COALESCE(hip.pincode, '')
                     ) AS profileDetails
 
                 FROM health_institute_profile hip
-
+				LEFT JOIN state_master s ON hip.state_id = s.id AND s.is_active = TRUE
+				LEFT JOIN district_master d ON hip.district_id = d.id AND d.is_active = TRUE
                 WHERE hip.health_institute_id = p_health_institute_id;
 
 
