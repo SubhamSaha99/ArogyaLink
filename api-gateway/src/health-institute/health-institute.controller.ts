@@ -67,7 +67,7 @@ export class HealthInstituteController {
 
   /**
    * * Get States
-   * @returns
+   * @returns json
    */
   @Get('states')
   @HttpCode(HttpStatus.OK)
@@ -82,6 +82,11 @@ export class HealthInstituteController {
     };
   }
 
+  /**
+   * @description get districts
+   * @param id 
+   * @returns json
+   */
   @Get('districts/:id')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
@@ -95,11 +100,32 @@ export class HealthInstituteController {
     };
   }
 
+  /**
+   * @description Get Health Institutes
+   * @returns json
+   */
   @Get('registrationCouncils')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getRegistrationCouncils() {
     const result = await this.healthInstituteService.getRegistrationCouncils();
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Get appoint doctor master data
+   * @returns json
+   */
+  @Get('appointDoctorMasterData')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getAppointDoctorMasterData() {
+    const result = await this.healthInstituteService.getAppointDoctorMasterData();
 
     return {
       success: true,

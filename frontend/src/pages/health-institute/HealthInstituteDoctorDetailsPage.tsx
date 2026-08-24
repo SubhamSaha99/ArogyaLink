@@ -60,6 +60,47 @@ export interface DoctorDetailsData {
   }>;
 }
 
+export interface AppointMasterDataItem {
+  id: number;
+  name: string;
+  code?: string;
+}
+
+export interface AppointDoctorMasterData {
+  departments: AppointMasterDataItem[];
+  designations: AppointMasterDataItem[];
+  consultationScopes: AppointMasterDataItem[];
+}
+
+let cachedAppointMasterData: AppointDoctorMasterData | null = null;
+let appointMasterDataInFlight: Promise<AppointDoctorMasterData> | null = null;
+
+export const getCachedAppointDoctorMasterData = async (): Promise<AppointDoctorMasterData> => {
+  if (cachedAppointMasterData) {
+    return cachedAppointMasterData;
+  }
+  if (appointMasterDataInFlight) {
+    return appointMasterDataInFlight;
+  }
+
+  appointMasterDataInFlight = (async () => {
+    try {
+      const response = await callApi(API_ROUTES.getAppointDoctorMasterData, null, "GET");
+      const data = response?.data || response;
+      cachedAppointMasterData = {
+        departments: Array.isArray(data?.departments) ? data.departments : [],
+        designations: Array.isArray(data?.designations) ? data.designations : [],
+        consultationScopes: Array.isArray(data?.consultationScopes) ? data.consultationScopes : [],
+      };
+      return cachedAppointMasterData;
+    } finally {
+      appointMasterDataInFlight = null;
+    }
+  })();
+
+  return appointMasterDataInFlight;
+};
+
 export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   const { doctorId } = useParams<{ doctorId: string }>();
   const navigate = useNavigate();
@@ -69,15 +110,21 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Appoint Modal State
+  // Appoint Modal & Master Data State
   const [isAppointModalOpen, setIsAppointModalOpen] = useState<boolean>(false);
-  const [appointmentDept, setAppointmentDept] = useState<string>("General Medicine");
-  const [appointmentDesignation, setAppointmentDesignation] =
-    useState<string>("Consultant");
+  const [masterData, setMasterData] = useState<AppointDoctorMasterData>({
+    departments: [],
+    designations: [],
+    consultationScopes: [],
+  });
+  const [loadingMasterData, setLoadingMasterData] = useState<boolean>(false);
+
+  const [appointmentDeptId, setAppointmentDeptId] = useState<string>("");
+  const [appointmentDesignationId, setAppointmentDesignationId] = useState<string>("");
+  const [appointmentScopeId, setAppointmentScopeId] = useState<string>("");
   const [appointmentDate, setAppointmentDate] = useState<string>(
     new Date().toISOString().split("T")[0]
   );
-  const [appointmentType, setAppointmentType] = useState<string>("OPD & IPD");
   const [appointmentNotes, setAppointmentNotes] = useState<string>("");
   const [isSubmittingAppointment, setIsSubmittingAppointment] =
     useState<boolean>(false);
@@ -133,6 +180,29 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     fetchDoctorDetails();
   }, [fetchDoctorDetails]);
 
+  // Open modal and fetch appoint master data on modal open
+  const handleOpenAppointModal = async () => {
+    setIsAppointModalOpen(true);
+    setLoadingMasterData(true);
+    try {
+      const data = await getCachedAppointDoctorMasterData();
+      setMasterData(data);
+      if (data.departments.length > 0) {
+        setAppointmentDeptId((prev) => prev || String(data.departments[0].id));
+      }
+      if (data.designations.length > 0) {
+        setAppointmentDesignationId((prev) => prev || String(data.designations[0].id));
+      }
+      if (data.consultationScopes.length > 0) {
+        setAppointmentScopeId((prev) => prev || String(data.consultationScopes[0].id));
+      }
+    } catch (err) {
+      console.error("Failed to load appoint doctor master data:", err);
+    } finally {
+      setLoadingMasterData(false);
+    }
+  };
+
   // Handle appointment submission
   const handleConfirmAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -142,6 +212,13 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     try {
       await new Promise((resolve) => setTimeout(resolve, 800));
 
+      const selectedDept =
+        masterData.departments.find((d) => String(d.id) === String(appointmentDeptId))?.name ||
+        "Specialty";
+      const selectedDesignation =
+        masterData.designations.find((d) => String(d.id) === String(appointmentDesignationId))?.name ||
+        "Practitioner";
+
       const docName = [
         doctorData.profileDetails?.firstName,
         doctorData.profileDetails?.lastName,
@@ -150,7 +227,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
         .join(" ");
 
       setAppointmentSuccessMessage(
-        `Dr. ${docName || doctorData.doctorId} has been successfully appointed as ${appointmentDesignation} (${appointmentDept}) at ${
+        `Dr. ${docName || doctorData.doctorId} has been successfully appointed as ${selectedDesignation} (${selectedDept}) at ${
           user?.healthInstituteName || "your institute"
         }!`
       );
@@ -514,7 +591,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                   </div>
                   <Button
                     variant="emerald"
-                    onClick={() => setIsAppointModalOpen(true)}
+                    onClick={handleOpenAppointModal}
                     className="text-xs font-bold px-5 h-9 shrink-0 cursor-pointer shadow-xs"
                   >
                     Initiate Appointment →
@@ -601,21 +678,21 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                         Department / Specialty *
                       </label>
                       <select
-                        value={appointmentDept}
-                        onChange={(e) => setAppointmentDept(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                        value={appointmentDeptId}
+                        onChange={(e) => setAppointmentDeptId(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
                         required
+                        disabled={loadingMasterData}
                       >
-                        <option value="General Medicine">General Medicine</option>
-                        <option value="Cardiology">Cardiology</option>
-                        <option value="Orthopedics">Orthopedics</option>
-                        <option value="Pediatrics">Pediatrics</option>
-                        <option value="Neurology">Neurology</option>
-                        <option value="Dermatology">Dermatology</option>
-                        <option value="Gynecology & Obstetrics">Gynecology & Obstetrics</option>
-                        <option value="Emergency & Trauma">Emergency & Trauma</option>
-                        <option value="Anesthesiology">Anesthesiology</option>
-                        <option value="Radiology">Radiology</option>
+                        {masterData.departments.length === 0 ? (
+                          <option value="">{loadingMasterData ? "Loading departments..." : "No departments found"}</option>
+                        ) : (
+                          masterData.departments.map((dept) => (
+                            <option key={dept.id} value={dept.id}>
+                              {dept.name}
+                            </option>
+                          ))
+                        )}
                       </select>
                     </div>
 
@@ -624,16 +701,21 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                         Designation / Role *
                       </label>
                       <select
-                        value={appointmentDesignation}
-                        onChange={(e) => setAppointmentDesignation(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                        value={appointmentDesignationId}
+                        onChange={(e) => setAppointmentDesignationId(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
                         required
+                        disabled={loadingMasterData}
                       >
-                        <option value="Consultant">Consultant</option>
-                        <option value="Senior Consultant">Senior Consultant</option>
-                        <option value="Visiting Specialist">Visiting Specialist</option>
-                        <option value="Resident Medical Officer">Resident Medical Officer</option>
-                        <option value="Department Head">Department Head</option>
+                        {masterData.designations.length === 0 ? (
+                          <option value="">{loadingMasterData ? "Loading designations..." : "No designations found"}</option>
+                        ) : (
+                          masterData.designations.map((desig) => (
+                            <option key={desig.id} value={desig.id}>
+                              {desig.name}
+                            </option>
+                          ))
+                        )}
                       </select>
                     </div>
                   </div>
@@ -658,15 +740,21 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                         Consultation Scope *
                       </label>
                       <select
-                        value={appointmentType}
-                        onChange={(e) => setAppointmentType(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                        value={appointmentScopeId}
+                        onChange={(e) => setAppointmentScopeId(e.target.value)}
+                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
+                        required
+                        disabled={loadingMasterData}
                       >
-                        <option value="OPD & IPD">OPD & IPD Services</option>
-                        <option value="OPD Only">OPD Consultations Only</option>
-                        <option value="IPD & Surgeries">IPD & Surgery Consultations</option>
-                        <option value="Teleconsultation">Teleconsultation & Remote</option>
-                        <option value="On-Call Emergency">On-Call Emergency Specialist</option>
+                        {masterData.consultationScopes.length === 0 ? (
+                          <option value="">{loadingMasterData ? "Loading scopes..." : "No consultation scopes found"}</option>
+                        ) : (
+                          masterData.consultationScopes.map((scope) => (
+                            <option key={scope.id} value={scope.id}>
+                              {scope.name}
+                            </option>
+                          ))
+                        )}
                       </select>
                     </div>
                   </div>

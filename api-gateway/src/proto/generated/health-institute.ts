@@ -87,6 +87,15 @@ export interface GetRegistrationCouncilRes {
   registrationCouncils: MasterDataItem[];
 }
 
+export interface GetAppointDoctorMasterDataReq {
+}
+
+export interface GetAppointDoctorMasterDataRes {
+  departments: MasterDataItem[];
+  designations: MasterDataItem[];
+  consultationScopes: MasterDataItem[];
+}
+
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
@@ -101,6 +110,8 @@ export interface HealthInstituteServiceClient {
   getDistricts(request: GetDistrictsReq): Observable<GetDistrictsRes>;
 
   getRegistrationCouncils(request: GetRegistrationCouncilReq): Observable<GetRegistrationCouncilRes>;
+
+  getAppointDoctorMasterData(request: GetAppointDoctorMasterDataReq): Observable<GetAppointDoctorMasterDataRes>;
 }
 
 export interface HealthInstituteServiceController {
@@ -126,6 +137,10 @@ export interface HealthInstituteServiceController {
   getRegistrationCouncils(
     request: GetRegistrationCouncilReq,
   ): Promise<GetRegistrationCouncilRes> | Observable<GetRegistrationCouncilRes> | GetRegistrationCouncilRes;
+
+  getAppointDoctorMasterData(
+    request: GetAppointDoctorMasterDataReq,
+  ): Promise<GetAppointDoctorMasterDataRes> | Observable<GetAppointDoctorMasterDataRes> | GetAppointDoctorMasterDataRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {
@@ -137,6 +152,7 @@ export function HealthInstituteServiceControllerMethods() {
       "getStates",
       "getDistricts",
       "getRegistrationCouncils",
+      "getAppointDoctorMasterData",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

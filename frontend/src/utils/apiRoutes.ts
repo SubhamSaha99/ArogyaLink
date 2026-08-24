@@ -21,6 +21,7 @@ export const API_ROUTES = {
   getHealthInstituteStates: "/api/healthInstitute/states",
   getHealthInstituteDistricts: "/api/healthInstitute/districts",
   getHealthInstituteRegistrationCouncils: "/api/healthInstitute/registrationCouncils",
+  getAppointDoctorMasterData: "/api/healthInstitute/appointDoctorMasterData",
 } as const;
 
 export type ApiRoute = (typeof API_ROUTES)[keyof typeof API_ROUTES] | string;

@@ -22,3 +22,16 @@ export interface GetHealthInstituteDetailsResponse {
   healthInstituteId: string;
   profileDetails: HealthInstituteProfileDetails;
 }
+
+export interface MasterDataItemResposne {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface GetDoctorMasterDataResponse {
+  status: string;
+  departments: MasterDataItemResposne[];
+  designations: MasterDataItemResposne[];
+  consultationScopes: MasterDataItemResposne[];
+}

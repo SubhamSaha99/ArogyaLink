@@ -14,14 +14,12 @@ import {
   ShieldCheck,
   Building2,
   Eye,
-  X,
   BadgeCheck,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 
@@ -96,8 +94,6 @@ const getCachedHealthInstituteMasterData = async (): Promise<{
 };
 
 export const HealthInstituteAppointDoctorPage: React.FC = () => {
-  const { user } = useAuth();
-
   // Doctor List API State
   const [doctors, setDoctors] = useState<DoctorListItem[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
@@ -108,32 +104,15 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
-  const [selectedCouncilId, setSelectedCouncilId] = useState<number | null>(null);
+  const [selectedCouncilId, setSelectedCouncilId] = useState<number | null>(
+    null,
+  );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
 
   // Master Data State (Councils and States)
   const [states, setStates] = useState<MasterDataItem[]>([]);
   const [councils, setCouncils] = useState<MasterDataItem[]>([]);
-
-  // Modal State for Appointment
-  const [selectedDoctorForAppointment, setSelectedDoctorForAppointment] =
-    useState<DoctorListItem | null>(null);
-
-  // Appointment Form State
-  const [appointmentDept, setAppointmentDept] = useState<string>("General Medicine");
-  const [appointmentDesignation, setAppointmentDesignation] =
-    useState<string>("Consultant");
-  const [appointmentDate, setAppointmentDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
-  const [appointmentType, setAppointmentType] = useState<string>("OPD & IPD");
-  const [appointmentNotes, setAppointmentNotes] = useState<string>("");
-  const [isSubmittingAppointment, setIsSubmittingAppointment] =
-    useState<boolean>(false);
-  const [appointmentSuccessMessage, setAppointmentSuccessMessage] = useState<string | null>(
-    null
-  );
 
   const hasFetchedOnceRef = useRef<boolean>(false);
   const lastQueryKeyRef = useRef<string>("");
@@ -163,49 +142,56 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
   }, []);
 
   // Main Doctor List Fetcher: POST /api/doctor/getDoctorList
-  const fetchDoctors = useCallback(async (force = false) => {
-    const offset = (currentPage - 1) * limit;
-    const searchVal = debouncedSearch.trim();
-    const queryKey = `${currentPage}-${limit}-${searchVal}-${selectedStateId}-${selectedCouncilId}`;
+  const fetchDoctors = useCallback(
+    async (force = false) => {
+      const offset = (currentPage - 1) * limit;
+      const searchVal = debouncedSearch.trim();
+      const queryKey = `${currentPage}-${limit}-${searchVal}-${selectedStateId}-${selectedCouncilId}`;
 
-    if (!force && lastQueryKeyRef.current === queryKey) {
-      return;
-    }
-    lastQueryKeyRef.current = queryKey;
+      if (!force && lastQueryKeyRef.current === queryKey) {
+        return;
+      }
+      lastQueryKeyRef.current = queryKey;
 
-    setLoading(true);
-    setError(null);
-    try {
-      const payload = {
-        offset,
-        limit,
-        search: searchVal || undefined,
-        stateId: selectedStateId ? Number(selectedStateId) : null,
-        councilId: selectedCouncilId ? Number(selectedCouncilId) : null,
-      };
+      setLoading(true);
+      setError(null);
+      try {
+        const payload = {
+          offset,
+          limit,
+          search: searchVal || undefined,
+          stateId: selectedStateId ? Number(selectedStateId) : null,
+          councilId: selectedCouncilId ? Number(selectedCouncilId) : null,
+        };
 
-      const response = await callApi(API_ROUTES.getDoctorList, payload, "POST");
+        const response = await callApi(
+          API_ROUTES.getDoctorList,
+          payload,
+          "POST",
+        );
 
-      const responseData = response?.data || response;
-      const docList = responseData?.doctors || [];
-      const total = responseData?.total ?? docList.length;
+        const responseData = response?.data || response;
+        const docList = responseData?.doctors || [];
+        const total = responseData?.total ?? docList.length;
 
-      setDoctors(Array.isArray(docList) ? docList : []);
-      setTotalCount(typeof total === "number" ? total : Number(total) || 0);
-    } catch (err: any) {
-      console.error("Failed to fetch doctor list:", err);
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Could not load doctor registry. Please try again."
-      );
-      setDoctors([]);
-      setTotalCount(0);
-      lastQueryKeyRef.current = "";
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, limit, debouncedSearch, selectedStateId, selectedCouncilId]);
+        setDoctors(Array.isArray(docList) ? docList : []);
+        setTotalCount(typeof total === "number" ? total : Number(total) || 0);
+      } catch (err: any) {
+        console.error("Failed to fetch doctor list:", err);
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Could not load doctor registry. Please try again.",
+        );
+        setDoctors([]);
+        setTotalCount(0);
+        lastQueryKeyRef.current = "";
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentPage, limit, debouncedSearch, selectedStateId, selectedCouncilId],
+  );
 
   // Initial & Filter Trigger
   useEffect(() => {
@@ -229,37 +215,6 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
     setSelectedCouncilId(null);
     setCurrentPage(1);
     lastQueryKeyRef.current = "";
-  };
-
-  // Submit Doctor Appointment
-  const handleConfirmAppointment = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!selectedDoctorForAppointment) return;
-
-    setIsSubmittingAppointment(true);
-    try {
-      // Simulate appointment workflow / link record
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      setAppointmentSuccessMessage(
-        `Dr. ${selectedDoctorForAppointment.firstName} ${selectedDoctorForAppointment.lastName} has been successfully appointed as ${appointmentDesignation} (${appointmentDept}) at ${
-          user?.healthInstituteName || "your institute"
-        }!`
-      );
-
-      setTimeout(() => {
-        setAppointmentSuccessMessage(null);
-        setSelectedDoctorForAppointment(null);
-        // Reset form
-        setAppointmentDept("General Medicine");
-        setAppointmentDesignation("Consultant");
-        setAppointmentNotes("");
-      }, 2000);
-    } catch (err: any) {
-      console.error("Appointment error:", err);
-    } finally {
-      setIsSubmittingAppointment(false);
-    }
   };
 
   const getDoctorFullName = (doc: DoctorListItem) => {
@@ -302,8 +257,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
               Appoint Certified Doctors
             </h1>
             <p className="text-slate-400 text-sm max-w-2xl">
-              Search the central ABDM medical registry, verify practitioner registration numbers &
-              licenses, and recruit certified medical specialists to your institute.
+              Search the central ABDM medical registry, verify practitioner
+              registration numbers & licenses, and recruit certified medical
+              specialists to your institute.
             </p>
           </div>
 
@@ -356,7 +312,7 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
             {/* State Filter, Council Filter, and Limit Controls */}
             <div className="flex flex-wrap items-center gap-3">
               {/* State Filter */}
-              <div className="flex items-center gap-2 min-w-[170px]">
+              <div className="flex items-center gap-2 min-w-42.5">
                 <MapPin className="w-4 h-4 text-slate-400 shrink-0" />
                 <select
                   value={selectedStateId || ""}
@@ -378,7 +334,7 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
               </div>
 
               {/* Medical Council Filter */}
-              <div className="flex items-center gap-2 min-w-[190px]">
+              <div className="flex items-center gap-2 min-w-47.5">
                 <ShieldCheck className="w-4 h-4 text-slate-400 shrink-0" />
                 <select
                   value={selectedCouncilId || ""}
@@ -400,7 +356,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-2">
-                <span className="text-xs text-slate-500 font-medium">Per Page:</span>
+                <span className="text-xs text-slate-500 font-medium">
+                  Per Page:
+                </span>
                 <select
                   value={limit}
                   onChange={(e) => {
@@ -468,7 +426,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
             <RefreshCw className="w-6 h-6 animate-spin" />
           </div>
           <div className="text-center space-y-1">
-            <p className="text-sm font-bold text-slate-700">Loading Doctor Registry...</p>
+            <p className="text-sm font-bold text-slate-700">
+              Loading Doctor Registry...
+            </p>
             <p className="text-xs text-slate-400">
               Querying verified practitioners from central medical database.
             </p>
@@ -480,7 +440,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
             <Stethoscope className="w-7 h-7" />
           </div>
           <div className="space-y-1">
-            <h3 className="text-base font-bold text-slate-900">No Doctors Found</h3>
+            <h3 className="text-base font-bold text-slate-900">
+              No Doctors Found
+            </h3>
             <p className="text-xs text-slate-500 max-w-md mx-auto">
               {searchTerm || selectedStateId
                 ? "No registered doctors match your current search criteria or state filter."
@@ -507,7 +469,8 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                 {(currentPage - 1) * limit + 1}–
                 {Math.min(currentPage * limit, totalCount)}
               </strong>{" "}
-              of <strong className="text-slate-800">{totalCount}</strong> doctors
+              of <strong className="text-slate-800">{totalCount}</strong>{" "}
+              doctors
             </span>
             <span>Sorted by Recent Registration</span>
           </div>
@@ -604,7 +567,10 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
 
                   {/* Bottom Action Footer */}
                   <div className="px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center">
-                    <Link to={`/health-institute/doctors/${doctor.doctorId}`} className="w-full">
+                    <Link
+                      to={`/health-institute/doctors/${doctor.doctorId}`}
+                      className="w-full"
+                    >
                       <Button
                         variant="outline"
                         size="sm"
@@ -624,8 +590,8 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
           {totalPages > 1 && (
             <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-200">
               <p className="text-xs text-slate-500">
-                Page <strong className="text-slate-800">{currentPage}</strong> of{" "}
-                <strong className="text-slate-800">{totalPages}</strong>
+                Page <strong className="text-slate-800">{currentPage}</strong>{" "}
+                of <strong className="text-slate-800">{totalPages}</strong>
               </p>
 
               <div className="flex items-center gap-2">
@@ -671,7 +637,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  onClick={() =>
+                    setCurrentPage((p) => Math.min(totalPages, p + 1))
+                  }
                   disabled={currentPage >= totalPages || loading}
                   className="text-xs text-slate-700 border-slate-300 h-8 px-3 cursor-pointer"
                 >
@@ -683,210 +651,8 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
           )}
         </div>
       )}
-
-      {/* Appoint Doctor Modal */}
-      {selectedDoctorForAppointment && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <Card className="w-full max-w-xl bg-white shadow-2xl border-slate-200 my-8 overflow-hidden">
-            <CardHeader className="border-b border-slate-100 bg-slate-50/70 pb-4 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
-                  <UserCheck className="w-5 h-5 text-teal-700" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-bold text-slate-900">
-                    Appoint Medical Practitioner
-                  </CardTitle>
-                  <p className="text-xs text-slate-500">
-                    Affiliate doctor to your healthcare institute roster.
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setSelectedDoctorForAppointment(null);
-                  setAppointmentSuccessMessage(null);
-                }}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-5">
-              {/* Doctor Summary Banner */}
-              <div className="p-4 rounded-2xl bg-linear-to-r from-teal-50 to-cyan-50 border border-teal-100 flex items-center justify-between gap-4">
-                <div className="space-y-0.5 min-w-0">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-teal-700">
-                    Selected Practitioner
-                  </span>
-                  <h4 className="text-sm font-extrabold text-slate-900 truncate">
-                    Dr. {getDoctorFullName(selectedDoctorForAppointment)}
-                  </h4>
-                  <p className="text-xs text-slate-600 font-mono">
-                    ID: {selectedDoctorForAppointment.doctorId} • Reg:{" "}
-                    {selectedDoctorForAppointment.medicalRegistration || "N/A"}
-                  </p>
-                  {(selectedDoctorForAppointment.registrationCouncilName ||
-                    selectedDoctorForAppointment.registrationStateName) && (
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      {[
-                        selectedDoctorForAppointment.registrationCouncilName,
-                        selectedDoctorForAppointment.registrationStateName,
-                      ]
-                        .filter(Boolean)
-                        .join(" • ")}
-                    </p>
-                  )}
-                </div>
-                <Badge variant="teal" className="bg-teal-600 text-white text-[10px] shrink-0">
-                  Verified ABDM
-                </Badge>
-              </div>
-
-              {appointmentSuccessMessage ? (
-                <div className="py-6 text-center space-y-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-sm font-bold text-emerald-900">Appointment Confirmed!</h4>
-                  <p className="text-xs text-emerald-700 max-w-sm mx-auto">
-                    {appointmentSuccessMessage}
-                  </p>
-                </div>
-              ) : (
-                <form onSubmit={handleConfirmAppointment} className="space-y-4">
-                  {/* Department & Role */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Department / Specialty *
-                      </label>
-                      <select
-                        value={appointmentDept}
-                        onChange={(e) => setAppointmentDept(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                        required
-                      >
-                        <option value="General Medicine">General Medicine</option>
-                        <option value="Cardiology">Cardiology</option>
-                        <option value="Orthopedics">Orthopedics</option>
-                        <option value="Pediatrics">Pediatrics</option>
-                        <option value="Neurology">Neurology</option>
-                        <option value="Dermatology">Dermatology</option>
-                        <option value="Gynecology & Obstetrics">Gynecology & Obstetrics</option>
-                        <option value="Emergency & Trauma">Emergency & Trauma</option>
-                        <option value="Anesthesiology">Anesthesiology</option>
-                        <option value="Radiology">Radiology</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Designation / Role *
-                      </label>
-                      <select
-                        value={appointmentDesignation}
-                        onChange={(e) => setAppointmentDesignation(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                        required
-                      >
-                        <option value="Consultant">Consultant</option>
-                        <option value="Senior Consultant">Senior Consultant</option>
-                        <option value="Visiting Specialist">Visiting Specialist</option>
-                        <option value="Resident Medical Officer">Resident Medical Officer</option>
-                        <option value="Department Head">Department Head</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Date & Service Type */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Appointment / Joining Date *
-                      </label>
-                      <Input
-                        type="date"
-                        value={appointmentDate}
-                        onChange={(e) => setAppointmentDate(e.target.value)}
-                        className="text-xs rounded-xl"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Consultation Scope *
-                      </label>
-                      <select
-                        value={appointmentType}
-                        onChange={(e) => setAppointmentType(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                      >
-                        <option value="OPD & IPD">OPD & IPD Services</option>
-                        <option value="OPD Only">OPD Consultations Only</option>
-                        <option value="IPD & Surgeries">IPD & Surgery Consultations</option>
-                        <option value="Teleconsultation">Teleconsultation & Remote</option>
-                        <option value="On-Call Emergency">On-Call Emergency Specialist</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Notes / Special Instructions */}
-                  <div className="space-y-1">
-                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      Affiliation Notes / Contract Reference (Optional)
-                    </label>
-                    <textarea
-                      rows={2}
-                      placeholder="e.g. Approved by medical board. Duty schedule: Monday to Friday 9 AM – 2 PM."
-                      value={appointmentNotes}
-                      onChange={(e) => setAppointmentNotes(e.target.value)}
-                      className="w-full p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    />
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="pt-2 flex items-center justify-end gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => setSelectedDoctorForAppointment(null)}
-                      disabled={isSubmittingAppointment}
-                      className="text-xs"
-                    >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="emerald"
-                      disabled={isSubmittingAppointment}
-                      className="text-xs font-bold px-5 cursor-pointer"
-                    >
-                      {isSubmittingAppointment ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
-                          Processing Affiliation...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                          Confirm Appointment
-                        </>
-                      )}
-                    </Button>
-                  </div>
-                </form>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 };
 
 export default HealthInstituteAppointDoctorPage;
-

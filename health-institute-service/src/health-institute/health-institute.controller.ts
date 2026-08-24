@@ -1,8 +1,9 @@
 import { Controller } from '@nestjs/common';
 import {
-    GetDistrictsReq,
-    GetDistrictsRes,
-    GetHealthInstituteDetailsReq,
+  GetAppointDoctorMasterDataRes,
+  GetDistrictsReq,
+  GetDistrictsRes,
+  GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
   GetRegistrationCouncilRes,
   GetStatesRes,
@@ -41,7 +42,7 @@ export class HealthInstituteController implements HealthInstituteServiceControll
   }
 
   async getStates(): Promise<GetStatesRes> {
-    return this.healthInstituteService.getStates();    
+    return this.healthInstituteService.getStates();
   }
 
   async getDistricts(request: GetDistrictsReq): Promise<GetDistrictsRes> {
@@ -50,5 +51,9 @@ export class HealthInstituteController implements HealthInstituteServiceControll
 
   async getRegistrationCouncils(): Promise<GetRegistrationCouncilRes> {
     return this.healthInstituteService.getRegistrationCouncils();
+  }
+
+  async getAppointDoctorMasterData(): Promise<GetAppointDoctorMasterDataRes> {
+    return this.healthInstituteService.getAppointDoctorMasterData();
   }
 }

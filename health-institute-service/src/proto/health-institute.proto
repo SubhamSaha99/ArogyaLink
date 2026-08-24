@@ -14,6 +14,8 @@ service HealthInstituteService {
   rpc GetDistricts(GetDistrictsReq) returns (GetDistrictsRes);
 
   rpc GetRegistrationCouncils(GetRegistrationCouncilReq) returns (GetRegistrationCouncilRes);
+
+  rpc GetAppointDoctorMasterData(GetAppointDoctorMasterDataReq) returns (GetAppointDoctorMasterDataRes);
 }
 
 message HealthInstituteProfileReq {
@@ -89,4 +91,12 @@ message GetRegistrationCouncilReq {}
 
 message GetRegistrationCouncilRes {
   repeated MasterDataItem registrationCouncils = 1;
+}
+
+message GetAppointDoctorMasterDataReq {}
+
+message GetAppointDoctorMasterDataRes {
+  repeated MasterDataItem departments        = 1;
+  repeated MasterDataItem designations       = 2;
+  repeated MasterDataItem consultationScopes = 3;
 }

@@ -69,6 +69,59 @@ export class InsertData1786077613166 implements MigrationInterface {
         ('Maharashtra Medical Council', 'MMC')
       ON CONFLICT (council_code) DO NOTHING;
     `);
+
+    // DEPARTMENT MASTER
+
+    await queryRunner.query(`
+      INSERT INTO department_master (
+        department_name,
+        department_code
+      )
+      VALUES
+        ('General Medicine', 'GENERAL_MEDICINE'),
+        ('Cardiology', 'CARDIOLOGY'),
+        ('Orthopedics', 'ORTHOPEDICS'),
+        ('Pediatrics', 'PEDIATRICS'),
+        ('Neurology', 'NEUROLOGY'),
+        ('Dermatology', 'DERMATOLOGY'),
+        ('Gynecology & Obstetrics', 'GYNECOLOGY_OBSTETRICS'),
+        ('Emergency & Trauma', 'EMERGENCY_TRAUMA'),
+        ('Anesthesiology', 'ANESTHESIOLOGY'),
+        ('Radiology', 'RADIOLOGY')
+      ON CONFLICT (department_code) DO NOTHING;
+    `);
+
+    // DESIGNATION MASTER
+
+    await queryRunner.query(`
+      INSERT INTO designation_master (
+        designation_name,
+        designation_code
+      )
+      VALUES
+        ('Consultant', 'CONSULTANT'),
+        ('Senior Consultant', 'SENIOR_CONSULTANT'),
+        ('Visiting Specialist', 'VISITING_SPECIALIST'),
+        ('Resident Medical Officer', 'RESIDENT_MEDICAL_OFFICER'),
+        ('Department Head', 'DEPARTMENT_HEAD')
+      ON CONFLICT (designation_code) DO NOTHING;
+    `);
+
+    // CONSULTATION SCOPE MASTER
+
+    await queryRunner.query(`
+      INSERT INTO consultation_scope_master (
+        scope_name,
+        scope_code
+      )
+      VALUES
+        ('OPD & IPD Services', 'OPD_IPD'),
+        ('OPD Consultations Only', 'OPD_ONLY'),
+        ('IPD & Surgery Consultations', 'IPD_SURGERIES'),
+        ('Teleconsultation & Remote', 'TELECONSULTATION'),
+        ('On-Call Emergency Specialist', 'ON_CALL_EMERGENCY')
+      ON CONFLICT (scope_code) DO NOTHING;
+    `);
   }
 
   public async down(queryRunner: QueryRunner): Promise<void> {
@@ -91,6 +144,49 @@ export class InsertData1786077613166 implements MigrationInterface {
       DELETE FROM registration_council_master
       WHERE council_code IN
       ('NMC','WBMC','GMC','KMC','TNMC','MMC');
+    `);
+
+    // CONSULTATION SCOPE MASTER
+
+    await queryRunner.query(`
+      DELETE FROM consultation_scope_master
+      WHERE scope_code IN (
+        'OPD_IPD',
+        'OPD_ONLY',
+        'IPD_SURGERIES',
+        'TELECONSULTATION',
+        'ON_CALL_EMERGENCY'
+      );
+    `);
+
+    // DESIGNATION MASTER
+
+    await queryRunner.query(`
+      DELETE FROM designation_master
+      WHERE designation_code IN (
+        'CONSULTANT',
+        'SENIOR_CONSULTANT',
+        'VISITING_SPECIALIST',
+        'RESIDENT_MEDICAL_OFFICER',
+        'DEPARTMENT_HEAD'
+      );
+    `);
+
+    // DEPARTMENT MASTER
+    await queryRunner.query(`
+      DELETE FROM department_master
+      WHERE department_code IN (
+        'GENERAL_MEDICINE',
+        'CARDIOLOGY',
+        'ORTHOPEDICS',
+        'PEDIATRICS',
+        'NEUROLOGY',
+        'DERMATOLOGY',
+        'GYNECOLOGY_OBSTETRICS',
+        'EMERGENCY_TRAUMA',
+        'ANESTHESIOLOGY',
+        'RADIOLOGY'
+      );
     `);
   }
 }
