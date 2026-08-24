@@ -2,10 +2,11 @@ import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { DataSource } from 'typeorm';
 import {
-    GetDistrictsReq,
+  GetDistrictsReq,
   GetDistrictsRes,
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
+  GetRegistrationCouncilRes,
   GetStatesRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
@@ -108,8 +109,10 @@ export class HealthInstituteService {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
-    await this.redisService.delete(`healthInstitute:profile:${request.healthInstituteId}`);
-    
+    await this.redisService.delete(
+      `healthInstitute:profile:${request.healthInstituteId}`,
+    );
+
     return {
       healthInstituteId: procedureResult,
     };
@@ -117,7 +120,7 @@ export class HealthInstituteService {
 
   /**
    * @description Get health institute details
-   * @param request 
+   * @param request
    * @returns GetHealthInstituteDetailsRes
    */
   async getHealthInstituteDetails(
@@ -211,19 +214,14 @@ export class HealthInstituteService {
         error instanceof Error &&
         error.message.toLowerCase().includes('redis')
       ) {
-        this.logger.warn(
-          `Redis operation failed for states`,
-          error.message,
-        );
+        this.logger.warn(`Redis operation failed for states`, error.message);
       }
 
       throw error;
     }
   }
 
-  async getDistricts(
-    request: GetDistrictsReq,
-  ): Promise<GetDistrictsRes> {
+  async getDistricts(request: GetDistrictsReq): Promise<GetDistrictsRes> {
     const cacheKey = `districts:${request.stateId}`;
 
     try {
@@ -255,6 +253,46 @@ export class HealthInstituteService {
       ) {
         this.logger.warn(
           `Redis operation failed for districts ${request.stateId}`,
+          error.message,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  async getRegistrationCouncils(): Promise<GetRegistrationCouncilRes> {
+    const cacheKey = `registrationCouncils`;
+
+    try {
+      const cachedDistricts = await this.redisService.get(cacheKey);
+
+      if (cachedDistricts) {
+        return JSON.parse(cachedDistricts) as GetRegistrationCouncilRes;
+      }
+
+      const result = await this.dataSource.query<MasterDataItem[]>(
+        `SELECT * FROM get_registration_councils()`,
+      );
+      console.log(result);
+      if (result.length === 0) {
+        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      }
+
+      const response: GetRegistrationCouncilRes = {
+        registrationCouncils: result,
+      };
+
+      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
+
+      return response;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          `Redis operation failed for registration councils`,
           error.message,
         );
       }

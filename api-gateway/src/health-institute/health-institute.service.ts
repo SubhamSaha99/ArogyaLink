@@ -3,6 +3,7 @@ import {
   GetDistrictsRes,
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
+  GetRegistrationCouncilRes,
   GetStatesRes,
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteServiceClient,
@@ -32,8 +33,8 @@ export class HealthInstituteService implements OnModuleInit {
 
   /**
    * * Update health institute profile
-   * @param request 
-   * @param healthInstituteId 
+   * @param request
+   * @param healthInstituteId
    * @returns UpdateHealthInstituteProfileRes
    */
   async updateHealthInstituteProfile(
@@ -54,7 +55,7 @@ export class HealthInstituteService implements OnModuleInit {
 
   /**
    * * Get health institute details
-   * @param healthInstituteId 
+   * @param healthInstituteId
    * @returns GetHealthInstituteDetailsRes
    */
   async getHealthInstituteDetails(
@@ -76,14 +77,12 @@ export class HealthInstituteService implements OnModuleInit {
    * @returns GetStatesRes
    */
   async getStates(): Promise<GetStatesRes> {
-    return await firstValueFrom(
-      this.healthInstituteGrpcService.getStates({}),
-    );
+    return await firstValueFrom(this.healthInstituteGrpcService.getStates({}));
   }
 
   /**
    * * Get Districts
-   * @param stateId 
+   * @param stateId
    * @returns GetDistrictsRes
    */
   async getDistricts(stateId: number): Promise<GetDistrictsRes> {
@@ -91,6 +90,16 @@ export class HealthInstituteService implements OnModuleInit {
       this.healthInstituteGrpcService.getDistricts({
         stateId,
       }),
+    );
+  }
+
+  /**
+   * @description Get Health Institutes
+   * @returns GetRegistrationCouncilRes
+   */
+  async getRegistrationCouncils(): Promise<GetRegistrationCouncilRes> {
+    return await firstValueFrom(
+      this.healthInstituteGrpcService.getRegistrationCouncils({}),
     );
   }
 }

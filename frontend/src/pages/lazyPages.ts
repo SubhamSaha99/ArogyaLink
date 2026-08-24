@@ -19,3 +19,5 @@ export const HealthInstituteRegisterPage = lazyLoad(() => import("@/pages/health
 export const HealthInstituteLayout = lazyLoad(() => import("@/components/layout/HealthInstituteLayout"));
 export const HealthInstituteProfilePage = lazyLoad(() => import("@/pages/health-institute/HealthInstituteProfilePage"));
 export const HealthInstituteDashboardPage = lazyLoad(() => import("@/pages/health-institute/HealthInstituteDashboardPage"));
+export const HealthInstituteAppointDoctorPage = lazyLoad(() => import("@/pages/health-institute/HealthInstituteAppointDoctorPage"));
+export const HealthInstituteDoctorDetailsPage = lazyLoad(() => import("@/pages/health-institute/HealthInstituteDoctorDetailsPage"));

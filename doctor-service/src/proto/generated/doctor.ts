@@ -126,6 +126,34 @@ export interface GetDoctorMasterDataRes {
   specializations: MasterDataItem[];
 }
 
+export interface GetDoctorListReq {
+  offset?: number | undefined;
+  limit?: number | undefined;
+  search?: string | undefined;
+  stateId?: number | undefined;
+  councilId?: number | undefined;
+}
+
+export interface DoctorListItem {
+  doctorId: string;
+  firstName: string;
+  middleName?: string | undefined;
+  lastName: string;
+  medicalRegistration: string;
+  licenseStatus: number;
+  registrationStateId?: number | undefined;
+  registrationCouncilId?: number | undefined;
+  registrationStateName?: string | undefined;
+  registrationCouncilName?: string | undefined;
+}
+
+export interface GetDoctorListRes {
+  doctors: DoctorListItem[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 export const DOCTOR_PACKAGE_NAME = "doctor";
 
 export interface DoctorServiceClient {
@@ -142,6 +170,8 @@ export interface DoctorServiceClient {
   getDoctorDetails(request: GetDoctorDetailsReq): Observable<GetDoctorDetailsRes>;
 
   getDoctorMasterData(request: GetDoctorMasterDataReq): Observable<GetDoctorMasterDataRes>;
+
+  getDoctorList(request: GetDoctorListReq): Observable<GetDoctorListRes>;
 }
 
 export interface DoctorServiceController {
@@ -171,6 +201,8 @@ export interface DoctorServiceController {
   getDoctorMasterData(
     request: GetDoctorMasterDataReq,
   ): Promise<GetDoctorMasterDataRes> | Observable<GetDoctorMasterDataRes> | GetDoctorMasterDataRes;
+
+  getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> | Observable<GetDoctorListRes> | GetDoctorListRes;
 }
 
 export function DoctorServiceControllerMethods() {
@@ -182,6 +214,7 @@ export function DoctorServiceControllerMethods() {
       "updateDoctorQualifications",
       "getDoctorDetails",
       "getDoctorMasterData",
+      "getDoctorList",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

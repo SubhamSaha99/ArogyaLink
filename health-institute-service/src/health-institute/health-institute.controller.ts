@@ -4,6 +4,7 @@ import {
     GetDistrictsRes,
     GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
+  GetRegistrationCouncilRes,
   GetStatesRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
@@ -45,5 +46,9 @@ export class HealthInstituteController implements HealthInstituteServiceControll
 
   async getDistricts(request: GetDistrictsReq): Promise<GetDistrictsRes> {
     return this.healthInstituteService.getDistricts(request);
+  }
+
+  async getRegistrationCouncils(): Promise<GetRegistrationCouncilRes> {
+    return this.healthInstituteService.getRegistrationCouncils();
   }
 }

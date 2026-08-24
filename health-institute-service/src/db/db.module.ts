@@ -6,6 +6,8 @@ import { HealthInstituteProfile } from './entities/health-institute-profile.enti
 import { DbExceptionLog } from './entities/db-exception-log.entity';
 import { State } from './entities/states.entity';
 import { District } from './entities/districts.entity';
+import { HealthInstituteDoctorMapping } from './entities/health-institute-doctor-mapping.entity';
+import { RegistrationCouncil } from './entities/registration-council.entity';
 
 @Module({
   imports: [
@@ -23,7 +25,7 @@ import { District } from './entities/districts.entity';
         synchronize: true,
         migrationsRun: false,
         migrations: ['dist/db/migrations/*.js'],
-        entities: [HealthInstituteProfile, State, District, DbExceptionLog],
+        entities: [HealthInstituteProfile, State, District, HealthInstituteDoctorMapping, RegistrationCouncil, DbExceptionLog],
         logging: true,
       }),
     }),

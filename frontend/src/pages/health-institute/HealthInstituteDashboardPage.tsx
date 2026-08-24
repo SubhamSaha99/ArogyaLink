@@ -1,7 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useFormik } from "formik";
-import * as Yup from "yup";
 import {
   Building2,
   Users,
@@ -20,11 +18,6 @@ import {
   Network,
   Radio,
   Compass,
-  Edit,
-  FileText,
-  Phone,
-  Loader2,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
@@ -39,42 +32,6 @@ export interface MasterDataItem {
   name: string;
   code?: string;
 }
-
-interface EditInstituteProfileFormValues {
-  registrationNumber: string;
-  phone: string;
-  address: string;
-  stateId: number | "";
-  districtId: number | "";
-  pincode: string;
-}
-
-const editProfileSchema = Yup.object({
-  registrationNumber: Yup.string()
-    .trim()
-    .required("Registration Number is required")
-    .max(50, "Registration Number cannot exceed 50 characters"),
-  phone: Yup.string()
-    .trim()
-    .matches(/^\+?[0-9]{7,15}$/, "Please enter a valid phone number (7-15 digits)")
-    .optional()
-    .nullable(),
-  address: Yup.string()
-    .trim()
-    .max(255, "Address cannot exceed 255 characters")
-    .optional()
-    .nullable(),
-  stateId: Yup.number()
-    .required("State selection is required")
-    .min(1, "Please select a valid State"),
-  districtId: Yup.number()
-    .required("District selection is required")
-    .min(1, "Please select a valid District"),
-  pincode: Yup.string()
-    .trim()
-    .required("Pincode is required")
-    .matches(/^[1-9][0-9]{5}$/, "Pincode must be a 6-digit valid postal code"),
-});
 
 export const HealthInstituteDashboardPage: React.FC = () => {
   const { user } = useAuth();
@@ -171,152 +128,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
     fetchDetails();
   }, [fetchDetails]);
 
-  // Edit Profile Modal State
-  const [isEditModalOpen, setIsEditModalOpen] = useState<boolean>(false);
-  const [modalStates, setModalStates] = useState<MasterDataItem[]>([]);
-  const [modalDistricts, setModalDistricts] = useState<MasterDataItem[]>([]);
-  const [loadingModalStates, setLoadingModalStates] = useState<boolean>(false);
-  const [loadingModalDistricts, setLoadingModalDistricts] = useState<boolean>(false);
-  const [updateError, setUpdateError] = useState<string | null>(null);
-  const [updateSuccess, setUpdateSuccess] = useState<string | null>(null);
-
-  // Fetch States for Modal: GET /api/healthInstitute/states (Called only when modal opens)
-  const fetchModalStates = async () => {
-    setLoadingModalStates(true);
-    try {
-      const response = await callApi(API_ROUTES.getHealthInstituteStates, null, "GET");
-      const list = response?.data?.states || response?.states || response?.data || [];
-      if (Array.isArray(list)) {
-        setModalStates(list);
-        return list;
-      }
-      return [];
-    } catch (err) {
-      console.error("Dashboard failed to fetch modal states:", err);
-      return [];
-    } finally {
-      setLoadingModalStates(false);
-    }
-  };
-
-  // Fetch Districts for Modal: GET /api/healthInstitute/districts/:id (Called only when modal opens or state changes)
-  const fetchModalDistricts = async (sId: number) => {
-    if (!sId) return [];
-    setLoadingModalDistricts(true);
-    try {
-      const response = await callApi(`${API_ROUTES.getHealthInstituteDistricts}/${sId}`, null, "GET");
-      const list = response?.data?.districts || response?.districts || response?.data || [];
-      if (Array.isArray(list)) {
-        setModalDistricts(list);
-        return list;
-      }
-      return [];
-    } catch (err) {
-      console.error(`Dashboard failed to fetch modal districts for state ${sId}:`, err);
-      return [];
-    } finally {
-      setLoadingModalDistricts(false);
-    }
-  };
-
-  // Formik for updating profile details: POST /api/healthInstitute/updateHealthInstituteProfile
-  const formik = useFormik<EditInstituteProfileFormValues>({
-    initialValues: {
-      registrationNumber: instituteData?.profileDetails?.registrationNumber || "",
-      phone: instituteData?.profileDetails?.phone || "",
-      address: instituteData?.profileDetails?.address || "",
-      stateId: instituteData?.profileDetails?.stateId || "",
-      districtId: instituteData?.profileDetails?.districtId || "",
-      pincode: instituteData?.profileDetails?.pincode || "",
-    },
-    validationSchema: editProfileSchema,
-    enableReinitialize: true,
-    onSubmit: async (values, { setSubmitting }) => {
-      setUpdateError(null);
-      setUpdateSuccess(null);
-
-      try {
-        const payload = {
-          registrationNumber: values.registrationNumber.trim(),
-          phone: values.phone.trim() || undefined,
-          address: values.address.trim() || undefined,
-          stateId: Number(values.stateId),
-          districtId: Number(values.districtId),
-          pincode: values.pincode.trim(),
-        };
-
-        const response = await callApi(
-          API_ROUTES.updateHealthInstituteProfile,
-          payload,
-          "POST"
-        );
-
-        if (response && response.success) {
-          setUpdateSuccess("Institute details updated successfully!");
-          await fetchDetails();
-          setTimeout(() => {
-            setIsEditModalOpen(false);
-          }, 1000);
-        } else {
-          setUpdateError(response?.message || "Failed to update institute details.");
-        }
-      } catch (err: any) {
-        console.error("Error updating institute profile:", err);
-        setUpdateError(
-          err?.response?.data?.message ||
-            err?.message ||
-            "An error occurred while updating profile details."
-        );
-      } finally {
-        setSubmitting(false);
-      }
-    },
-  });
-
-  const openEditModal = async () => {
-    const currentStateId = instituteData?.profileDetails?.stateId || "";
-    const currentDistrictId = instituteData?.profileDetails?.districtId || "";
-
-    formik.resetForm({
-      values: {
-        registrationNumber: instituteData?.profileDetails?.registrationNumber || "",
-        phone: instituteData?.profileDetails?.phone || "",
-        address: instituteData?.profileDetails?.address || "",
-        stateId: currentStateId,
-        districtId: currentDistrictId,
-        pincode: instituteData?.profileDetails?.pincode || "",
-      },
-    });
-
-    setUpdateError(null);
-    setUpdateSuccess(null);
-    setIsEditModalOpen(true);
-
-    const fetchedStates = await fetchModalStates();
-    const activeStateId = currentStateId || (fetchedStates.length > 0 ? fetchedStates[0].id : null);
-    if (activeStateId) {
-      if (!currentStateId && fetchedStates.length > 0) {
-        formik.setFieldValue("stateId", activeStateId);
-      }
-      const fetchedDistricts = await fetchModalDistricts(Number(activeStateId));
-      if (!currentDistrictId && fetchedDistricts.length > 0) {
-        formik.setFieldValue("districtId", fetchedDistricts[0].id);
-      }
-    }
-  };
-
-  const handleModalStateChange = async (e: React.ChangeEvent<HTMLSelectElement>) => {
-    const newSId = Number(e.target.value);
-    formik.setFieldValue("stateId", newSId);
-    formik.setFieldValue("districtId", "");
-    if (newSId) {
-      const fetched = await fetchModalDistricts(newSId);
-      if (fetched.length > 0) {
-        formik.setFieldValue("districtId", fetched[0].id);
-      }
-    }
-  };
-
+  // Handle State Selector change or on-demand loading
   const handleStateChange = (stateId: number) => {
     setSelectedStateId(stateId);
     setDistrictSearchTerm("");
@@ -481,14 +293,6 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
             </Link>
-            <Button
-              variant="outline"
-              onClick={openEditModal}
-              className="bg-slate-800/80 hover:bg-slate-700 text-teal-300 hover:text-white border-slate-700 font-bold text-xs px-4 cursor-pointer"
-            >
-              <Edit className="w-3.5 h-3.5 mr-1.5 text-teal-400" />
-              Edit Institute Details
-            </Button>
           </div>
         </div>
       </div>
@@ -751,22 +555,12 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                 <p className="text-xs text-slate-500">
                   Manage hospital name, category, license number, and location details.
                 </p>
-                <div className="flex items-center gap-3 pt-1">
-                  <Link
-                    to="/health-institute/profile"
-                    className="text-xs font-bold text-teal-700 hover:underline"
-                  >
-                    Go to Profile →
-                  </Link>
-                  <span className="text-slate-300">•</span>
-                  <button
-                    type="button"
-                    onClick={openEditModal}
-                    className="text-xs font-bold text-teal-700 hover:underline cursor-pointer"
-                  >
-                    Quick Edit →
-                  </button>
-                </div>
+                <Link
+                  to="/health-institute/profile"
+                  className="inline-block pt-1 text-xs font-bold text-teal-700 hover:underline"
+                >
+                  Go to Profile →
+                </Link>
               </div>
 
               <div className="p-4 rounded-2xl border border-slate-200 hover:border-teal-400 hover:shadow-sm transition-all bg-slate-50/50 space-y-2">
@@ -775,11 +569,14 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Doctor Roster</h4>
                 <p className="text-xs text-slate-500">
-                  View and manage doctors affiliated with your healthcare facility.
+                  Search, verify medical registration, and appoint doctors to your facility.
                 </p>
-                <span className="inline-block pt-1 text-xs font-bold text-slate-400">
-                  Coming Soon
-                </span>
+                <Link
+                  to="/health-institute/appoint-doctor"
+                  className="inline-block pt-1 text-xs font-bold text-teal-700 hover:underline"
+                >
+                  Appoint & Manage Doctors →
+                </Link>
               </div>
             </div>
           </CardContent>
@@ -814,231 +611,6 @@ export const HealthInstituteDashboardPage: React.FC = () => {
           </CardContent>
         </Card>
       </div>
-
-      {/* Edit Profile Details Modal (POST /api/healthInstitute/updateHealthInstituteProfile) */}
-      {isEditModalOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <Card className="w-full max-w-xl bg-white shadow-2xl border-slate-200 my-8">
-            <CardHeader className="border-b border-slate-100 pb-4 flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="text-lg font-bold text-slate-900">
-                  Edit Institute Profile Details
-                </CardTitle>
-                <p className="text-xs text-slate-500">
-                  Update registration number, contact phone, and location details.
-                </p>
-              </div>
-              <button
-                type="button"
-                onClick={() => setIsEditModalOpen(false)}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </CardHeader>
-
-            <CardContent className="p-6">
-              <form onSubmit={formik.handleSubmit} className="space-y-4">
-                {updateError && (
-                  <div className="p-3 rounded-lg bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2 font-medium">
-                    <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                    <span>{updateError}</span>
-                  </div>
-                )}
-
-                {updateSuccess && (
-                  <div className="p-3 rounded-lg bg-emerald-50 border border-emerald-200 text-xs text-emerald-700 flex items-center gap-2 font-medium">
-                    <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                    <span>{updateSuccess}</span>
-                  </div>
-                )}
-
-                {/* Registration Number */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Registration / License Number *
-                  </label>
-                  <Input
-                    type="text"
-                    name="registrationNumber"
-                    placeholder="e.g. NH-2026/8879"
-                    value={formik.values.registrationNumber}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched.registrationNumber && formik.errors.registrationNumber
-                        ? formik.errors.registrationNumber
-                        : undefined
-                    }
-                    icon={<FileText className="w-4 h-4 text-teal-600" />}
-                  />
-                </div>
-
-                {/* Phone Number */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Contact Phone Number
-                  </label>
-                  <Input
-                    type="text"
-                    name="phone"
-                    placeholder="e.g. 0187243563"
-                    value={formik.values.phone}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched.phone && formik.errors.phone
-                        ? formik.errors.phone
-                        : undefined
-                    }
-                    icon={<Phone className="w-4 h-4 text-teal-600" />}
-                  />
-                </div>
-
-                {/* Street Address */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Street Address
-                  </label>
-                  <Input
-                    type="text"
-                    name="address"
-                    placeholder="e.g. Phool Bagan, Kolkata"
-                    value={formik.values.address}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched.address && formik.errors.address
-                        ? formik.errors.address
-                        : undefined
-                    }
-                    icon={<MapPin className="w-4 h-4 text-teal-600" />}
-                  />
-                </div>
-
-                {/* State & District Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  {/* State Select */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        State *
-                      </label>
-                      {loadingModalStates && (
-                        <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
-                          <Loader2 className="w-3 h-3 animate-spin" /> Loading...
-                        </span>
-                      )}
-                    </div>
-                    <select
-                      name="stateId"
-                      value={formik.values.stateId}
-                      onChange={handleModalStateChange}
-                      onBlur={formik.handleBlur}
-                      disabled={loadingModalStates}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500"
-                    >
-                      <option value="">Select State</option>
-                      {modalStates.map((st) => (
-                        <option key={st.id} value={st.id}>
-                          {st.name} {st.code ? `(${st.code})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {formik.touched.stateId && formik.errors.stateId && (
-                      <p className="text-xs text-red-600 font-medium">
-                        {formik.errors.stateId}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* District Select */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        District *
-                      </label>
-                      {loadingModalDistricts && (
-                        <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
-                          <Loader2 className="w-3 h-3 animate-spin" /> Loading...
-                        </span>
-                      )}
-                    </div>
-                    <select
-                      name="districtId"
-                      value={formik.values.districtId}
-                      onChange={formik.handleChange}
-                      onBlur={formik.handleBlur}
-                      disabled={loadingModalDistricts || !formik.values.stateId}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100 disabled:cursor-not-allowed"
-                    >
-                      <option value="">Select District</option>
-                      {modalDistricts.map((dist) => (
-                        <option key={dist.id} value={dist.id}>
-                          {dist.name} {dist.code ? `(${dist.code})` : ""}
-                        </option>
-                      ))}
-                    </select>
-                    {formik.touched.districtId && formik.errors.districtId && (
-                      <p className="text-xs text-red-600 font-medium">
-                        {formik.errors.districtId}
-                      </p>
-                    )}
-                  </div>
-                </div>
-
-                {/* Pincode */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Pincode *
-                  </label>
-                  <Input
-                    type="text"
-                    name="pincode"
-                    placeholder="e.g. 700009"
-                    value={formik.values.pincode}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched.pincode && formik.errors.pincode
-                        ? formik.errors.pincode
-                        : undefined
-                    }
-                  />
-                </div>
-
-                {/* Submit & Cancel Buttons */}
-                <div className="pt-3 flex items-center justify-end gap-3">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => setIsEditModalOpen(false)}
-                    disabled={formik.isSubmitting}
-                    className="text-xs"
-                  >
-                    Cancel
-                  </Button>
-                  <Button
-                    type="submit"
-                    variant="emerald"
-                    disabled={formik.isSubmitting}
-                    className="text-xs font-bold px-5"
-                  >
-                    {formik.isSubmitting ? (
-                      <>
-                        <Loader2 className="w-3.5 h-3.5 mr-2 animate-spin" />
-                        Saving Changes...
-                      </>
-                    ) : (
-                      "Save Profile Details"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        </div>
-      )}
     </div>
   );
 };

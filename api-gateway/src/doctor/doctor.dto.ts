@@ -4,6 +4,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
+  IsPositive,
   IsString,
   Length,
   Max,
@@ -100,4 +101,35 @@ export class DoctorQualificationsDto {
   @ValidateNested({ each: true })
   @Type(() => DoctorQualification)
   qualifications!: DoctorQualification[];
+}
+
+/**
+ * * Get Doctor List DTO.
+ */
+
+export class GetDoctorListDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset: number = 0;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 10;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsInt()
+  @IsOptional()
+  stateId?: number;
+
+  @IsInt()
+  @IsOptional()
+  councilId?: number;
 }

@@ -14,16 +14,18 @@ service DoctorService {
   rpc GetDoctorDetails(GetDoctorDetailsReq) returns (GetDoctorDetailsRes);
 
   rpc GetDoctorMasterData(GetDoctorMasterDataReq) returns (GetDoctorMasterDataRes);
+
+  rpc GetDoctorList(GetDoctorListReq) returns (GetDoctorListRes);
 }
 
 message DoctorProfileReq {
   string doctorId = 1;
-  string email = 2;
-  string mobile = 3;
+  string email    = 2;
+  string mobile   = 3;
 
-  string firstName = 4;
+  string          firstName  = 4;
   optional string middleName = 5;
-  string lastName = 6;
+  string          lastName   = 6;
 }
 
 message DoctorProfileRes {
@@ -31,11 +33,11 @@ message DoctorProfileRes {
 }
 
 message UpdateDoctorBasicDeatilsReq {
-  string doctorId = 1;
-  optional string firstName = 2;
-  optional string middleName = 3;
-  optional string lastName = 4;
-  optional int32 gender = 5;
+  string          doctorId     = 1;
+  optional string firstName    = 2;
+  optional string middleName   = 3;
+  optional string lastName     = 4;
+  optional int32  gender       = 5;
   optional string profileImage = 6;
 }
 
@@ -44,12 +46,12 @@ message UpdateDoctorBasicDeatilsRes {
 }
 
 message UpdateDoctorProfessionalDetailsReq {
-  string doctorId = 1;
+  string doctorId            = 1;
   string medicalRegistration = 2;
-  int32 registrationCouncil = 3;
-  int32 registrationState = 4;
-  int32 registrationYear = 5;
-  int32 licenseStatus = 6;
+  int32  registrationCouncil = 3;
+  int32  registrationState   = 4;
+  int32  registrationYear    = 5;
+  int32  licenseStatus       = 6;
 }
 
 message UpdateDoctorProfessionalDetailsRes {
@@ -57,15 +59,15 @@ message UpdateDoctorProfessionalDetailsRes {
 }
 
 message DoctorQualification {
-  int32 qualificationId = 1;
-  int32 specializationId = 2;
-  string institutionName = 3;
-  string universityName = 4;
-  int32 yearOfCompletion = 5;
+  int32  qualificationId  = 1;
+  int32  specializationId = 2;
+  string institutionName  = 3;
+  string universityName   = 4;
+  int32  yearOfCompletion = 5;
 }
 
 message UpdateDoctorQualificationsReq {
-  string doctorId = 1;
+  string                       doctorId       = 1;
   repeated DoctorQualification qualifications = 2;
 }
 
@@ -78,56 +80,84 @@ message GetDoctorDetailsReq {
 }
 
 message GetDoctorProfileDetails {
-  int32 doctorProfileId = 1;
-  string email = 2;
-  string mobile = 3;
-  string firstName = 4;
-  optional string middleName = 5;
-  string lastName = 6;
-  optional int32 gender = 7;
-  optional string profileImage = 8;
+  int32           doctorProfileId = 1;
+  string          email           = 2;
+  string          mobile          = 3;
+  string          firstName       = 4;
+  optional string middleName      = 5;
+  string          lastName        = 6;
+  optional int32  gender          = 7;
+  optional string profileImage    = 8;
 }
 
 message GetDoctorProfessionalDetails {
-  optional int32 doctorProfessionalDetailsId = 1;
-  optional string medicalRegistration = 2;
-  optional int32 registrationCouncilId = 3;
-  optional string registrationCouncilName = 4;
-  optional int32 registrationStateId = 5;
-  optional string registrationStateName = 6;
-  optional int32 registrationYear = 7;
-  optional int32 licenseStatus = 8;
+  optional int32  doctorProfessionalDetailsId = 1;
+  optional string medicalRegistration         = 2;
+  optional int32  registrationCouncilId       = 3;
+  optional string registrationCouncilName     = 4;
+  optional int32  registrationStateId         = 5;
+  optional string registrationStateName       = 6;
+  optional int32  registrationYear            = 7;
+  optional int32  licenseStatus               = 8;
 }
 
 message GetDoctorQualificationDetails {
-  int32 doctorQualificationId = 1;
-  int32 qualificationId = 2;
-  string qualificationName = 3;
-  optional int32 specializationId = 4;
-  optional string specializationName = 5;
-  string institutionName = 6;
-  string universityName = 7;
-  int32 yearOfCompletion = 8;
+  int32           doctorQualificationId = 1;
+  int32           qualificationId       = 2;
+  string          qualificationName     = 3;
+  optional int32  specializationId      = 4;
+  optional string specializationName    = 5;
+  string          institutionName       = 6;
+  string          universityName        = 7;
+  int32           yearOfCompletion      = 8;
 }
 
 message GetDoctorDetailsRes {
-  string doctorId = 1;
-  GetDoctorProfileDetails profileDetails = 2;
-  GetDoctorProfessionalDetails professionalDetails = 3;
+  string                                 doctorId             = 1;
+  GetDoctorProfileDetails                profileDetails       = 2;
+  GetDoctorProfessionalDetails           professionalDetails  = 3;
   repeated GetDoctorQualificationDetails qualificationDetails = 4;
 }
 
 message GetDoctorMasterDataReq {}
 
 message MasterDataItem {
-  int32 id = 1;
+  int32  id   = 1;
   string name = 2;
   string code = 3;
 }
 
 message GetDoctorMasterDataRes {
   repeated MasterDataItem registrationCouncils = 1;
-  repeated MasterDataItem states = 2;
-  repeated MasterDataItem qualifications = 3;
-  repeated MasterDataItem specializations = 4;
+  repeated MasterDataItem states               = 2;
+  repeated MasterDataItem qualifications       = 3;
+  repeated MasterDataItem specializations      = 4;
+}
+
+message GetDoctorListReq {
+  optional int32  offset    = 1;
+  optional int32  limit     = 2;
+  optional string search    = 3;
+  optional int32  stateId   = 4;
+  optional int32  councilId = 5;
+}
+
+message DoctorListItem {
+  string          doctorId                = 1;
+  string          firstName               = 2;
+  optional string middleName              = 3;
+  string          lastName                = 4;
+  string          medicalRegistration     = 5;
+  int32           licenseStatus           = 6;
+  optional uint32 registrationStateId     = 7;
+  optional uint32 registrationCouncilId   = 8;
+  optional string registrationStateName   = 9;
+  optional string registrationCouncilName = 10;
+}
+
+message GetDoctorListRes {
+  repeated DoctorListItem doctors = 1;
+  int32                   total   = 2;
+  int32                   offset  = 3;
+  int32                   limit   = 4;
 }

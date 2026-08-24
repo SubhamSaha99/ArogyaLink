@@ -5,6 +5,7 @@ import {
   DoctorServiceClient,
   GetDoctorDetailsReq,
   GetDoctorDetailsRes,
+  GetDoctorListRes,
   GetDoctorMasterDataRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
@@ -17,6 +18,7 @@ import {
   DoctorBasicDetailsDto,
   DoctorProfessionalDetailsDto,
   DoctorQualificationsDto,
+  GetDoctorListDto,
 } from './doctor.dto';
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/utils/file-util';
@@ -136,5 +138,16 @@ export class DoctorService implements OnModuleInit {
    */
   async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
     return await firstValueFrom(this.doctorGrpcService.getDoctorMasterData({}));
+  }
+
+  /**
+   * @description Get Doctor List
+   * @param request
+   * @returns GetDoctorListRes
+   */
+  async getDoctorList(request: GetDoctorListDto): Promise<GetDoctorListRes> {
+
+    const result = await firstValueFrom(this.doctorGrpcService.getDoctorList(request))
+    return result;
   }
 }

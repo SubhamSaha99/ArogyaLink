@@ -16,6 +16,8 @@ import {
   HealthInstituteLayout,
   HealthInstituteProfilePage,
   HealthInstituteDashboardPage,
+  HealthInstituteAppointDoctorPage,
+  HealthInstituteDoctorDetailsPage,
 } from "@/pages/lazyPages";
 
 function AppLayout() {
@@ -24,7 +26,9 @@ function AppLayout() {
     location.pathname.startsWith("/doctor") || location.pathname === "/dashboard";
   const isHealthInstituteTerminalRoute =
     location.pathname.startsWith("/health-institute/profile") ||
-    location.pathname.startsWith("/health-institute/dashboard");
+    location.pathname.startsWith("/health-institute/dashboard") ||
+    location.pathname.startsWith("/health-institute/appoint-doctor") ||
+    location.pathname.startsWith("/health-institute/doctors");
   const hidePublicNavAndFooter = isDoctorRoute || isHealthInstituteTerminalRoute;
 
   return (
@@ -52,6 +56,10 @@ function AppLayout() {
             <Route path="/health-institute" element={<HealthInstituteLayout />}>
               <Route path="profile" element={<HealthInstituteProfilePage />} />
               <Route path="dashboard" element={<HealthInstituteDashboardPage />} />
+              <Route path="appoint-doctor" element={<HealthInstituteAppointDoctorPage />} />
+              <Route path="appoint-doctor/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
+              <Route path="doctors" element={<HealthInstituteAppointDoctorPage />} />
+              <Route path="doctors/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
             </Route>
           </Routes>
         </Suspense>

@@ -64,3 +64,22 @@ export interface GetDoctorMasterDataResponse {
   qualifications: MasterDataItemResposne[];
   specializations: MasterDataItemResposne[];
 }
+
+export interface DoctorListItem {
+  doctorId: string;
+  firstName: string;
+  middleName?: string;
+  lastName: string;
+  medicalRegistration: string;
+  licenseStatus: number;
+  registrationStateId?: number;
+  registrationCouncilId?: number;
+  registrationStateName?: string;
+  registrationCouncilName?: string;
+}
+export interface GetDoctorListResponse {
+  doctors: DoctorListItem[];
+  total: number;
+  resultOffset: number;
+  resultLimit: number;
+}

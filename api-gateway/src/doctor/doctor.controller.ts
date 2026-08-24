@@ -13,6 +13,7 @@ import {
   DoctorBasicDetailsDto,
   DoctorProfessionalDetailsDto,
   DoctorQualificationsDto,
+  GetDoctorListDto,
 } from './doctor.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../common/utils/multer.config';
@@ -27,11 +28,13 @@ export class DoctorController {
 
   /**
    * * Update Doctor Basic Details
+   * @param user
    * @param request
-   * @param profileImage
-   * @returns JSON
+   * @param file
+   * @returns json
    */
-  @Post('updateDoctorBasicDetails')
+  @Post('updateBasicDetails')
+  @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   @UseInterceptors(
     FileInterceptor(
@@ -42,56 +45,61 @@ export class DoctorController {
     ),
   )
   async updateDoctorBasicDetails(
-    @Body() request: DoctorBasicDetailsDto,
     @CurrentUser() user: JwtPayload,
-    @UploadedFile() profileImage?: Express.Multer.File,
+    @Body() request: DoctorBasicDetailsDto,
+    @UploadedFile() file?: Express.Multer.File,
   ) {
     const result = await this.doctorService.updateDoctorBasicDetails(
       request,
       user.userBusinessId,
-      profileImage,
+      file,
     );
 
     return {
       success: true,
-      message: 'Deatils Updated Successfully.',
+      message: 'Doctor Basic Details Updated Successfully.',
       data: result,
     };
   }
 
   /**
-   * * Update Doctor Professional Details.
+   * * Update Doctor Professional Details
+   * @param user
    * @param request
-   * @returns JSON
+   * @returns json
    */
   @Post('updateDoctorProfessionalDetails')
+  @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
-  async updateDoctorProfessinalDetails(
-    @Body() request: DoctorProfessionalDetailsDto,
+  async updateDoctorProfessionalDetails(
     @CurrentUser() user: JwtPayload,
+    @Body() request: DoctorProfessionalDetailsDto,
   ) {
-    const result = await this.doctorService.updateDoctorProfessinalDetails(
-      request,
-      user.userBusinessId,
-    );
+    const result =
+      await this.doctorService.updateDoctorProfessinalDetails(
+        request,
+        user.userBusinessId,
+      );
 
     return {
       success: true,
-      message: 'Deatils Updated Successfully.',
+      message: 'Doctor Professional Details Updated Successfully.',
       data: result,
     };
   }
 
   /**
    * * Update Doctor Qualifications
+   * @param user
    * @param request
    * @returns json
    */
   @Post('updateDoctorQualifications')
+  @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   async updateDoctorQualifications(
-    @Body() request: DoctorQualificationsDto,
     @CurrentUser() user: JwtPayload,
+    @Body() request: DoctorQualificationsDto,
   ) {
     const result = await this.doctorService.updateDoctorQualifications(
       request,
@@ -100,23 +108,29 @@ export class DoctorController {
 
     return {
       success: true,
-      message: 'Deatils Updated Successfully.',
+      message: 'Doctor Qualifications Updated Successfully.',
       data: result,
     };
   }
 
   /**
-   * * Get Doctor Details
+   * @description Get Doctor Details
    * @param user
+   * @param request
    * @returns json
    */
-  @Get('getDoctorDetails')
+  @Post('getDoctorDetails')
   @HttpCode(HttpStatus.OK)
-  @Auth(UserRole.DOCTOR)
-  async getDoctorDetails(@CurrentUser() user: JwtPayload) {
-    const result = await this.doctorService.getDoctorDetails(
-      user.userBusinessId,
-    );
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  async getDoctorDetails(
+    @CurrentUser() user: JwtPayload,
+    @Body() request: { doctorId?: string },
+  ) {
+    let doctorId = user.userBusinessId;
+    if (user.role === UserRole.HEALTH_INSTITUTE) {
+      doctorId = request?.doctorId || user.userBusinessId;
+    }
+    const result = await this.doctorService.getDoctorDetails(doctorId);
 
     return {
       success: true,
@@ -136,13 +150,30 @@ export class DoctorController {
    */
   @Get('getDoctorMasterData')
   @HttpCode(HttpStatus.OK)
-  @Auth(UserRole.DOCTOR)
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getDoctorMasterData() {
     const result = await this.doctorService.getDoctorMasterData();
 
     return {
       success: true,
       message: 'Doctor Master Data Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Get Doctor List
+   * @param request
+   * @returns json
+   */
+  @Post('getDoctorList')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getDoctorList(@Body() request: GetDoctorListDto) {
+    const result = await this.doctorService.getDoctorList(request);
+    return {
+      success: true,
+      message: 'Doctor List Fetched Successfully.',
       data: result,
     };
   }

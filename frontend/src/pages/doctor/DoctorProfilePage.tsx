@@ -243,7 +243,7 @@ export const DoctorProfilePage: React.FC = () => {
     setLoading(true);
     setFetchingError(null);
     try {
-      const response = await callApi(API_ROUTES.getDoctorDetails, null, "GET");
+      const response = await callApi(API_ROUTES.getDoctorDetails, {}, "POST");
       if (response && response.data) {
         setDoctorDetails(response.data);
       }

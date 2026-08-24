@@ -5,6 +5,8 @@ import {
   DoctorProfileRes,
   GetDoctorDetailsReq,
   GetDoctorDetailsRes,
+  GetDoctorListReq,
+  GetDoctorListRes,
   GetDoctorMasterDataRes,
   UpdateDoctorBasicDeatilsReq,
   UpdateDoctorBasicDeatilsRes,
@@ -23,6 +25,7 @@ import {
   UpdateDoctorResponse,
   GetDoctorDetailsResponse,
   GetDoctorMasterDataResponse,
+  GetDoctorListResponse,
 } from '../common/interfaces/doctor.interface';
 
 @Injectable()
@@ -336,5 +339,31 @@ export class DoctorService {
 
       throw error;
     }
+  }
+
+  async getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> {
+    const result = await this.dataSource.query<GetDoctorListResponse[]>(
+      `SELECT * FROM get_doctor_list($1, $2, $3, $4, $5)`,
+      [
+        request.offset,
+        request.limit,
+        request.search,
+        request.stateId,
+        request.councilId,
+      ],
+    );
+
+    const procedureResult = result?.[0];
+
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Database Error!');
+    }
+    
+    return {
+      doctors: procedureResult.doctors,
+      total: procedureResult.total,
+      offset: procedureResult.resultOffset,
+      limit: procedureResult.resultLimit,
+    };
   }
 }

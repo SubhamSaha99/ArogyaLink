@@ -75,8 +75,8 @@ interface EditInstituteProfileFormValues {
 const editProfileSchema = Yup.object({
   registrationNumber: Yup.string()
     .trim()
-    .required("Registration Number is required")
-    .max(50, "Registration Number cannot exceed 50 characters"),
+    .max(50, "Registration Number cannot exceed 50 characters")
+    .optional(),
   phone: Yup.string()
     .trim()
     .matches(/^\+?[0-9]{7,15}$/, "Please enter a valid phone number (7-15 digits)")
@@ -225,7 +225,8 @@ export const HealthInstituteProfilePage: React.FC = () => {
 
       try {
         const payload = {
-          registrationNumber: values.registrationNumber.trim(),
+          healthInstituteId,
+          registrationNumber: values.registrationNumber.trim() || undefined,
           phone: values.phone.trim() || undefined,
           address: values.address.trim() || undefined,
           stateId: Number(values.stateId),

@@ -47,7 +47,7 @@ export class HealthInstituteController {
 
   /**
    * * Get health institute details
-   * @param user 
+   * @param user
    * @returns json
    */
   @Get('getHealthInstituteDetails')
@@ -67,7 +67,7 @@ export class HealthInstituteController {
 
   /**
    * * Get States
-   * @returns 
+   * @returns
    */
   @Get('states')
   @HttpCode(HttpStatus.OK)
@@ -87,6 +87,19 @@ export class HealthInstituteController {
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getDistricts(@Param('id') id: string) {
     const result = await this.healthInstituteService.getDistricts(Number(id));
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  @Get('registrationCouncils')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getRegistrationCouncils() {
+    const result = await this.healthInstituteService.getRegistrationCouncils();
 
     return {
       success: true,
