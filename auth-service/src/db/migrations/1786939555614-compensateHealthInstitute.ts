@@ -4,7 +4,7 @@ export class CompensateHealthInstitute1786939555614 implements MigrationInterfac
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
         CREATE OR REPLACE FUNCTION compensate_health_institute_registration(
-            p_health_institute_id INT
+            p_health_institute_primary_key INT
         )
         RETURNS VARCHAR(20)
         LANGUAGE plpgsql
@@ -16,7 +16,7 @@ export class CompensateHealthInstitute1786939555614 implements MigrationInterfac
         BEGIN
             DELETE
             FROM health_institute hi
-            WHERE hi.id = p_health_institute_id;
+            WHERE hi.id = p_health_institute_primary_key;
             IF NOT FOUND THEN
                 RETURN 'helathInstituteNotFound';
             END IF;

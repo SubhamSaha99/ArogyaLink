@@ -44,8 +44,9 @@ export class HealthInstituteService {
     request: HealthInstituteProfileReq,
   ): Promise<HealthInstituteProfileRes> {
     const result = await this.dataSource.query<UpdateHealthInstituteResponse[]>(
-      `SELECT create_health_institute_profile($1, $2, $3, $4) AS f_result`,
+      `SELECT create_health_institute_profile($1, $2, $3, $4, $5) AS f_result`,
       [
+        request.healthInstitutePrimaryKey,
         request.healthInstituteId,
         request.healthInstituteName,
         request.healthInstituteType,
@@ -64,7 +65,7 @@ export class HealthInstituteService {
 
     if (
       typeof procedureResult === 'string' &&
-      !/^[HND](\d{6})$/.test(procedureResult)
+      !/^AGL-[HND]\d{6}$/.test(procedureResult)
     ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }

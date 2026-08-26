@@ -23,17 +23,18 @@ service AuthService {
 }
 
 message HealthInstituteRegReq {
-  string email = 1;
-  string password = 2;
-  int32 healthInstituteType = 3;
+  string email               = 1;
+  string password            = 2;
+  int32  healthInstituteType = 3;
 }
 
 message HealthInstituteRegRes {
-  string healthInstituteId = 1;
+  uint32 healthInstitutePrimaryKey = 1;
+  string healthInstituteId         = 2;
 }
 
 message CompensateHealthInstituteRegistrationReq {
-  string healthInstituteId = 1;
+  uint32 healthInstitutePrimaryKey = 1;
 }
 
 message CompensateHealthInstituteRegistrationRes {
@@ -41,23 +42,23 @@ message CompensateHealthInstituteRegistrationRes {
 }
 
 message HealthInstituteLoginReq {
-  string email = 1;
-  string password = 2;
-  string requestIp = 3;
-  string userAgent = 4;
+  string          email      = 1;
+  string          password   = 2;
+  string          requestIp  = 3;
+  string          userAgent  = 4;
   optional string deviceName = 5;
 }
 
 message HealthInstituteLoginRes {
   string healthInstituteId = 1;
-  string email = 2;
-  string accessToken = 3;
-  string refreshToken = 4;
+  string email             = 2;
+  string accessToken       = 3;
+  string refreshToken      = 4;
 }
 
 message DoctorRegistrationReq {
-  string email = 1;
-  string mobile = 2;
+  string email    = 1;
+  string mobile   = 2;
   string password = 3;
 }
 
@@ -74,19 +75,19 @@ message CompensateDoctorRegistrationRes {
 }
 
 message DoctorLoginReq {
-  optional string email = 1;
-  optional string mobile = 2;
-  string password = 3;
-  string requestIp = 4;
-  string userAgent = 5;
+  optional string email      = 1;
+  optional string mobile     = 2;
+  string          password   = 3;
+  string          requestIp  = 4;
+  string          userAgent  = 5;
   optional string deviceName = 6;
 }
 
 message DoctorLoginRes {
-  string doctorId = 1;
-  string email = 2;
-  string mobile = 3;
-  string accessToken = 4;
+  string doctorId     = 1;
+  string email        = 2;
+  string mobile       = 3;
+  string accessToken  = 4;
   string refreshToken = 5;
 }
 
@@ -95,7 +96,7 @@ message RefreshTokenReq {
 }
 
 message RefreshTokenRes {
-  string accessToken = 1;
+  string accessToken  = 1;
   string refreshToken = 2;
 }
 

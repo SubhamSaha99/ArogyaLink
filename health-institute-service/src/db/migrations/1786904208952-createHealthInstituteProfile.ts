@@ -4,6 +4,7 @@ export class CreateHealthInstituteProfile1786904208952 implements MigrationInter
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             CREATE OR REPLACE FUNCTION create_health_institute_profile(
+				p_health_institute_primary_key INTEGER,
                 p_health_institute_id VARCHAR(20),
                 p_health_institute_name VARCHAR(255),
                 p_health_institute_type SMALLINT,
@@ -20,6 +21,7 @@ export class CreateHealthInstituteProfile1786904208952 implements MigrationInter
             BEGIN
 
                 INSERT INTO health_institute_profile (
+					health_institute_primary_key,
                     health_institute_id,
                     health_institute_name,
                     health_institute_type,
@@ -27,6 +29,7 @@ export class CreateHealthInstituteProfile1786904208952 implements MigrationInter
                     created_at
                 )
                 VALUES (
+					p_health_institute_primary_key,
                     p_health_institute_id,
                     p_health_institute_name,
                     p_health_institute_type,
@@ -69,7 +72,7 @@ export class CreateHealthInstituteProfile1786904208952 implements MigrationInter
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-            DROP FUNCTION IF EXISTS create_health_institute_profile(VARCHAR, VARCHAR, SMALLINT, VARCHAR);
+            DROP FUNCTION IF EXISTS create_health_institute_profile(INTEGER, VARCHAR, VARCHAR, SMALLINT, VARCHAR);
         `);
   }
 }

@@ -29,11 +29,11 @@ message HealthInstituteRegReq {
 }
 
 message HealthInstituteRegRes {
-  string healthInstituteId = 1;
+  uint32 healthInstitutePrimaryKey = 1;
+  string healthInstituteId         = 2;
 }
-
 message CompensateHealthInstituteRegistrationReq {
-  string healthInstituteId = 1;
+  uint32 healthInstitutePrimaryKey = 1;
 }
 
 message CompensateHealthInstituteRegistrationRes {

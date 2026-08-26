@@ -8,12 +8,25 @@ import {
 } from 'typeorm';
 
 @Entity({ name: 'health_institute_profile' })
+@Index(
+  'idx_health_institute_profile_institute_primary_key',
+  ['healthInstitutePrimaryKey'],
+  {
+    unique: true,
+  },
+)
 @Index('idx_health_institute_profile_institute_id', ['healthInstituteId'], {
   unique: true,
 })
 export class HealthInstituteProfile {
   @PrimaryGeneratedColumn('increment')
   id!: number;
+
+  @Column({
+    name: 'health_institute_primary_key',
+    type: 'int',
+  })
+  healthInstitutePrimaryKey!: number;
 
   @Column({
     name: 'health_institute_id',

@@ -2,6 +2,12 @@ export interface authQueryInterface {
   f_result: string;
 }
 
+export interface healthInstituteQueryInterface {
+    status: string;
+    healthInstitutePrimaryKey: number;
+    healthInstituteId: string;
+}
+
 export interface healthInstituteLoginQueryInterface {
   status: string;
   healthInstituteId: string;

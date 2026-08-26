@@ -17,11 +17,12 @@ export interface HealthInstituteRegReq {
 }
 
 export interface HealthInstituteRegRes {
+  healthInstitutePrimaryKey: number;
   healthInstituteId: string;
 }
 
 export interface CompensateHealthInstituteRegistrationReq {
-  healthInstituteId: string;
+  healthInstitutePrimaryKey: number;
 }
 
 export interface CompensateHealthInstituteRegistrationRes {

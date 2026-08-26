@@ -41,6 +41,7 @@ import {
   authQueryInterface,
   rateLimitOptionsInterface,
   doctorLoginQueryInterface,
+  healthInstituteQueryInterface,
 } from '../common/interfaces/auth.interface';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { UserSession } from '../db/entities/user-session.entity';
@@ -66,45 +67,37 @@ export class AuthService {
   ): Promise<HealthInstituteRegRes> {
     const hashedPassword = await bcrypt.hash(request.password, 10);
 
-    const result = await this.dataSource.query<authQueryInterface[]>(
-      `SELECT register_health_institute($1, $2, $3) AS f_result`,
+    const result = await this.dataSource.query<healthInstituteQueryInterface[]>(
+      `SELECT * FROM register_health_institute($1, $2, $3)`,
       [request.email, hashedPassword, request.healthInstituteType],
     );
-    const procedureResult: string = result[0]?.f_result;
+    const procedureResult = result[0];
 
     if (!procedureResult) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure!');
     }
-    if (procedureResult === Errors.emailExistError) {
-      throwRpcException(status.ALREADY_EXISTS, 'Email already exists');
-    }
-    if (procedureResult === Errors.dbError) {
-      throwRpcException(status.INTERNAL, 'Database error');
-    }
-    if (!/^[HND]\d{6}$/.test(procedureResult)) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+
+    switch (procedureResult.status) {
+      case Errors.emailExistError:
+        throwRpcException(status.ALREADY_EXISTS, 'Email already exists!');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error!');
+        break;
     }
     return {
-      healthInstituteId: procedureResult,
+      healthInstitutePrimaryKey: procedureResult.healthInstitutePrimaryKey,
+      healthInstituteId: procedureResult.healthInstituteId,
     };
   }
 
   async compensateHealthInstituteRegistration(
     request: CompensateHealthInstituteRegistrationReq,
   ): Promise<CompensateDoctorRegistrationRes> {
-    const match = request.healthInstituteId.match(/^[HND](\d{6})$/);
-
-    if (!match) {
-      return throwRpcException(
-        status.INVALID_ARGUMENT,
-        'Invalid health institute ID format',
-      );
-    }
-    const healthInstitutePk = Number(match[1]);
 
     const result = await this.dataSource.query<authQueryInterface[]>(
       `SELECT compensate_health_institute_registration($1) AS f_result`,
-      [healthInstitutePk],
+      [request.healthInstitutePrimaryKey],
     );
 
     const procedureResult: string = result[0]?.f_result;

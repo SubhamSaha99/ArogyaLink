@@ -21,10 +21,11 @@ service HealthInstituteService {
 }
 
 message HealthInstituteProfileReq {
-  string healthInstituteId   = 1;
-  string healthInstituteName = 2;
-  int32  healthInstituteType = 3;
-  string email               = 4;
+  uint32 healthInstitutePrimaryKey = 1;
+  string healthInstituteId         = 2;
+  string healthInstituteName       = 3;
+  uint32 healthInstituteType       = 4;
+  string email                     = 5;
 }
 
 message HealthInstituteProfileRes {
@@ -114,7 +115,6 @@ message AppointDoctorReq {
   uint32          consultationScope         = 8;
   optional string affiliationNotes          = 9;
 }
-
 
 message AppointDoctorRes {
   uint32 mappingId = 1;

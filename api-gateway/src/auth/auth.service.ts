@@ -60,11 +60,12 @@ export class AuthService implements OnModuleInit {
   /**
    * * Health Institute Registration
    * @param request
-   * @returns HealthInstituteRegRes
+   * @returns {healthInstituteId}
    */
   async healthInstituteRegistration(
     request: HealthInstituteRegDto,
-  ): Promise<HealthInstituteRegRes> {
+  ): Promise<{ healthInstituteId: string }> {
+    let healthInstitutePrimaryKey: number | null = null;
     let healthInstituteId: string | null = null;
     try {
       const authResponse = await firstValueFrom(
@@ -74,23 +75,25 @@ export class AuthService implements OnModuleInit {
           healthInstituteType: request.healthInstituteType,
         }),
       );
+      healthInstitutePrimaryKey = authResponse.healthInstitutePrimaryKey;
       healthInstituteId = authResponse.healthInstituteId;
 
       await firstValueFrom(
         this.healthInstituteGrpcService.createHealthInstituteProfile({
+          healthInstitutePrimaryKey,
           healthInstituteId,
           healthInstituteName: request.healthInstituteName,
           healthInstituteType: request.healthInstituteType,
           email: request.email,
         }),
       );
-      return authResponse;
+      return { healthInstituteId };
     } catch (error) {
-      if (healthInstituteId) {
+      if (healthInstitutePrimaryKey) {
         try {
           await firstValueFrom(
             this.authGrpcService.compensateHealthInstituteRegistration({
-              healthInstituteId,
+              healthInstitutePrimaryKey,
             }),
           );
         } catch (rollbackError) {
