@@ -1,6 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {
+  AppointDoctorReq,
+  AppointDoctorRes,
   GetAppointDoctorMasterDataRes,
   GetDistrictsReq,
   GetDistrictsRes,
@@ -10,12 +12,11 @@ import {
   GetStatesRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
-  MasterDataItem,
   UpdateHealthInstituteProfileReq,
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
 import {
-    GetDoctorMasterDataResponse,
+  GetDoctorMasterDataResponse,
   GetHealthInstituteDetailsResponse,
   MasterDataItemResposne,
   UpdateHealthInstituteResponse,
@@ -354,5 +355,36 @@ export class HealthInstituteService {
 
       throw error;
     }
+  }
+
+  async appointDoctor(request: AppointDoctorReq): Promise<AppointDoctorRes> {
+    const result = await this.dataSource.query<UpdateHealthInstituteResponse[]>(
+      `SELECT appoint_doctor($1, $2, $3, $4, $5, $6, $7, $8, $9) AS f_result`,
+      [
+        request.healthInstitutePrimaryKey,
+        request.healthInstituteId,
+        request.doctorPrimaryKey,
+        request.doctorId,
+        request.departmentId,
+        request.designation,
+        request.joiningDate,
+        request.consultationScope,
+        request.affiliationNotes,
+      ],
+    );
+    const procedureResult: string = result[0]?.f_result;
+
+    switch (procedureResult) {
+      case Errors.doctorAlreadyMapped:
+        throwRpcException(status.ALREADY_EXISTS, 'Doctor Alreday Appointed!');
+        break;
+
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error!');
+        break;
+    }
+    return {
+      mappingId: Number(procedureResult),
+    };
   }
 }

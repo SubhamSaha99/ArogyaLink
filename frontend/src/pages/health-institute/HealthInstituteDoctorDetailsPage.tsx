@@ -75,6 +75,9 @@ export interface AppointDoctorMasterData {
 let cachedAppointMasterData: AppointDoctorMasterData | null = null;
 let appointMasterDataInFlight: Promise<AppointDoctorMasterData> | null = null;
 
+let cachedHealthInstitutePrimaryKey: number | null = null;
+let healthInstituteDetailsInFlight: Promise<number | null> | null = null;
+
 export const getCachedAppointDoctorMasterData = async (): Promise<AppointDoctorMasterData> => {
   if (cachedAppointMasterData) {
     return cachedAppointMasterData;
@@ -99,6 +102,34 @@ export const getCachedAppointDoctorMasterData = async (): Promise<AppointDoctorM
   })();
 
   return appointMasterDataInFlight;
+};
+
+export const getCachedHealthInstitutePrimaryKey = async (): Promise<number | null> => {
+  if (cachedHealthInstitutePrimaryKey) {
+    return cachedHealthInstitutePrimaryKey;
+  }
+  if (healthInstituteDetailsInFlight) {
+    return healthInstituteDetailsInFlight;
+  }
+
+  healthInstituteDetailsInFlight = (async () => {
+    try {
+      const response = await callApi(API_ROUTES.getHealthInstituteDetails, null, "GET");
+      const data = response?.data?.profileDetails || response?.profileDetails || response?.data;
+      const primaryKey = data?.id ? Number(data.id) : null;
+      if (primaryKey) {
+        cachedHealthInstitutePrimaryKey = primaryKey;
+      }
+      return primaryKey;
+    } catch (err) {
+      console.error("Failed to fetch health institute details for primary key:", err);
+      return null;
+    } finally {
+      healthInstituteDetailsInFlight = null;
+    }
+  })();
+
+  return healthInstituteDetailsInFlight;
 };
 
 export const HealthInstituteDoctorDetailsPage: React.FC = () => {
@@ -131,6 +162,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   const [appointmentSuccessMessage, setAppointmentSuccessMessage] = useState<string | null>(
     null
   );
+  const [appointmentError, setAppointmentError] = useState<string | null>(null);
 
   const hasFetchedDoctorIdRef = useRef<string | null>(null);
 
@@ -183,9 +215,13 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   // Open modal and fetch appoint master data on modal open
   const handleOpenAppointModal = async () => {
     setIsAppointModalOpen(true);
+    setAppointmentError(null);
     setLoadingMasterData(true);
     try {
-      const data = await getCachedAppointDoctorMasterData();
+      const [data] = await Promise.all([
+        getCachedAppointDoctorMasterData(),
+        getCachedHealthInstitutePrimaryKey(),
+      ]);
       setMasterData(data);
       if (data.departments.length > 0) {
         setAppointmentDeptId((prev) => prev || String(data.departments[0].id));
@@ -208,9 +244,32 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     e.preventDefault();
     if (!doctorData) return;
 
+    const doctorPrimaryKey = doctorData.profileDetails?.doctorProfileId;
+    if (!doctorPrimaryKey) {
+      setAppointmentError("Doctor profile details could not be found.");
+      return;
+    }
+
     setIsSubmittingAppointment(true);
+    setAppointmentError(null);
     try {
-      await new Promise((resolve) => setTimeout(resolve, 800));
+      const healthInstitutePrimaryKey = await getCachedHealthInstitutePrimaryKey();
+      if (!healthInstitutePrimaryKey) {
+        throw new Error("Health institute profile ID could not be retrieved.");
+      }
+
+      const payload = {
+        healthInstitutePrimaryKey: Number(healthInstitutePrimaryKey),
+        doctorPrimaryKey: Number(doctorPrimaryKey),
+        doctorId: doctorData.doctorId,
+        departmentId: Number(appointmentDeptId),
+        designation: Number(appointmentDesignationId),
+        joiningDate: appointmentDate,
+        consultationScope: Number(appointmentScopeId),
+        affiliationNotes: appointmentNotes.trim() || undefined,
+      };
+
+      await callApi(API_ROUTES.appointDoctor, payload, "POST");
 
       const selectedDept =
         masterData.departments.find((d) => String(d.id) === String(appointmentDeptId))?.name ||
@@ -235,9 +294,14 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
       setTimeout(() => {
         setAppointmentSuccessMessage(null);
         setIsAppointModalOpen(false);
-      }, 2000);
+      }, 2500);
     } catch (err: any) {
       console.error("Appointment error:", err);
+      setAppointmentError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to appoint doctor. Please try again."
+      );
     } finally {
       setIsSubmittingAppointment(false);
     }
@@ -626,6 +690,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                 onClick={() => {
                   setIsAppointModalOpen(false);
                   setAppointmentSuccessMessage(null);
+                  setAppointmentError(null);
                 }}
                 className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
               >
@@ -658,6 +723,13 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                   Verified ABDM
                 </Badge>
               </div>
+
+              {appointmentError && (
+                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 flex items-start gap-2.5">
+                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <span>{appointmentError}</span>
+                </div>
+              )}
 
               {appointmentSuccessMessage ? (
                 <div className="py-6 text-center space-y-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
@@ -778,7 +850,11 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                     <Button
                       type="button"
                       variant="outline"
-                      onClick={() => setIsAppointModalOpen(false)}
+                      onClick={() => {
+                        setIsAppointModalOpen(false);
+                        setAppointmentError(null);
+                        setAppointmentSuccessMessage(null);
+                      }}
                       disabled={isSubmittingAppointment}
                       className="text-xs"
                     >

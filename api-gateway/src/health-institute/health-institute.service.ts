@@ -1,6 +1,8 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
-    GetAppointDoctorMasterDataRes,
+  AppointDoctorReq,
+  AppointDoctorRes,
+  GetAppointDoctorMasterDataRes,
   GetDistrictsRes,
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
@@ -13,7 +15,10 @@ import {
 } from '../proto/generated/health-institute';
 import { GrpcServiceName } from '../common/utils/constant';
 import type { ClientGrpc } from '@nestjs/microservices';
-import { UpdateHealthInstituteProfileDto } from './health-institute.dto';
+import {
+  AppointDoctorDto,
+  UpdateHealthInstituteProfileDto,
+} from './health-institute.dto';
 import { firstValueFrom } from 'rxjs';
 
 @Injectable()
@@ -111,6 +116,16 @@ export class HealthInstituteService implements OnModuleInit {
   async getAppointDoctorMasterData(): Promise<GetAppointDoctorMasterDataRes> {
     return await firstValueFrom(
       this.healthInstituteGrpcService.getAppointDoctorMasterData({}),
+    );
+  }
+
+  async appointDoctor(request: AppointDoctorDto, healthInstituteId: string): Promise<AppointDoctorRes> {
+    const appointDoctorData: AppointDoctorReq = {
+      ...request,
+      healthInstituteId
+    };
+    return await firstValueFrom(
+      this.healthInstituteGrpcService.appointDoctor(appointDoctorData),
     );
   }
 }

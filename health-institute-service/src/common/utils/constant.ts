@@ -4,6 +4,7 @@ export const Errors = {
   emailNotExistError: 'emailNotExist',
   invalidIdError: 'invalidIdError',
   dbError: 'dbError',
+  doctorAlreadyMapped: 'doctorAlreadyMapped'
 } as const;
 
 export const REDIS_CLIENT = 'REDIS_CLIENT';

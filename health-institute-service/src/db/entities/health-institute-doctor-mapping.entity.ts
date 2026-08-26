@@ -50,15 +50,15 @@ export class HealthInstituteDoctorMapping {
 
   @Column({
     name: 'department_id',
-    type: 'smallint',
+    type: 'integer',
   })
   departmentId!: number;
 
   @Column({
-    name: 'designation',
-    type: 'smallint',
+    name: 'designation_id',
+    type: 'integer',
   })
-  designation!: number;
+  designationId!: number;
 
   @Column({
     name: 'joining_date',
@@ -67,10 +67,10 @@ export class HealthInstituteDoctorMapping {
   joiningDate!: Date;
 
   @Column({
-    name: 'consultation_scope',
-    type: 'smallint',
+    name: 'consultation_scope_id',
+    type: 'integer',
   })
-  consultationScope!: number;
+  consultationScopeId!: number;
 
   @Column({
     name: 'affiliation_notes',

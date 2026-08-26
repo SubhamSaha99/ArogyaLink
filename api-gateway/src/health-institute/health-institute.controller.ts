@@ -7,7 +7,7 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { UpdateHealthInstituteProfileDto } from './health-institute.dto';
+import { AppointDoctorDto, UpdateHealthInstituteProfileDto } from './health-institute.dto';
 import { HealthInstituteService } from './health-institute.service';
 import { Auth } from '../common/decorators/auth.decorator';
 import { UserRole } from '../common/utils/constant';
@@ -132,5 +132,16 @@ export class HealthInstituteController {
       message: 'Details Fetched Successfully.',
       data: result,
     };
+  }
+
+  @Post('appointDoctor')
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async appointDoctor(@Body() request: AppointDoctorDto, @CurrentUser() user: JwtPayload) {
+    const result = await this.healthInstituteService.appointDoctor(request, user.userBusinessId);
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    }; 
   }
 }
