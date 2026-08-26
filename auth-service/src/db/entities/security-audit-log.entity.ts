@@ -8,10 +8,17 @@ import {
 
 @Entity('security_audit_log')
 @Index('idx_security_audit_log_user_business_id', ['userBusinessId'])
+@Index('idx_security_audit_log_user_primary_key', ['userPrimaryKey'])
 @Index('idx_security_audit_log_session_id', ['sessionId'])
 export class SecurityAuditLog {
   @PrimaryGeneratedColumn()
   id!: number;
+
+  @Column({
+    name: 'user_primary_key',
+    type: 'int',
+  })
+  userPrimaryKey!: number
 
   @Column({
     name: 'user_business_id',

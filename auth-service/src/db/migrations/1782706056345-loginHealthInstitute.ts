@@ -8,6 +8,7 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
         )
         RETURNS TABLE (
             status VARCHAR,
+            "healthInstitutePrimaryKey" INTEGER,
             "healthInstituteId" VARCHAR,
             email VARCHAR,
             password VARCHAR
@@ -30,6 +31,7 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
                 RETURN QUERY
                 SELECT
                     'invalidCredential'::VARCHAR,
+                    NULL:: INTEGER,
                     NULL::VARCHAR,
                     NULL::VARCHAR,
                     NULL::VARCHAR;
@@ -41,7 +43,8 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
             -- Return health institute details
             RETURN QUERY
             SELECT
-                'SUCCESS'::VARCHAR AS status,
+                'SUCCESS'::VARCHAR AS status,		
+				hi.id AS "healthInstitutePrimaryKey",
                 hi.health_institute_id AS "healthInstituteId",
                 hi.email,
                 hi.password
@@ -75,6 +78,7 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
                 RETURN QUERY
                 SELECT
                     'dbError'::VARCHAR,
+                    NULL:: INTEGER,
                     NULL::VARCHAR,
                     NULL::VARCHAR,
                     NULL::VARCHAR;
@@ -86,7 +90,7 @@ export class LoginHealthInstitute1782706056345 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DROP PROCEDURE IF EXISTS login_health_institute(VARCHAR, VARCHAR, REFCURSOR);`,
+      `DROP FUNCTION IF EXISTS login_health_institute(VARCHAR);`,
     );
   }
 }

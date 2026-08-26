@@ -19,13 +19,13 @@ service DoctorService {
 }
 
 message DoctorProfileReq {
-  string doctorId = 1;
-  string email    = 2;
-  string mobile   = 3;
-
-  string          firstName  = 4;
-  optional string middleName = 5;
-  string          lastName   = 6;
+  uint32          doctorPrimaryKey = 1;
+  string          doctorId         = 2;
+  string          email            = 3;
+  string          mobile           = 4;
+  string          firstName        = 5;
+  optional string middleName       = 6;
+  string          lastName         = 7;
 }
 
 message DoctorProfileRes {

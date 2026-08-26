@@ -4,6 +4,7 @@ export class CreateDoctorProfile1784178631611 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             CREATE OR REPLACE FUNCTION create_doctor_profile(
+                p_doctor_primary_key INTEGER,
                 p_doctor_id VARCHAR(20),
                 p_email VARCHAR(255),
                 p_mobile VARCHAR(20),
@@ -22,6 +23,7 @@ export class CreateDoctorProfile1784178631611 implements MigrationInterface {
             BEGIN
             
                 INSERT INTO doctor_profile (
+                    doctor_primary_key,
                     doctor_id,
                     email,
                     mobile,
@@ -31,6 +33,7 @@ export class CreateDoctorProfile1784178631611 implements MigrationInterface {
                     created_at
                 )
                 VALUES (
+                    p_doctor_primary_key,
                     p_doctor_id,
                     p_email,
                     p_mobile,

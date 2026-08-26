@@ -139,9 +139,9 @@ export class AuthService implements OnModuleInit {
    */
   async doctorRegistration(
     request: DoctorRegDto,
-  ): Promise<DoctorRegistrationRes> {
+  ): Promise<{ doctorId: string }> {
+    let doctorPrimaryKey: number | null = null;
     let doctorId: string | null = null;
-
     try {
       const authResponse = await firstValueFrom(
         this.authGrpcService.createDoctorAuth({
@@ -151,10 +151,12 @@ export class AuthService implements OnModuleInit {
         }),
       );
 
+      doctorPrimaryKey = authResponse.doctorPrimaryKey;
       doctorId = authResponse.doctorId;
 
       await firstValueFrom(
         this.doctorGrpcService.createDoctorProfile({
+          doctorPrimaryKey,
           doctorId,
           email: request.email,
           mobile: request.mobile,
@@ -164,13 +166,13 @@ export class AuthService implements OnModuleInit {
         }),
       );
 
-      return authResponse;
+      return { doctorId };
     } catch (error) {
-      if (doctorId) {
+      if (doctorPrimaryKey) {
         try {
           await firstValueFrom(
             this.authGrpcService.compensateDoctorRegistration({
-              doctorId,
+              doctorPrimaryKey,
             }),
           );
         } catch (rollbackError) {

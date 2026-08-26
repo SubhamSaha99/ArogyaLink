@@ -11,6 +11,7 @@ import { UserRole } from '../../common/util/constant';
 @Entity('user_sessions')
 @Index('idx_user_sessions_session_id', ['sessionId'], { unique: true })
 @Index('idx_user_sessions_user_business_id', ['userBusinessId'])
+@Index('idx_user_sessions_user_primary_key', ['userPrimaryKey'])
 export class UserSession {
   @PrimaryGeneratedColumn()
   id!: number;
@@ -28,6 +29,12 @@ export class UserSession {
     enum: UserRole,
   })
   role!: UserRole;
+
+  @Column({
+    name: 'user_primary_key',
+    type: 'int',
+  })
+  userPrimaryKey!: number
 
   @Column({
     name: 'user_business_id',

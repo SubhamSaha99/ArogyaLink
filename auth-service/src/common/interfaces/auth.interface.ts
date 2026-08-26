@@ -10,6 +10,7 @@ export interface healthInstituteQueryInterface {
 
 export interface healthInstituteLoginQueryInterface {
   status: string;
+  healthInstitutePrimaryKey: number;
   healthInstituteId: string;
   email: string;
   password: string;
@@ -22,8 +23,15 @@ export interface rateLimitOptionsInterface {
   message: string;
 }
 
+export interface doctorQueryInterface {
+    status: string;
+    doctorPrimaryKey: number;
+    doctorId: string;
+}
+
 export interface doctorLoginQueryInterface {
   status: string;
+  doctorPrimaryKey: number;
   doctorId: string;
   email: string;
   mobile: string;

@@ -17,6 +17,7 @@ export class SessionService {
   async createSession(dto: CreateSessionDto): Promise<UserSession> {
     const session: UserSession = this.sessionRepository.create({
       sessionId: dto.sessionId,
+      userPrimaryKey: dto.userPrimaryKey,
       userBusinessId: dto.userBusinessId,
       role: dto.role,
       refreshTokenHash: dto.refreshTokenHash,

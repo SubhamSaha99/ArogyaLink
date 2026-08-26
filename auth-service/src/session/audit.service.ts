@@ -13,6 +13,7 @@ export class AuditService {
 
   async log(dto: CreateAuditLogDto): Promise<void> {
     const audit: SecurityAuditLog = this.auditRepository.create({
+      userPrimaryKey: dto.userPrimaryKey,
       userBusinessId: dto.userBusinessId,
       role: dto.role,
       sessionId: dto.sessionId,

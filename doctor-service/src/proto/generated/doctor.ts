@@ -11,6 +11,7 @@ import { Observable } from "rxjs";
 export const protobufPackage = "doctor";
 
 export interface DoctorProfileReq {
+  doctorPrimaryKey: number;
   doctorId: string;
   email: string;
   mobile: string;

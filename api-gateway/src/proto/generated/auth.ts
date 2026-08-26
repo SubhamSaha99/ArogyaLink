@@ -51,11 +51,12 @@ export interface DoctorRegistrationReq {
 }
 
 export interface DoctorRegistrationRes {
+  doctorPrimaryKey: number;
   doctorId: string;
 }
 
 export interface CompensateDoctorRegistrationReq {
-  doctorId: string;
+  doctorPrimaryKey: number;
 }
 
 export interface CompensateDoctorRegistrationRes {

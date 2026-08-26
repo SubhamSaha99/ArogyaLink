@@ -9,6 +9,7 @@ export class LoginDoctorProcedure1784310182686 implements MigrationInterface {
         )
         RETURNS TABLE (
             status VARCHAR,
+            "doctorPrimaryKey" INTEGER,
             "doctorId" VARCHAR,
             email VARCHAR,
             mobile VARCHAR,
@@ -42,6 +43,7 @@ export class LoginDoctorProcedure1784310182686 implements MigrationInterface {
                 RETURN QUERY
                 SELECT
                     'invalidCredential'::VARCHAR,
+                    NULL:: INTEGER,
                     NULL::VARCHAR,
                     NULL::VARCHAR,
                     NULL::VARCHAR,
@@ -55,6 +57,7 @@ export class LoginDoctorProcedure1784310182686 implements MigrationInterface {
             RETURN QUERY
             SELECT
                 'SUCCESS'::VARCHAR AS status,
+                d.id AS "doctorPrimaryKey",
                 d.doctor_id AS "doctorId",
                 d.email,
                 d.mobile,
@@ -99,6 +102,7 @@ export class LoginDoctorProcedure1784310182686 implements MigrationInterface {
                 RETURN QUERY
                 SELECT
                     'dbError'::VARCHAR,
+                    NULL:: INTEGER,
                     NULL::VARCHAR,
                     NULL::VARCHAR,
                     NULL::VARCHAR,

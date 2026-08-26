@@ -62,11 +62,13 @@ message DoctorRegistrationReq {
 }
 
 message DoctorRegistrationRes {
-  string doctorId = 1;
+  uint32 doctorPrimaryKey = 1;
+  string doctorId         = 2;
 }
 
+
 message CompensateDoctorRegistrationReq {
-  string doctorId = 1;
+  uint32 doctorPrimaryKey = 1;
 }
 
 message CompensateDoctorRegistrationRes {

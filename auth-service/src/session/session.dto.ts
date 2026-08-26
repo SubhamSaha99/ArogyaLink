@@ -2,6 +2,7 @@ import { UserRole } from '../common/util/constant';
 
 export interface CreateSessionDto {
   sessionId: string;
+  userPrimaryKey: number;
   userBusinessId: string;
   role: UserRole;
   refreshTokenHash: string;
@@ -13,6 +14,7 @@ export interface CreateSessionDto {
 }
 
 export interface CreateAuditLogDto {
+  userPrimaryKey: number;
   userBusinessId?: string;
   role?: string;
   sessionId?: string;

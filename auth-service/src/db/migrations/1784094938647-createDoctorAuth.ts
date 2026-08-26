@@ -8,12 +8,17 @@ export class CreateDoctorAuth1784094938647 implements MigrationInterface {
             p_mobile VARCHAR(20),
             p_password VARCHAR(255)
         )
-        RETURNS VARCHAR(50)
+        RETURNS TABLE (
+            status VARCHAR,
+            "doctorPrimaryKey" INTEGER,
+            "doctorId" VARCHAR
+        )
         LANGUAGE plpgsql
         AS $$
         DECLARE
             v_id BIGINT;
             v_doctor_id VARCHAR(20);
+
             v_sqlstate TEXT;
             v_message TEXT;
             v_detail TEXT;
@@ -21,27 +26,39 @@ export class CreateDoctorAuth1784094938647 implements MigrationInterface {
 
             -- Check if email already exists
             IF p_email IS NOT NULL
-               AND TRIM(p_email) <> ''
-               AND EXISTS (
-                   SELECT 1
-                   FROM doctor
-                   WHERE email = p_email
-               )
+            AND TRIM(p_email) <> ''
+            AND EXISTS (
+                SELECT 1
+                FROM doctor
+                WHERE email = p_email
+            )
             THEN
-                RETURN 'emailExist';
+                RETURN QUERY
+                SELECT
+                    'emailExist'::VARCHAR,
+                    0::INTEGER,
+                    ''::VARCHAR;
+
+                RETURN;
             END IF;
 
 
             -- Check if mobile already exists
             IF p_mobile IS NOT NULL
-               AND TRIM(p_mobile) <> ''
-               AND EXISTS (
-                   SELECT 1
-                   FROM doctor
-                   WHERE mobile = p_mobile
-               )
+            AND TRIM(p_mobile) <> ''
+            AND EXISTS (
+                SELECT 1
+                FROM doctor
+                WHERE mobile = p_mobile
+            )
             THEN
-                RETURN 'mobileExist';
+                RETURN QUERY
+                SELECT
+                    'mobileExist'::VARCHAR,
+                    0::INTEGER,
+                    ''::VARCHAR;
+
+                RETURN;
             END IF;
 
 
@@ -62,7 +79,8 @@ export class CreateDoctorAuth1784094938647 implements MigrationInterface {
 
 
             -- Generate Doctor ID
-            v_doctor_id := 'DOC' || LPAD(v_id::TEXT, 6, '0');
+            v_doctor_id :=
+                'AGL-' || 'DOC' || LPAD(v_id::TEXT, 6, '0');
 
 
             -- Update Doctor ID
@@ -73,18 +91,25 @@ export class CreateDoctorAuth1784094938647 implements MigrationInterface {
             WHERE id = v_id;
 
 
-            -- Return generated Doctor ID
-            RETURN v_doctor_id;
+            -- Success response
+            RETURN QUERY
+            SELECT
+                'SUCCESS'::VARCHAR,
+                v_id::INTEGER,
+                v_doctor_id::VARCHAR;
 
 
         EXCEPTION
             WHEN OTHERS THEN
 
+                -- Capture PostgreSQL error
                 GET STACKED DIAGNOSTICS
                     v_sqlstate = RETURNED_SQLSTATE,
                     v_message = MESSAGE_TEXT,
                     v_detail = PG_EXCEPTION_DETAIL;
 
+
+                -- Log database exception
                 INSERT INTO db_exception_log (
                     procedure_name,
                     error_code,
@@ -100,7 +125,13 @@ export class CreateDoctorAuth1784094938647 implements MigrationInterface {
                     NOW()
                 );
 
-                RETURN 'dbError';
+
+                -- Database error response
+                RETURN QUERY
+                SELECT
+                    'dbError'::VARCHAR,
+                    0::INTEGER,
+                    ''::VARCHAR;
 
         END;
         $$;

@@ -42,6 +42,7 @@ import {
   rateLimitOptionsInterface,
   doctorLoginQueryInterface,
   healthInstituteQueryInterface,
+  doctorQueryInterface,
 } from '../common/interfaces/auth.interface';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { UserSession } from '../db/entities/user-session.entity';
@@ -91,10 +92,14 @@ export class AuthService {
     };
   }
 
+  /**
+   * @description Compensate Health Institute Registration
+   * @param request
+   * @returns CompensateDoctorRegistrationRes
+   */
   async compensateHealthInstituteRegistration(
     request: CompensateHealthInstituteRegistrationReq,
   ): Promise<CompensateDoctorRegistrationRes> {
-
     const result = await this.dataSource.query<authQueryInterface[]>(
       `SELECT compensate_health_institute_registration($1) AS f_result`,
       [request.healthInstitutePrimaryKey],
@@ -102,20 +107,25 @@ export class AuthService {
 
     const procedureResult: string = result[0]?.f_result;
 
-    if (procedureResult === Errors.helathInstituteNotFoundError)
-      throwRpcException(
-        status.NOT_FOUND,
-        'Health Institute auth record not found',
-      );
-    if (procedureResult === Errors.dbError)
-      throwRpcException(
-        status.INTERNAL,
-        'Failed to compensate doctor registration',
-      );
+    switch (procedureResult) {
+      case Errors.helathInstituteNotFoundError:
+        throwRpcException(
+          status.NOT_FOUND,
+          'Health Institute auth record not found!',
+        );
+        break;
+      case Errors.dbError:
+        throwRpcException(
+          status.INTERNAL,
+          'Failed to compensate health institute registration!',
+        );
+        break;
+    }
     return {
       success: true,
     };
   }
+
   /**
    * * Health Institute Login
    * @param request
@@ -149,14 +159,14 @@ export class AuthService {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
-    if (procedureResult.status === Errors.invalidCredentialError) {
-      await this.rateLimiterService.recordFailure(rateLimitOptions);
-
-      throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
-    }
-
-    if (procedureResult.status === Errors.dbError) {
-      throwRpcException(status.INTERNAL, 'Database error');
+    switch (procedureResult.status) {
+      case Errors.invalidCredentialError:
+        await this.rateLimiterService.recordFailure(rateLimitOptions);
+        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error');
+        break;
     }
 
     const isPasswordValid: boolean = await this.hashUtil.verify(
@@ -176,6 +186,7 @@ export class AuthService {
 
     const jwtPayload: JwtPayload = {
       sessionId,
+      userPrimaryKey: procedureResult.healthInstitutePrimaryKey,
       userBusinessId: procedureResult.healthInstituteId,
       role: UserRole.HEALTH_INSTITUTE,
     };
@@ -194,6 +205,7 @@ export class AuthService {
     await Promise.all([
       this.sessionService.createSession({
         sessionId,
+        userPrimaryKey: procedureResult.healthInstitutePrimaryKey,
         userBusinessId: procedureResult.healthInstituteId,
         role: UserRole.HEALTH_INSTITUTE,
         refreshTokenHash,
@@ -204,6 +216,7 @@ export class AuthService {
       }),
 
       this.auditService.log({
+        userPrimaryKey: procedureResult.healthInstitutePrimaryKey,
         userBusinessId: procedureResult.healthInstituteId,
         role: UserRole.HEALTH_INSTITUTE,
         sessionId,
@@ -234,27 +247,31 @@ export class AuthService {
   ): Promise<DoctorRegistrationRes> {
     const hashedPassword = await this.hashUtil.hash(request.password);
 
-    const result = await this.dataSource.query<authQueryInterface[]>(
-      `SELECT create_doctor_auth($1, $2, $3) AS f_result`,
+    const result = await this.dataSource.query<doctorQueryInterface[]>(
+      `SELECT * FROM create_doctor_auth($1, $2, $3)`,
       [request.email, request.mobile, hashedPassword],
     );
 
-    const procedureResult = result?.[0]?.f_result;
+    const procedureResult = result[0];
 
-    if (procedureResult === Errors.emailExistError) {
-      throwRpcException(status.ALREADY_EXISTS, 'Email already exists');
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure!');
     }
-    if (procedureResult === Errors.mobileExistError) {
-      throwRpcException(status.ALREADY_EXISTS, 'Mobile already exists');
+    switch (procedureResult.status) {
+      case Errors.emailExistError:
+        throwRpcException(status.ALREADY_EXISTS, 'Email already exists!');
+        break;
+      case Errors.mobileExistError:
+        throwRpcException(status.ALREADY_EXISTS, 'Mobile already exists!');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error!');
+        break;
     }
-    if (procedureResult === Errors.dbError) {
-      throwRpcException(status.INTERNAL, 'Database error');
-    }
-    if (!/^DOC\d{6}$/.test(procedureResult)) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-    }
+
     return {
-      doctorId: procedureResult,
+      doctorPrimaryKey: procedureResult.doctorPrimaryKey,
+      doctorId: procedureResult.doctorId,
     };
   }
 
@@ -266,33 +283,25 @@ export class AuthService {
   async compensateDoctorRegistration(
     request: CompensateDoctorRegistrationReq,
   ): Promise<CompensateDoctorRegistrationRes> {
-    const match = request.doctorId.match(/^DOC(\d{6})$/);
-
-    if (!match) {
-      return throwRpcException(
-        status.INVALID_ARGUMENT,
-        'Invalid doctor ID format',
-      );
-    }
-
-    const doctorPk = Number(match[1]);
-
     const result = await this.dataSource.query<authQueryInterface[]>(
       `SELECT compensate_doctor_registration($1) AS f_result`,
-      [doctorPk],
+      [request.doctorPrimaryKey],
     );
 
     const procedureResult: string = result[0]?.f_result;
-
-    if (procedureResult === Errors.doctorNotFoundError)
-      throwRpcException(status.NOT_FOUND, 'Doctor auth record not found');
-    if (procedureResult === Errors.dbError)
-      throwRpcException(
-        status.INTERNAL,
-        'Failed to compensate doctor registration',
-      );
-    if (procedureResult === Errors.doctorNotFoundError)
-      throwRpcException(status.NOT_FOUND, 'Doctor auth record not found');
+    switch (procedureResult) {
+      case Errors.doctorNotFoundError:
+        throwRpcException(status.NOT_FOUND, 'Doctor auth record not found!');
+        break;
+      case Errors.dbError:
+        throwRpcException(
+          status.INTERNAL,
+          'Failed to compensate doctor registration!',
+        );
+        break;
+      default:
+        throwRpcException(status.INTERNAL, 'Something went wrong!');
+    }
     return {
       success: true,
     };
@@ -333,13 +342,15 @@ export class AuthService {
     if (!procedureResult) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
-    if (procedureResult.status === Errors.invalidCredentialError) {
-      await this.rateLimiterService.recordFailure(rateLimitOptions);
 
-      throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
-    }
-    if (procedureResult.status === Errors.dbError) {
-      throwRpcException(status.INTERNAL, 'Database error');
+    switch (procedureResult.status) {
+      case Errors.invalidCredentialError:
+        await this.rateLimiterService.recordFailure(rateLimitOptions);
+        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error');
+        break;
     }
 
     const isPasswordValid = await bcrypt.compare(
@@ -358,6 +369,7 @@ export class AuthService {
 
     const jwtPayload: JwtPayload = {
       sessionId,
+      userPrimaryKey: procedureResult.doctorPrimaryKey,
       userBusinessId: procedureResult.doctorId,
       role: UserRole.DOCTOR,
     };
@@ -375,6 +387,7 @@ export class AuthService {
     await Promise.all([
       this.sessionService.createSession({
         sessionId,
+        userPrimaryKey: procedureResult.doctorPrimaryKey,
         userBusinessId: procedureResult.doctorId,
         role: UserRole.DOCTOR,
         refreshTokenHash,
@@ -385,6 +398,7 @@ export class AuthService {
       }),
 
       this.auditService.log({
+        userPrimaryKey: procedureResult.doctorPrimaryKey,
         userBusinessId: procedureResult.doctorId,
         role: UserRole.DOCTOR,
         sessionId,
@@ -438,6 +452,7 @@ export class AuthService {
 
     const jwtPayload: JwtPayload = {
       sessionId: session!.sessionId,
+      userPrimaryKey: session!.userPrimaryKey,
       userBusinessId: session!.userBusinessId,
       role: session!.role,
     };
@@ -459,6 +474,7 @@ export class AuthService {
       this.sessionService.updateLastActivity(session!.sessionId),
 
       this.auditService.log({
+        userPrimaryKey: session!.userPrimaryKey,
         userBusinessId: session!.userBusinessId,
         role: session!.role,
         sessionId: session!.sessionId,
@@ -488,6 +504,7 @@ export class AuthService {
     await this.sessionService.deactivateSession(request.sessionId);
 
     await this.auditService.log({
+      userPrimaryKey: session!.userPrimaryKey,
       userBusinessId: session.userBusinessId,
       role: session.role,
       sessionId: session.sessionId,

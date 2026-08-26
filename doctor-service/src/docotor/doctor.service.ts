@@ -46,8 +46,9 @@ export class DoctorService {
     request: DoctorProfileReq,
   ): Promise<DoctorProfileRes> {
     const result = await this.dataSource.query<UpdateDoctorResponse[]>(
-      `SELECT create_doctor_profile($1, $2, $3, $4, $5, $6) AS f_result`,
+      `SELECT create_doctor_profile($1, $2, $3, $4, $5, $6, $7) AS f_result`,
       [
+        request.doctorPrimaryKey,
         request.doctorId,
         request.email,
         request.mobile,
@@ -69,7 +70,7 @@ export class DoctorService {
 
     if (
       typeof procedureResult === 'string' &&
-      !/^DOC\d{6}$/.test(procedureResult)
+      !/^AGL-DOC\d{6}$/.test(procedureResult)
     ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }

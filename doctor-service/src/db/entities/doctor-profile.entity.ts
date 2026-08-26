@@ -9,9 +9,16 @@ import {
 
 @Entity('doctor_profile')
 @Index('idx_doctor_profile_doctor_id', ['doctorId'], { unique: true })
+@Index('idx_doctor_profile_doctor_primary_key', ['doctorPrimaryKey'], { unique: true })
 export class DoctorProfile {
   @PrimaryGeneratedColumn('increment')
   id!: number;
+
+  @Column({
+    name: 'doctor_primary_key',
+    type: 'int',
+  })
+  doctorPrimaryKey!: number;
 
   @Column({
     name: 'doctor_id',
