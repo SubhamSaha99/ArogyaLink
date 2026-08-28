@@ -9,6 +9,7 @@ import {
 
 @Entity({ name: 'doctor_qualifications' })
 @Index('idx_doctor_qualifications_doctor_id', ['doctorId'])
+@Index('idx_doctor_qualifications_doctor_primary_key', ['doctorPrimaryKey'])
 @Index('idx_doctor_qualifications_qualification_id', ['qualificationId'])
 @Index('idx_doctor_qualifications_specialization_id', ['specializationId'])
 @Index(
@@ -19,6 +20,12 @@ import {
 export class DoctorQualification {
   @PrimaryGeneratedColumn()
   id!: number;
+
+   @Column({
+    name: 'doctor_primary_key',
+    type: 'int',
+  })
+  doctorPrimaryKey!: number;
 
   @Column({
     name: 'doctor_id',

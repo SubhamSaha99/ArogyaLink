@@ -11,9 +11,22 @@ import {
 @Index('idx_doctor_professional_details_doctor_id', ['doctorId'], {
   unique: true,
 })
+@Index(
+  'idx_doctor_professional_details_doctor_primary_key',
+  ['doctorPrimaryKey'],
+  {
+    unique: true,
+  },
+)
 export class DoctorProfessionalDetails {
   @PrimaryGeneratedColumn('increment')
   id!: number;
+
+  @Column({
+    name: 'doctor_primary_key',
+    type: 'int',
+  })
+  doctorPrimaryKey!: number;
 
   @Column({
     name: 'doctor_id',

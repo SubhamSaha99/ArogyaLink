@@ -4,7 +4,10 @@ import { API_ROUTES } from "@/utils/apiRoutes";
 import { setCookie, getCookie, deleteCookie } from "@/utils/cookies";
 
 export interface User {
+  userPrimaryKey?: number;
+  doctorPrimaryKey?: number;
   doctorId?: string;
+  healthInstitutePrimaryKey?: number;
   healthInstituteId?: string;
   healthInstituteName?: string;
   healthInstituteType?: number;
@@ -15,7 +18,10 @@ export interface User {
 export interface LoginResponseData {
   accessToken: string;
   refreshToken?: string;
+  userPrimaryKey?: number;
+  doctorPrimaryKey?: number;
   doctorId?: string;
+  healthInstitutePrimaryKey?: number;
   healthInstituteId?: string;
   healthInstituteName?: string;
   healthInstituteType?: number;
@@ -61,7 +67,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     // 3. User details in React state
     setUser({
+      userPrimaryKey: data.userPrimaryKey,
+      doctorPrimaryKey: data.doctorPrimaryKey,
       doctorId: data.doctorId,
+      healthInstitutePrimaryKey: data.healthInstitutePrimaryKey,
       healthInstituteId: data.healthInstituteId,
       healthInstituteName: data.healthInstituteName,
       healthInstituteType: data.healthInstituteType,

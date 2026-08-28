@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useLocation } from "react-router-dom";
 import {
   ArrowLeft,
   RefreshCw,
@@ -27,6 +27,7 @@ import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 
 export interface DoctorDetailsData {
+  doctorPrimaryKey?: number;
   doctorId: string;
   profileDetails?: {
     doctorProfileId?: number;
@@ -134,8 +135,15 @@ export const getCachedHealthInstitutePrimaryKey = async (): Promise<number | nul
 
 export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   const { doctorId } = useParams<{ doctorId: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
+
+  const stateDoctor = (location.state as any)?.doctor;
+  const stateDoctorPrimaryKey =
+    (location.state as any)?.doctorPrimaryKey ||
+    stateDoctor?.doctorPrimaryKey ||
+    stateDoctor?.profileDetails?.doctorProfileId;
 
   const [doctorData, setDoctorData] = useState<DoctorDetailsData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -166,7 +174,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
 
   const hasFetchedDoctorIdRef = useRef<string | null>(null);
 
-  // Fetch Doctor Details: POST /api/doctor/getDoctorDetails with doctorId
+  // Fetch Doctor Details: POST /api/doctor/getDoctorDetails with doctorPrimaryKey & doctorId
   const fetchDoctorDetails = useCallback(async (force = false) => {
     if (!doctorId) {
       setError("No Doctor ID provided in the route.");
@@ -182,15 +190,28 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     setLoading(true);
     setError(null);
     try {
-      // Send doctorId in req.body via POST
+      const isNumericParam = Boolean(doctorId && /^\d+$/.test(doctorId));
+      const doctorPrimaryKey = isNumericParam
+        ? Number(doctorId)
+        : (stateDoctorPrimaryKey ? Number(stateDoctorPrimaryKey) : undefined);
+
+      const payload: { doctorPrimaryKey?: number; doctorId?: string } = {};
+      if (doctorPrimaryKey) {
+        payload.doctorPrimaryKey = doctorPrimaryKey;
+      }
+      if (doctorId) {
+        payload.doctorId = doctorId;
+      }
+
+      // Send doctorPrimaryKey and doctorId in req.body via POST
       const response = await callApi(
         API_ROUTES.getDoctorDetails,
-        { doctorId },
+        payload,
         "POST"
       );
 
       const data = response?.data || response;
-      if (data && (data.doctorId || data.profileDetails)) {
+      if (data && (data.doctorId || data.profileDetails || data.doctorPrimaryKey)) {
         setDoctorData(data);
       } else {
         setError("Doctor details could not be retrieved from the central registry.");
@@ -206,7 +227,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [doctorId]);
+  }, [doctorId, stateDoctorPrimaryKey]);
 
   useEffect(() => {
     fetchDoctorDetails();
@@ -244,7 +265,10 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     e.preventDefault();
     if (!doctorData) return;
 
-    const doctorPrimaryKey = doctorData.profileDetails?.doctorProfileId;
+    const doctorPrimaryKey =
+      doctorData.doctorPrimaryKey ||
+      doctorData.profileDetails?.doctorProfileId ||
+      stateDoctorPrimaryKey;
     if (!doctorPrimaryKey) {
       setAppointmentError("Doctor profile details could not be found.");
       return;

@@ -80,10 +80,12 @@ export class DoctorService implements OnModuleInit {
    */
   async updateDoctorProfessinalDetails(
     request: DoctorProfessionalDetailsDto,
+    doctorPrimaryKey: number,
     doctorId: string,
   ): Promise<UpdateDoctorProfessionalDetailsRes> {
     const doctorProfesionalDetails: UpdateDoctorProfessionalDetailsReq = {
       ...request,
+      doctorPrimaryKey,
       doctorId,
     };
     return await firstValueFrom(
@@ -100,15 +102,19 @@ export class DoctorService implements OnModuleInit {
    */
   async updateDoctorQualifications(
     request: DoctorQualificationsDto,
+    doctorPrimaryKey: number,
     doctorId: string,
   ): Promise<UpdateDoctorQualificationsRes> {
     const doctorQualifications: UpdateDoctorQualificationsReq = {
       ...request,
+      doctorPrimaryKey,
       doctorId,
       qualifications:
         request.qualifications?.map((qualification) => ({
           ...qualification,
-          specializationId: qualification.specializationId ?? 0,
+          doctorQualificationId: qualification.doctorQualificationId ?? undefined,
+          qualificationId: qualification.qualificationId,
+          specializationId: qualification.specializationId ?? undefined,
           institutionName: qualification.institutionName ?? '',
           universityName: qualification.universityName ?? '',
           yearOfCompletion: qualification.yearOfCompletion ?? 0,
@@ -125,11 +131,12 @@ export class DoctorService implements OnModuleInit {
    * @param user
    * @returns GetDoctorDetailsRes
    */
-  async getDoctorDetails(doctorId: string): Promise<GetDoctorDetailsRes> {
-    const id: GetDoctorDetailsReq = {
-      doctorId,
-    };
-    return await firstValueFrom(this.doctorGrpcService.getDoctorDetails(id));
+  async getDoctorDetails(
+    request: GetDoctorDetailsReq,
+  ): Promise<GetDoctorDetailsRes> {
+    return await firstValueFrom(
+      this.doctorGrpcService.getDoctorDetails(request),
+    );
   }
 
   /**
@@ -146,8 +153,9 @@ export class DoctorService implements OnModuleInit {
    * @returns GetDoctorListRes
    */
   async getDoctorList(request: GetDoctorListDto): Promise<GetDoctorListRes> {
-
-    const result = await firstValueFrom(this.doctorGrpcService.getDoctorList(request))
+    const result = await firstValueFrom(
+      this.doctorGrpcService.getDoctorList(request),
+    );
     return result;
   }
 }

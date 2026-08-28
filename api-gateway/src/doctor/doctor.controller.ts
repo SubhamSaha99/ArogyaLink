@@ -13,6 +13,7 @@ import {
   DoctorBasicDetailsDto,
   DoctorProfessionalDetailsDto,
   DoctorQualificationsDto,
+  GetDoctorDetailsDto,
   GetDoctorListDto,
 } from './doctor.dto';
 import { FileInterceptor } from '@nestjs/platform-express';
@@ -33,7 +34,7 @@ export class DoctorController {
    * @param file
    * @returns json
    */
-  @Post('updateBasicDetails')
+  @Post('updateDoctorBasicDetails')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   @UseInterceptors(
@@ -75,11 +76,11 @@ export class DoctorController {
     @CurrentUser() user: JwtPayload,
     @Body() request: DoctorProfessionalDetailsDto,
   ) {
-    const result =
-      await this.doctorService.updateDoctorProfessinalDetails(
-        request,
-        user.userBusinessId,
-      );
+    const result = await this.doctorService.updateDoctorProfessinalDetails(
+      request,
+      user.userPrimaryKey,
+      user.userBusinessId,
+    );
 
     return {
       success: true,
@@ -103,6 +104,7 @@ export class DoctorController {
   ) {
     const result = await this.doctorService.updateDoctorQualifications(
       request,
+      user.userPrimaryKey,
       user.userBusinessId,
     );
 
@@ -124,18 +126,25 @@ export class DoctorController {
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getDoctorDetails(
     @CurrentUser() user: JwtPayload,
-    @Body() request: { doctorId?: string },
+    @Body() request: GetDoctorDetailsDto,
   ) {
-    let doctorId = user.userBusinessId;
+    let doctorPrimaryKey: number = user.userPrimaryKey;
+    let doctorId: string = user.userBusinessId;
+
     if (user.role === UserRole.HEALTH_INSTITUTE) {
+      doctorPrimaryKey = request?.doctorPrimaryKey || user.userPrimaryKey;
       doctorId = request?.doctorId || user.userBusinessId;
     }
-    const result = await this.doctorService.getDoctorDetails(doctorId);
+    const result = await this.doctorService.getDoctorDetails({
+      doctorPrimaryKey,
+      doctorId,
+    });
 
     return {
       success: true,
       message: 'Doctor Details Fetched Successfully.',
       data: {
+        doctorPrimaryKey: result.doctorPrimaryKey,
         doctorId: result.doctorId,
         profileDetails: result.profileDetails,
         professionalDetails: result.professionalDetails,

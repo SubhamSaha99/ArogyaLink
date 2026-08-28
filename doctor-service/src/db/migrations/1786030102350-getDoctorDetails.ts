@@ -4,10 +4,11 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
         CREATE OR REPLACE FUNCTION get_doctor_details(
-            p_doctor_id VARCHAR(20)
+            p_doctor_primary_key INTEGER
         )
         RETURNS TABLE (
             status VARCHAR,
+            "doctorPrimaryKey" INTEGER,
             "doctorId" VARCHAR,
             "profileDetails" JSONB,
             "professionalDetails" JSONB,
@@ -25,12 +26,13 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
             IF NOT EXISTS (
                 SELECT 1
                 FROM doctor_profile dp
-                WHERE dp.doctor_id = p_doctor_id
+                WHERE dp.doctor_primary_key = p_doctor_primary_key
             ) THEN
         
                 RETURN QUERY
                 SELECT
                     'invalidIdError'::VARCHAR,
+                    NULL:: INTEGER,
                     NULL::VARCHAR,
                     NULL::JSONB,
                     NULL::JSONB,
@@ -44,6 +46,7 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
             RETURN QUERY
             SELECT
                 'SUCCESS'::VARCHAR AS status,
+                dp.doctor_primary_key AS doctorPrimaryKey,
                 dp.doctor_id::VARCHAR AS doctorId,
                 jsonb_build_object(
                     'doctorProfileId', dp.id,
@@ -85,16 +88,15 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
                         FROM doctor_qualifications dq
                         LEFT JOIN qualification_master qm ON qm.id = dq.qualification_id
                         LEFT JOIN specialization_master spm ON spm.id = dq.specialization_id
-                        WHERE dq.doctor_id = dp.doctor_id
+                        WHERE dq.doctor_primary_key = dp.doctor_primary_key
                     ),
                     '[]'::JSONB
                 ) AS "qualificationDetails"
-        
             FROM doctor_profile dp
-            LEFT JOIN doctor_professional_details pd ON dp.doctor_id = pd.doctor_id
+            LEFT JOIN doctor_professional_details pd ON dp.doctor_primary_key = pd.doctor_primary_key
             LEFT JOIN registration_council_master rcm ON rcm.id = pd.registration_council_id
             LEFT JOIN state_master sm ON sm.id = pd.registration_state_id
-            WHERE dp.doctor_id = p_doctor_id;
+            WHERE dp.doctor_primary_key = p_doctor_primary_key;
         
         
         EXCEPTION
@@ -128,6 +130,7 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
                 RETURN QUERY
                 SELECT
                     'dbError'::VARCHAR,
+                    NULL::INTEGER,
                     NULL::VARCHAR,
                     NULL::JSONB,
                     NULL::JSONB,
@@ -140,7 +143,7 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DROP FUNCTION IF EXISTS get_doctor_details(VARCHAR);`,
+      `DROP FUNCTION IF EXISTS get_doctor_details(INTEGER);`,
     );
   }
 }

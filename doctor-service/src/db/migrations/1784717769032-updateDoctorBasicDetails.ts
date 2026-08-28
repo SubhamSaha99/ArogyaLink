@@ -4,11 +4,11 @@ export class UpdateDoctorBasicDetails1784717769032 implements MigrationInterface
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
                 CREATE OR REPLACE FUNCTION update_doctor_basic_details(
-                    p_doctor_id VARCHAR(20),
+                    p_doctor_profile_id INTEGER,
                     p_first_name VARCHAR(255),
                     p_middle_name VARCHAR(255),
                     p_last_name VARCHAR(255),
-                    p_gender INT,
+                    p_gender INTEGER,
                     p_profile_image VARCHAR(255)
                 )
                 RETURNS VARCHAR(50)
@@ -29,7 +29,7 @@ export class UpdateDoctorBasicDetails1784717769032 implements MigrationInterface
                         gender = COALESCE(p_gender, gender),
                         profile_image = COALESCE(p_profile_image, profile_image),
                         updated_at = NOW()
-                    WHERE doctor_id = p_doctor_id
+                    WHERE id = p_doctor_profile_id
 
                     RETURNING doctor_id INTO v_doctor_id;
 
@@ -72,7 +72,7 @@ export class UpdateDoctorBasicDetails1784717769032 implements MigrationInterface
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(
-      `DROP FUNCTION IF EXISTS update_doctor_basic_details(VARCHAR, VARCHAR, VARCHAR, VARCHAR, INT, VARCHAR);`,
+      `DROP FUNCTION IF EXISTS update_doctor_basic_details(INTEGER, VARCHAR, VARCHAR, VARCHAR, INTEGER, VARCHAR);`,
     );
   }
 }

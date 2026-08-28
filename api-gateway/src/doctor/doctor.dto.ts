@@ -4,7 +4,6 @@ import {
   IsInt,
   IsNotEmpty,
   IsOptional,
-  IsPositive,
   IsString,
   Length,
   Max,
@@ -14,6 +13,11 @@ import {
 } from 'class-validator';
 
 export class DoctorBasicDetailsDto {
+  @Type(() => Number)
+  @IsInt()
+  @IsNotEmpty()
+  doctorProfileId!: number;
+
   @IsOptional()
   @IsString()
   @Length(2, 100)
@@ -51,31 +55,35 @@ export class DoctorBasicDetailsDto {
 }
 
 export class DoctorProfessionalDetailsDto {
+  @IsInt()
+  @IsOptional()
+  doctorProfessionalDetailsId?: number;
+  
   @IsString()
   @IsNotEmpty()
   medicalRegistration!: string;
 
-  @Type(() => Number)
   @IsInt()
   @Min(1)
   registrationCouncil!: number;
 
-  @Type(() => Number)
   @IsInt()
   @Min(1)
   registrationState!: number;
 
-  @Type(() => Number)
   @IsInt()
   @Min(1900)
   registrationYear!: number;
 
-  @Type(() => Number)
   @IsInt()
   licenseStatus!: number;
 }
 
 export class DoctorQualification {
+  @IsInt()
+  @IsOptional()
+  doctorQualificationId?: number;
+
   @IsInt()
   qualificationId!: number;
 
@@ -101,6 +109,20 @@ export class DoctorQualificationsDto {
   @ValidateNested({ each: true })
   @Type(() => DoctorQualification)
   qualifications!: DoctorQualification[];
+}
+
+/**
+ * @description Get Doctor Details DTO.
+ */
+export class GetDoctorDetailsDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  doctorPrimaryKey?: number;
+
+  @IsOptional()
+  @IsString()
+  doctorId?: string;
 }
 
 /**

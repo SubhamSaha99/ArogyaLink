@@ -24,6 +24,7 @@ import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 
 export interface DoctorListItem {
+  doctorPrimaryKey?: number;
   doctorId: string;
   firstName: string;
   middleName?: string;
@@ -568,7 +569,12 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                   {/* Bottom Action Footer */}
                   <div className="px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center">
                     <Link
-                      to={`/health-institute/doctors/${doctor.doctorId}`}
+                      to={`/health-institute/doctors/${doctor.doctorPrimaryKey || doctor.doctorId}`}
+                      state={{
+                        doctor,
+                        doctorPrimaryKey: doctor.doctorPrimaryKey,
+                        doctorId: doctor.doctorId,
+                      }}
                       className="w-full"
                     >
                       <Button

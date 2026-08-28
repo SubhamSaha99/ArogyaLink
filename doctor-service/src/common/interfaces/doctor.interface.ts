@@ -3,11 +3,12 @@ export interface UpdateDoctorResponse {
 }
 
 export interface DoctorQualifications {
-  qualification_id: number;
-  specialization_id: number | null;
-  institution_name: string | null;
-  university_name: string | null;
-  year_of_completion: number | null;
+  doctorQualificationId?: number | null;
+  qualificationId: number;
+  specializationId: number | null;
+  institutionName: string | null;
+  universityName: string | null;
+  yearOfCompletion: number | null;
 }
 
 export interface GetDoctorProfileDetailsResponse {
@@ -45,6 +46,7 @@ export interface GetDoctorQualificationDetailsResponse {
 
 export interface GetDoctorDetailsResponse {
   status: string;
+  doctorPrimaryKey: number;
   doctorId: string;
   profileDetails: GetDoctorProfileDetailsResponse;
   professionalDetails: GetDoctorProfessionalDetailsResponse;

@@ -25,6 +25,7 @@ export interface DoctorProfileRes {
 }
 
 export interface UpdateDoctorBasicDeatilsReq {
+  doctorProfileId: number;
   doctorId: string;
   firstName?: string | undefined;
   middleName?: string | undefined;
@@ -38,6 +39,8 @@ export interface UpdateDoctorBasicDeatilsRes {
 }
 
 export interface UpdateDoctorProfessionalDetailsReq {
+  doctorProfessionalDetailsId?: number | undefined;
+  doctorPrimaryKey: number;
   doctorId: string;
   medicalRegistration: string;
   registrationCouncil: number;
@@ -51,14 +54,16 @@ export interface UpdateDoctorProfessionalDetailsRes {
 }
 
 export interface DoctorQualification {
+  doctorQualificationId?: number | undefined;
   qualificationId: number;
-  specializationId: number;
+  specializationId?: number | undefined;
   institutionName: string;
   universityName: string;
   yearOfCompletion: number;
 }
 
 export interface UpdateDoctorQualificationsReq {
+  doctorPrimaryKey: number;
   doctorId: string;
   qualifications: DoctorQualification[];
 }
@@ -68,6 +73,7 @@ export interface UpdateDoctorQualificationsRes {
 }
 
 export interface GetDoctorDetailsReq {
+  doctorPrimaryKey: number;
   doctorId: string;
 }
 
@@ -105,6 +111,7 @@ export interface GetDoctorQualificationDetails {
 }
 
 export interface GetDoctorDetailsRes {
+  doctorPrimaryKey: number;
   doctorId: string;
   profileDetails: GetDoctorProfileDetails | undefined;
   professionalDetails: GetDoctorProfessionalDetails | undefined;

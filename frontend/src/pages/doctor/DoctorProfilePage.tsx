@@ -45,6 +45,7 @@ export interface DoctorMasterData {
 }
 
 interface DoctorDetailsResponse {
+  doctorPrimaryKey?: number;
   doctorId: string;
   profileDetails?: {
     doctorProfileId?: number;
@@ -243,7 +244,14 @@ export const DoctorProfilePage: React.FC = () => {
     setLoading(true);
     setFetchingError(null);
     try {
-      const response = await callApi(API_ROUTES.getDoctorDetails, {}, "POST");
+      const response = await callApi(
+        API_ROUTES.getDoctorDetails,
+        {
+          doctorPrimaryKey: user?.doctorPrimaryKey || user?.userPrimaryKey,
+          doctorId: user?.doctorId,
+        },
+        "POST"
+      );
       if (response && response.data) {
         setDoctorDetails(response.data);
       }
@@ -316,6 +324,15 @@ export const DoctorProfilePage: React.FC = () => {
 
       try {
         const formData = new FormData();
+
+        const doctorProfileId =
+          doctorDetails?.profileDetails?.doctorProfileId ||
+          user?.doctorPrimaryKey ||
+          user?.userPrimaryKey;
+
+        if (doctorProfileId) {
+          formData.append("doctorProfileId", String(doctorProfileId));
+        }
 
         if (values.firstName.trim()) {
           formData.append("firstName", values.firstName.trim());
@@ -392,6 +409,9 @@ export const DoctorProfilePage: React.FC = () => {
 
       try {
         const payload = {
+          doctorProfessionalDetailsId:
+            doctorDetails?.professionalDetails?.doctorProfessionalDetailsId ||
+            undefined,
           medicalRegistration: values.medicalRegistration.trim(),
           registrationCouncil: Number(values.registrationCouncil),
           registrationState: Number(values.registrationState),
@@ -460,13 +480,23 @@ export const DoctorProfilePage: React.FC = () => {
 
       try {
         const payload = {
-          qualifications: values.qualifications.map((q) => ({
-            qualificationId: Number(q.qualificationId),
-            specializationId: q.specializationId ? Number(q.specializationId) : null,
-            institutionName: q.institutionName?.trim() || "",
-            universityName: q.universityName?.trim() || "",
-            yearOfCompletion: q.yearOfCompletion ? Number(q.yearOfCompletion) : 0,
-          })),
+          qualifications: values.qualifications.map((q, idx) => {
+            const existingQualId =
+              doctorDetails?.qualificationDetails?.[idx]?.doctorQualificationId;
+            return {
+              doctorQualificationId:
+                (q as any).doctorQualificationId || existingQualId || undefined,
+              qualificationId: Number(q.qualificationId),
+              specializationId: q.specializationId
+                ? Number(q.specializationId)
+                : undefined,
+              institutionName: q.institutionName?.trim() || "",
+              universityName: q.universityName?.trim() || "",
+              yearOfCompletion: q.yearOfCompletion
+                ? Number(q.yearOfCompletion)
+                : 0,
+            };
+          }),
         };
 
         const response = await callApi(

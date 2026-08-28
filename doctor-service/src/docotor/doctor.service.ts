@@ -61,7 +61,7 @@ export class DoctorService {
     const procedureResult: string = result[0]?.f_result;
 
     if (!procedureResult) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      throwRpcException(status.INTERNAL, 'Invalid response from query');
     }
 
     if (procedureResult === Errors.dbError) {
@@ -72,7 +72,7 @@ export class DoctorService {
       typeof procedureResult === 'string' &&
       !/^AGL-DOC\d{6}$/.test(procedureResult)
     ) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      throwRpcException(status.INTERNAL, 'Invalid response from query');
     }
 
     return {
@@ -91,7 +91,7 @@ export class DoctorService {
     const result = await this.dataSource.query<UpdateDoctorResponse[]>(
       `SELECT update_doctor_basic_details($1, $2, $3, $4, $5, $6) AS f_result`,
       [
-        request.doctorId,
+        request.doctorProfileId,
         request.firstName,
         request.middleName,
         request.lastName,
@@ -109,9 +109,9 @@ export class DoctorService {
     }
     if (
       typeof procedureResult === 'string' &&
-      !/^DOC\d{6}$/.test(procedureResult)
+      !/^AGL-DOC\d{6}$/.test(procedureResult)
     ) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+      throwRpcException(status.INTERNAL, 'Invalid response from query');
     }
 
     await this.redisService.delete(`doctor:profile:${request.doctorId}`);
@@ -130,8 +130,10 @@ export class DoctorService {
     request: UpdateDoctorProfessionalDetailsReq,
   ): Promise<UpdateDoctorProfessionalDetailsRes> {
     const result = await this.dataSource.query<UpdateDoctorResponse[]>(
-      `SELECT update_doctor_professional_details($1, $2, $3, $4, $5, $6) AS f_result`,
+      `SELECT update_doctor_professional_details($1, $2, $3, $4, $5, $6, $7, $8) AS f_result`,
       [
+        request.doctorProfessionalDetailsId ?? null,
+        request.doctorPrimaryKey,
         request.doctorId,
         request.medicalRegistration,
         request.registrationCouncil,
@@ -142,17 +144,22 @@ export class DoctorService {
     );
 
     const procedureResult: string = result?.[0]?.f_result;
-    if (procedureResult === Errors.invalidIdError) {
-      throwRpcException(status.INVALID_ARGUMENT, 'Invalid Doctor ID');
-    }
-    if (procedureResult === Errors.dbError) {
-      throwRpcException(status.INTERNAL, 'Database error');
-    }
-    if (
-      typeof procedureResult === 'string' &&
-      !/^DOC\d{6}$/.test(procedureResult)
-    ) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+
+    switch (procedureResult) {
+      case Errors.invalidIdError:
+        throwRpcException(status.NOT_FOUND, 'Doctor not found');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error!');
+        break;
+      default:
+        if (
+          typeof procedureResult === 'string' &&
+          !/^AGL-DOC\d{6}$/.test(procedureResult)
+        ) {
+          throwRpcException(status.INTERNAL, 'Invalid response from query!');
+        }
+        break;
     }
 
     await this.redisService.delete(`doctor:profile:${request.doctorId}`);
@@ -172,34 +179,41 @@ export class DoctorService {
   ): Promise<UpdateDoctorQualificationsRes> {
     const qualifications: DoctorQualifications[] = request.qualifications.map(
       (qualification) => ({
-        qualification_id: qualification.qualificationId,
-        specialization_id: qualification.specializationId ?? null,
-        institution_name: qualification.institutionName ?? null,
-        university_name: qualification.universityName,
-        year_of_completion: qualification.yearOfCompletion,
+        doctorQualificationId: qualification.doctorQualificationId ?? null,
+        qualificationId: qualification.qualificationId,
+        specializationId: qualification.specializationId ?? null,
+        institutionName: qualification.institutionName ?? null,
+        universityName: qualification.universityName,
+        yearOfCompletion: qualification.yearOfCompletion,
       }),
     );
 
     const result = await this.dataSource.query<UpdateDoctorResponse[]>(
-      `SELECT update_doctor_qualifications($1, $2) AS f_result`,
-      [request.doctorId, JSON.stringify(qualifications)],
+      `SELECT update_doctor_qualifications($1, $2, $3) AS f_result`,
+      [
+        request.doctorPrimaryKey,
+        request.doctorId,
+        JSON.stringify(qualifications),
+      ],
     );
 
     const procedureResult: string = result?.[0]?.f_result;
 
-    if (procedureResult === Errors.invalidIdError) {
-      throwRpcException(status.NOT_FOUND, 'Doctor not found');
-    }
-
-    if (procedureResult === Errors.dbError) {
-      throwRpcException(status.INTERNAL, 'Database error');
-    }
-
-    if (
-      typeof procedureResult === 'string' &&
-      !/^DOC\d{6}$/.test(procedureResult)
-    ) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    switch (procedureResult) {
+      case Errors.invalidIdError:
+        throwRpcException(status.NOT_FOUND, 'Doctor not found');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error!');
+        break;
+      default:
+        if (
+          typeof procedureResult === 'string' &&
+          !/^AGL-DOC\d{6}$/.test(procedureResult)
+        ) {
+          throwRpcException(status.INTERNAL, 'Invalid response from query!');
+        }
+        break;
     }
 
     await this.redisService.delete(`doctor:profile:${request.doctorId}`);
@@ -228,7 +242,7 @@ export class DoctorService {
 
       const result = await this.dataSource.query<GetDoctorDetailsResponse[]>(
         `SELECT * FROM get_doctor_details($1)`,
-        [request.doctorId],
+        [request.doctorPrimaryKey],
       );
 
       const procedureResult = result?.[0];
@@ -247,6 +261,7 @@ export class DoctorService {
       }
 
       const {
+        doctorPrimaryKey,
         doctorId,
         profileDetails,
         professionalDetails,
@@ -260,6 +275,7 @@ export class DoctorService {
         : '';
 
       const response: GetDoctorDetailsRes = {
+        doctorPrimaryKey,
         doctorId,
         profileDetails: {
           ...profileDetails,
@@ -267,11 +283,6 @@ export class DoctorService {
         },
         professionalDetails,
         qualificationDetails,
-        // qualificationDetails: qualificationDetails.map((qualification) => ({
-        //   ...qualification,
-        //   specializationId: qualification.specializationId ?? undefined,
-        //   specializationName: qualification.specializationName ?? undefined,
-        // })),
       };
 
       await this.redisService.set(cacheKey, JSON.stringify(response), 300);
@@ -293,7 +304,7 @@ export class DoctorService {
   }
 
   /**
-   * * Get Doctor Master Data
+   * @description Get Doctor Master Data
    * @returns GetDoctorMasterDataRes
    */
   async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
@@ -342,6 +353,11 @@ export class DoctorService {
     }
   }
 
+  /**
+   * @description Get doctor List
+   * @param request 
+   * @returns GetDoctorListRes
+   */
   async getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> {
     const result = await this.dataSource.query<GetDoctorListResponse[]>(
       `SELECT * FROM get_doctor_list($1, $2, $3, $4, $5)`,
@@ -359,7 +375,7 @@ export class DoctorService {
     if (!procedureResult) {
       throwRpcException(status.INTERNAL, 'Database Error!');
     }
-    
+
     return {
       doctors: procedureResult.doctors,
       total: procedureResult.total,
