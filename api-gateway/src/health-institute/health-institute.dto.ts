@@ -1,9 +1,21 @@
-import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, MaxLength, Min } from 'class-validator';
+import {
+  IsDateString,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  Min,
+} from 'class-validator';
 
 /**
  * * DTO for update health institute profile
  */
 export class UpdateHealthInstituteProfileDto {
+  @IsInt()
+  @IsNotEmpty()
+  healthInstituteProfileId!: number;
+
   @IsString()
   @IsNotEmpty()
   @MaxLength(50)
@@ -29,7 +41,6 @@ export class UpdateHealthInstituteProfileDto {
   @MaxLength(6)
   pincode!: string;
 }
-
 
 export class AppointDoctorDto {
   @IsInt()

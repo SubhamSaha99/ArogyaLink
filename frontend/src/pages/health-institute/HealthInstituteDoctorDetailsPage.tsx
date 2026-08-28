@@ -116,8 +116,16 @@ export const getCachedHealthInstitutePrimaryKey = async (): Promise<number | nul
   healthInstituteDetailsInFlight = (async () => {
     try {
       const response = await callApi(API_ROUTES.getHealthInstituteDetails, null, "GET");
-      const data = response?.data?.profileDetails || response?.profileDetails || response?.data;
-      const primaryKey = data?.id ? Number(data.id) : null;
+      const rootData = response?.data || response;
+      const profile = rootData?.profileDetails;
+      const primaryKey = rootData?.healthInstitutePrimaryKey
+        ? Number(rootData.healthInstitutePrimaryKey)
+        : profile?.healthInstituteProfileId
+        ? Number(profile.healthInstituteProfileId)
+        : profile?.id
+        ? Number(profile.id)
+        : null;
+
       if (primaryKey) {
         cachedHealthInstitutePrimaryKey = primaryKey;
       }

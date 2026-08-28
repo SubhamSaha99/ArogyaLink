@@ -3,7 +3,7 @@ export interface UpdateHealthInstituteResponse {
 }
 
 export interface HealthInstituteProfileDetails {
-  id: number;
+  healthInstituteProfileId: number;
   healthInstituteName: string;
   healthInstituteType: number;
   registrationNumber?: string;
@@ -19,6 +19,7 @@ export interface HealthInstituteProfileDetails {
 
 export interface GetHealthInstituteDetailsResponse {
   status: string;
+  healthInstitutePrimaryKey: number;
   healthInstituteId: string;
   profileDetails: HealthInstituteProfileDetails;
 }

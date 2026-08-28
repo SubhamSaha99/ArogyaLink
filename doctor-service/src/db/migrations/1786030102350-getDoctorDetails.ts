@@ -46,8 +46,8 @@ export class GetDoctorDetails1786030102350 implements MigrationInterface {
             RETURN QUERY
             SELECT
                 'SUCCESS'::VARCHAR AS status,
-                dp.doctor_primary_key AS doctorPrimaryKey,
-                dp.doctor_id::VARCHAR AS doctorId,
+                dp.doctor_primary_key AS "doctorPrimaryKey",
+                dp.doctor_id::VARCHAR AS "doctorId",
                 jsonb_build_object(
                     'doctorProfileId', dp.id,
                     'email', dp.email,

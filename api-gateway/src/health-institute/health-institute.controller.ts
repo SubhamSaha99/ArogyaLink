@@ -7,7 +7,10 @@ import {
   Param,
   Post,
 } from '@nestjs/common';
-import { AppointDoctorDto, UpdateHealthInstituteProfileDto } from './health-institute.dto';
+import {
+  AppointDoctorDto,
+  UpdateHealthInstituteProfileDto,
+} from './health-institute.dto';
 import { HealthInstituteService } from './health-institute.service';
 import { Auth } from '../common/decorators/auth.decorator';
 import { UserRole } from '../common/utils/constant';
@@ -55,6 +58,7 @@ export class HealthInstituteController {
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getHealthInstituteDetails(@CurrentUser() user: JwtPayload) {
     const result = await this.healthInstituteService.getHealthInstituteDetails(
+      user.userPrimaryKey,
       user.userBusinessId,
     );
 
@@ -84,7 +88,7 @@ export class HealthInstituteController {
 
   /**
    * @description get districts
-   * @param id 
+   * @param id
    * @returns json
    */
   @Get('districts/:id')
@@ -125,7 +129,8 @@ export class HealthInstituteController {
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getAppointDoctorMasterData() {
-    const result = await this.healthInstituteService.getAppointDoctorMasterData();
+    const result =
+      await this.healthInstituteService.getAppointDoctorMasterData();
 
     return {
       success: true,
@@ -136,12 +141,18 @@ export class HealthInstituteController {
 
   @Post('appointDoctor')
   @Auth(UserRole.HEALTH_INSTITUTE)
-  async appointDoctor(@Body() request: AppointDoctorDto, @CurrentUser() user: JwtPayload) {
-    const result = await this.healthInstituteService.appointDoctor(request, user.userBusinessId);
+  async appointDoctor(
+    @Body() request: AppointDoctorDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result = await this.healthInstituteService.appointDoctor(
+      request,
+      user.userBusinessId,
+    );
     return {
       success: true,
       message: 'Details Fetched Successfully.',
       data: result,
-    }; 
+    };
   }
 }

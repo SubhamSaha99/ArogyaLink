@@ -33,13 +33,14 @@ message HealthInstituteProfileRes {
 }
 
 message UpdateHealthInstituteProfileReq {
-  string          healthInstituteId  = 1;
-  string          registrationNumber = 2;
-  optional string phone              = 3;
-  optional string address            = 4;
-  int32           stateId            = 5;
-  int32           districtId         = 6;
-  string          pincode            = 7;
+  uint32          healthInstituteProfileId = 1;
+  string          healthInstituteId        = 2;
+  string          registrationNumber       = 3;
+  optional string phone                    = 4;
+  optional string address                  = 5;
+  uint32          stateId                  = 6;
+  uint32          districtId               = 7;
+  string          pincode                  = 8;
 }
 
 message UpdateHealthInstituteProfileRes {
@@ -47,31 +48,33 @@ message UpdateHealthInstituteProfileRes {
 }
 
 message GetHealthInstituteDetailsReq {
-  string healthInstituteId = 1;
+  uint32 healthInstitutePrimaryId = 1;
+  string healthInstituteId        = 2;
 }
 
 message HealthInstituteProfileDetails {
-  int32           id                  = 1;
-  string          healthInstituteName = 2;
-  int32           healthInstituteType = 3;
-  optional string registrationNumber  = 4;
-  string          email               = 5;
-  optional string phone               = 6;
-  optional string address             = 7;
-  optional int32  stateId             = 8;
-  optional string stateName           = 9;
-  optional int32  districtId          = 10;
-  optional string districtName        = 11;
-  optional string pincode             = 12;
+  uint32          healthInstituteProfileId = 1;
+  string          healthInstituteName      = 2;
+  uint32          healthInstituteType      = 3;
+  optional string registrationNumber       = 4;
+  string          email                    = 5;
+  optional string phone                    = 6;
+  optional string address                  = 7;
+  optional uint32 stateId                  = 8;
+  optional string stateName                = 9;
+  optional uint32 districtId               = 10;
+  optional string districtName             = 11;
+  optional string pincode                  = 12;
 }
 
 message GetHealthInstituteDetailsRes {
-  string                        healthInstituteId = 1;
-  HealthInstituteProfileDetails profileDetails    = 2;
+  uint32                        healthInstitutePrimaryKey = 1;
+  string                        healthInstituteId         = 2;
+  HealthInstituteProfileDetails profileDetails            = 3;
 }
 
 message MasterDataItem {
-  int32  id   = 1;
+  uint32 id   = 1;
   string name = 2;
   string code = 3;
 }
@@ -83,7 +86,7 @@ message GetStatesRes{
 }
 
 message GetDistrictsReq {
-  int32 stateId = 1;
+  uint32 stateId = 1;
 }
 
 message GetDistrictsRes {

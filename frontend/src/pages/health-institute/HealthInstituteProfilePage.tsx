@@ -46,8 +46,10 @@ export const getInstituteTypeLabel = (typeId?: number) => {
 };
 
 export interface HealthInstituteDetailsResponse {
+  healthInstitutePrimaryKey?: number;
   healthInstituteId: string;
   profileDetails?: {
+    healthInstituteProfileId?: number;
     id?: number;
     healthInstituteName?: string;
     healthInstituteType?: number;
@@ -75,8 +77,8 @@ interface EditInstituteProfileFormValues {
 const editProfileSchema = Yup.object({
   registrationNumber: Yup.string()
     .trim()
-    .max(50, "Registration Number cannot exceed 50 characters")
-    .optional(),
+    .required("Registration Number is required")
+    .max(50, "Registration Number cannot exceed 50 characters"),
   phone: Yup.string()
     .trim()
     .matches(/^\+?[0-9]{7,15}$/, "Please enter a valid phone number (7-15 digits)")
@@ -211,7 +213,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
   const formik = useFormik<EditInstituteProfileFormValues>({
     initialValues: {
       registrationNumber: profile?.registrationNumber || "",
-      phone: profile?.phone || "",
+      phone: profile?.phone || "+91",
       address: profile?.address || "",
       stateId: profile?.stateId || 1,
       districtId: profile?.districtId || 101,
@@ -224,9 +226,20 @@ export const HealthInstituteProfilePage: React.FC = () => {
       setUpdateSuccess(null);
 
       try {
+        const profileId =
+          profile?.healthInstituteProfileId ||
+          profile?.id ||
+          details?.healthInstitutePrimaryKey ||
+          user?.healthInstitutePrimaryKey ||
+          user?.userPrimaryKey;
+
+        if (!profileId) {
+          throw new Error("Health institute profile ID could not be determined.");
+        }
+
         const payload = {
-          healthInstituteId,
-          registrationNumber: values.registrationNumber.trim() || undefined,
+          healthInstituteProfileId: Number(profileId),
+          registrationNumber: values.registrationNumber.trim(),
           phone: values.phone.trim() || undefined,
           address: values.address.trim() || undefined,
           stateId: Number(values.stateId),

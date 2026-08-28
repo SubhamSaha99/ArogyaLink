@@ -65,9 +65,11 @@ export class HealthInstituteService implements OnModuleInit {
    * @returns GetHealthInstituteDetailsRes
    */
   async getHealthInstituteDetails(
+    healthInstitutePrimaryId: number,
     healthInstituteId: string,
   ): Promise<GetHealthInstituteDetailsRes> {
     const healInstituteProfileData: GetHealthInstituteDetailsReq = {
+      healthInstitutePrimaryId,
       healthInstituteId,
     };
 
@@ -119,10 +121,13 @@ export class HealthInstituteService implements OnModuleInit {
     );
   }
 
-  async appointDoctor(request: AppointDoctorDto, healthInstituteId: string): Promise<AppointDoctorRes> {
+  async appointDoctor(
+    request: AppointDoctorDto,
+    healthInstituteId: string,
+  ): Promise<AppointDoctorRes> {
     const appointDoctorData: AppointDoctorReq = {
       ...request,
-      healthInstituteId
+      healthInstituteId,
     };
     return await firstValueFrom(
       this.healthInstituteGrpcService.appointDoctor(appointDoctorData),

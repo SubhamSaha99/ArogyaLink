@@ -81,6 +81,10 @@ export const HealthInstituteLoginPage: React.FC = () => {
             login({
               accessToken: data.accessToken,
               refreshToken: data.refreshToken,
+              healthInstitutePrimaryKey:
+                data.healthInstitutePrimaryKey || data.userPrimaryKey,
+              userPrimaryKey:
+                data.userPrimaryKey || data.healthInstitutePrimaryKey,
               healthInstituteId: data.healthInstituteId,
               healthInstituteName: data.healthInstituteName,
               healthInstituteType: data.healthInstituteType,

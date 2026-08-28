@@ -5,10 +5,11 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
     public async up(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
             CREATE OR REPLACE FUNCTION get_health_institute_details(
-                p_health_institute_id VARCHAR(20)
+                p_health_institute_primary_key INTEGER
             )
             RETURNS TABLE (
                 status VARCHAR,
+                "healthInstitutePrimaryKey" INTEGER,
                 "healthInstituteId" VARCHAR,
                 "profileDetails" JSONB
             )
@@ -24,12 +25,13 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
                 IF NOT EXISTS (
                     SELECT 1
                     FROM health_institute_profile hip
-                    WHERE hip.health_institute_id = p_health_institute_id
+                    WHERE hip.health_institute_primary_key = p_health_institute_primary_key
                 ) THEN
 
                     RETURN QUERY
                     SELECT
                         'invalidIdError'::VARCHAR,
+                        NULL::INTEGER,
                         NULL::VARCHAR,
                         NULL::JSONB;
 
@@ -41,9 +43,10 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
                 RETURN QUERY
                 SELECT
                     'SUCCESS'::VARCHAR AS status,
+                    hip.health_institute_primary_key AS "healthInstitutePrimaryKey",
                     hip.health_institute_id AS "healthInstituteId",
                     jsonb_build_object(
-                        'id', hip.id,
+                        'healthInstituteProfileId', hip.id,
                         'healthInstituteName', hip.health_institute_name,
                         'healthInstituteType', hip.health_institute_type,
                         'registrationNumber', COALESCE(hip.registration_number, ''),
@@ -60,7 +63,7 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
                 FROM health_institute_profile hip
 				LEFT JOIN state_master s ON hip.state_id = s.id AND s.is_active = TRUE
 				LEFT JOIN district_master d ON hip.district_id = d.id AND d.is_active = TRUE
-                WHERE hip.health_institute_id = p_health_institute_id;
+                WHERE hip.health_institute_primary_key = p_health_institute_primary_key;
 
 
             EXCEPTION
@@ -89,6 +92,7 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
                     RETURN QUERY
                     SELECT
                         'dbError'::VARCHAR,
+                        NULL::INTEGER,
                         NULL::VARCHAR,
                         NULL::JSONB;
 
@@ -99,7 +103,7 @@ export class GetHealthInstituteDetails1787069148925 implements MigrationInterfac
 
     public async down(queryRunner: QueryRunner): Promise<void> {
         await queryRunner.query(`
-            DROP FUNCTION IF EXISTS get_health_institute_details(VARCHAR);
+            DROP FUNCTION IF EXISTS get_health_institute_details(INTEGER);
         `)
     }
 

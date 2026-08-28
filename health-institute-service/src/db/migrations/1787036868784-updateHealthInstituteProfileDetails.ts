@@ -4,7 +4,7 @@ export class UpdateHealthInstituteProfileDetails1787036868784 implements Migrati
   public async up(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
             CREATE OR REPLACE FUNCTION update_health_institute_profile_details(
-                p_health_institute_id VARCHAR(50),
+                p_health_institute_profile_id INTEGER,
                 p_registration_number VARCHAR(100),
                 p_phone VARCHAR(20),
                 p_address TEXT,
@@ -31,7 +31,7 @@ export class UpdateHealthInstituteProfileDetails1787036868784 implements Migrati
                     district_id = COALESCE(p_district_id, district_id),
                     pincode = COALESCE(p_pincode, pincode),
                     updated_at = NOW()
-                WHERE health_institute_id = p_health_institute_id
+                WHERE id = p_health_institute_profile_id
 
                 RETURNING health_institute_id INTO v_health_institute_id;
 
@@ -74,7 +74,7 @@ export class UpdateHealthInstituteProfileDetails1787036868784 implements Migrati
 
   public async down(queryRunner: QueryRunner): Promise<void> {
     await queryRunner.query(`
-            DROP FUNCTION IF EXISTS update_health_institute_profile_details(VARCHAR, VARCHAR, SMALLINT, VARCHAR);
+            DROP FUNCTION IF EXISTS update_health_institute_profile_details(INTEGER, VARCHAR, SMALLINT, VARCHAR);
         `);
   }
 }

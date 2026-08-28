@@ -96,6 +96,8 @@ export const DoctorLoginPage: React.FC = () => {
             login({
               accessToken: data.accessToken,
               refreshToken: data.refreshToken,
+              doctorPrimaryKey: data.doctorPrimaryKey || data.userPrimaryKey,
+              userPrimaryKey: data.userPrimaryKey || data.doctorPrimaryKey,
               doctorId: data.doctorId,
               email: data.email,
               mobile: data.mobile,

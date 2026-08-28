@@ -55,10 +55,6 @@ export class HealthInstituteService {
     );
     const procedureResult: string = result[0]?.f_result;
 
-    if (!procedureResult) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-    }
-
     if (procedureResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
@@ -86,7 +82,7 @@ export class HealthInstituteService {
     const result = await this.dataSource.query<UpdateHealthInstituteResponse[]>(
       `SELECT update_health_institute_profile_details($1, $2, $3, $4, $5, $6, $7) AS f_result`,
       [
-        request.healthInstituteId,
+        request.healthInstituteProfileId,
         request.registrationNumber,
         request.phone,
         request.address,
@@ -98,17 +94,13 @@ export class HealthInstituteService {
 
     const procedureResult: string = result[0]?.f_result;
 
-    if (!procedureResult) {
-      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-    }
-
     if (procedureResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
 
     if (
       typeof procedureResult === 'string' &&
-      !/^[HND](\d{6})$/.test(procedureResult)
+      !/^AGL-[HND]\d{6}$/.test(procedureResult)
     ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
@@ -142,7 +134,7 @@ export class HealthInstituteService {
       const result = await this.dataSource.query<
         GetHealthInstituteDetailsResponse[]
       >(`SELECT * FROM get_health_institute_details($1)`, [
-        request.healthInstituteId,
+        request.healthInstitutePrimaryId,
       ]);
 
       const procedureResult = result[0];
@@ -162,8 +154,7 @@ export class HealthInstituteService {
       }
 
       const response: GetHealthInstituteDetailsRes = {
-        healthInstituteId: procedureResult.healthInstituteId,
-        profileDetails: procedureResult.profileDetails,
+        ...procedureResult,
       };
 
       await this.redisService.set(cacheKey, JSON.stringify(response), 300);

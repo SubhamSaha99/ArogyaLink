@@ -23,6 +23,7 @@ export interface HealthInstituteProfileRes {
 }
 
 export interface UpdateHealthInstituteProfileReq {
+  healthInstituteProfileId: number;
   healthInstituteId: string;
   registrationNumber: string;
   phone?: string | undefined;
@@ -37,11 +38,12 @@ export interface UpdateHealthInstituteProfileRes {
 }
 
 export interface GetHealthInstituteDetailsReq {
+  healthInstitutePrimaryId: number;
   healthInstituteId: string;
 }
 
 export interface HealthInstituteProfileDetails {
-  id: number;
+  healthInstituteProfileId: number;
   healthInstituteName: string;
   healthInstituteType: number;
   registrationNumber?: string | undefined;
@@ -56,6 +58,7 @@ export interface HealthInstituteProfileDetails {
 }
 
 export interface GetHealthInstituteDetailsRes {
+  healthInstitutePrimaryKey: number;
   healthInstituteId: string;
   profileDetails: HealthInstituteProfileDetails | undefined;
 }
