@@ -43,7 +43,7 @@ export class DoctorService implements OnModuleInit {
    * @param profileImage
    * @returns UpdateDoctorBasicDeatilsRes
    */
-  async updateDoctorBasicDetails(
+  async updateDoctorProfileDetails(
     request: DoctorBasicDetailsDto,
     doctorId: string,
     profileImage?: Express.Multer.File,
@@ -63,7 +63,7 @@ export class DoctorService implements OnModuleInit {
       }
 
       return await firstValueFrom(
-        this.doctorGrpcService.updateDoctorBasicDetails(doctorBasicDetails),
+        this.doctorGrpcService.updateDoctorProfileDetails(doctorBasicDetails),
       );
     } catch (error) {
       if (uploadedImagePath) {

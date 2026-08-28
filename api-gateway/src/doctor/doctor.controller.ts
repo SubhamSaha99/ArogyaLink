@@ -34,7 +34,7 @@ export class DoctorController {
    * @param file
    * @returns json
    */
-  @Post('updateDoctorBasicDetails')
+  @Post('updateDoctorProfileDetails')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   @UseInterceptors(
@@ -45,12 +45,12 @@ export class DoctorController {
       }),
     ),
   )
-  async updateDoctorBasicDetails(
+  async updateDoctorProfileDetails(
     @CurrentUser() user: JwtPayload,
     @Body() request: DoctorBasicDetailsDto,
     @UploadedFile() file?: Express.Multer.File,
   ) {
-    const result = await this.doctorService.updateDoctorBasicDetails(
+    const result = await this.doctorService.updateDoctorProfileDetails(
       request,
       user.userBusinessId,
       file,

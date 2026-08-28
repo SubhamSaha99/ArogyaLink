@@ -351,7 +351,7 @@ export const DoctorProfilePage: React.FC = () => {
         }
 
         const response = await callApi(
-          API_ROUTES.updateDoctorBasicDetails,
+          API_ROUTES.updateDoctorProfileDetails,
           formData,
           "POST",
           {

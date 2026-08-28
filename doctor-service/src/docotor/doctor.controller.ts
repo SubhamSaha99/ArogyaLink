@@ -28,10 +28,10 @@ export class DoctorController implements DoctorServiceController {
     return this.doctorService.createDoctorProfile(request);
   }
 
-  async updateDoctorBasicDetails(
+  async updateDoctorProfileDetails(
     request: UpdateDoctorBasicDeatilsReq,
   ): Promise<UpdateDoctorBasicDeatilsRes> {
-    return this.doctorService.updateDoctorBasicDetails(request);
+    return this.doctorService.updateDoctorProfileDetails(request);
   }
 
   async updateDoctorProfessionalDetails(

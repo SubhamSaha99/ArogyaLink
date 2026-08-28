@@ -8,7 +8,7 @@ export const API_ROUTES = {
   logout: "/api/auth/logout",
 
   // Doctor Routes
-  updateDoctorBasicDetails: "/api/doctor/updateDoctorBasicDetails",
+  updateDoctorProfileDetails: "/api/doctor/updateDoctorProfileDetails",
   updateDoctorProfessionalDetails: "/api/doctor/updateDoctorProfessionalDetails",
   updateDoctorQualifications: "/api/doctor/updateDoctorQualifications",
   getDoctorDetails: "/api/doctor/getDoctorDetails",

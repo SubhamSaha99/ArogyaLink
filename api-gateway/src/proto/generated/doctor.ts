@@ -167,7 +167,7 @@ export const DOCTOR_PACKAGE_NAME = "doctor";
 export interface DoctorServiceClient {
   createDoctorProfile(request: DoctorProfileReq): Observable<DoctorProfileRes>;
 
-  updateDoctorBasicDetails(request: UpdateDoctorBasicDeatilsReq): Observable<UpdateDoctorBasicDeatilsRes>;
+  updateDoctorProfileDetails(request: UpdateDoctorBasicDeatilsReq): Observable<UpdateDoctorBasicDeatilsRes>;
 
   updateDoctorProfessionalDetails(
     request: UpdateDoctorProfessionalDetailsReq,
@@ -187,7 +187,7 @@ export interface DoctorServiceController {
     request: DoctorProfileReq,
   ): Promise<DoctorProfileRes> | Observable<DoctorProfileRes> | DoctorProfileRes;
 
-  updateDoctorBasicDetails(
+  updateDoctorProfileDetails(
     request: UpdateDoctorBasicDeatilsReq,
   ): Promise<UpdateDoctorBasicDeatilsRes> | Observable<UpdateDoctorBasicDeatilsRes> | UpdateDoctorBasicDeatilsRes;
 
@@ -217,7 +217,7 @@ export function DoctorServiceControllerMethods() {
   return function (constructor: Function) {
     const grpcMethods: string[] = [
       "createDoctorProfile",
-      "updateDoctorBasicDetails",
+      "updateDoctorProfileDetails",
       "updateDoctorProfessionalDetails",
       "updateDoctorQualifications",
       "getDoctorDetails",

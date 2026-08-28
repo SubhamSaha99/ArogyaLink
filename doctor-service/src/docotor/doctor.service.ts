@@ -85,7 +85,7 @@ export class DoctorService {
    * @param request
    * @returns UpdateDoctorBasicDeatilsRes
    */
-  async updateDoctorBasicDetails(
+  async updateDoctorProfileDetails(
     request: UpdateDoctorBasicDeatilsReq,
   ): Promise<UpdateDoctorBasicDeatilsRes> {
     const result = await this.dataSource.query<UpdateDoctorResponse[]>(
