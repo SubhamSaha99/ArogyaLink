@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   AppointDoctorDto,
+  GetAppointedDoctorsListDto,
   UpdateHealthInstituteProfileDto,
 } from './health-institute.dto';
 import { HealthInstituteService } from './health-institute.service';
@@ -147,8 +148,27 @@ export class HealthInstituteController {
   ) {
     const result = await this.healthInstituteService.appointDoctor(
       request,
+      user.userPrimaryKey,
       user.userBusinessId,
     );
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  @Post('getAppointedDoctorsList')
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getAppointedDoctorsList(
+    @Body() request: GetAppointedDoctorsListDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result = await this.healthInstituteService.getAppointedDoctorsList(
+      request,
+      user.userPrimaryKey,
+    );
+
     return {
       success: true,
       message: 'Details Fetched Successfully.',

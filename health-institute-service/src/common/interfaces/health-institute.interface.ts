@@ -36,3 +36,24 @@ export interface GetDoctorMasterDataResponse {
   designations: MasterDataItemResposne[];
   consultationScopes: MasterDataItemResposne[];
 }
+
+export interface AppointedDoctorResult {
+  mappingId: number;
+  doctorPrimaryKey: number;
+  doctorId: string;
+  departmentId: number;
+  departmentName: string;
+  designationId: number;
+  designationName: string;
+  joiningDate: string;
+  consultationScopeId: number;
+  consultationScopeName: string;
+  status: boolean;
+}
+
+export interface GetAppointedDoctorsDatabaseResponse {
+  doctors: AppointedDoctorResult[];
+  total: number;
+  offset: number;
+  limit: number;
+}

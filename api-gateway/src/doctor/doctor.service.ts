@@ -7,10 +7,10 @@ import {
   GetDoctorDetailsRes,
   GetDoctorListRes,
   GetDoctorMasterDataRes,
-  UpdateDoctorBasicDeatilsReq,
-  UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
+  UpdateDoctorProfileReq,
+  UpdateDoctorProfileRes,
   UpdateDoctorQualificationsReq,
   UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
@@ -24,12 +24,16 @@ import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/utils/file-util';
 import { moveFile } from '../common/utils/upload-file';
 import { GrpcServiceName } from '../common/utils/constant';
+import { HealthInstituteServiceClient } from '../proto/generated/health-institute';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {
   private doctorGrpcService!: DoctorServiceClient;
+  private healthInstituteGrpcService!: HealthInstituteServiceClient; 
   constructor(
     @Inject(GrpcServiceName.DOCTOR) private readonly doctorClient: ClientGrpc,
+    @Inject(GrpcServiceName.HEALTH_INSTITUTE)
+    private readonly healInstituteClient: ClientGrpc,
   ) {}
 
   onModuleInit() {
@@ -47,11 +51,11 @@ export class DoctorService implements OnModuleInit {
     request: DoctorBasicDetailsDto,
     doctorId: string,
     profileImage?: Express.Multer.File,
-  ): Promise<UpdateDoctorBasicDeatilsRes> {
+  ): Promise<UpdateDoctorProfileRes> {
     let uploadedImagePath: string | undefined;
 
     try {
-      const doctorBasicDetails: UpdateDoctorBasicDeatilsReq = {
+      const doctorProfileDetails: UpdateDoctorProfileReq = {
         ...request,
         doctorId,
       };
@@ -59,11 +63,11 @@ export class DoctorService implements OnModuleInit {
       if (profileImage) {
         uploadedImagePath = await moveFile(profileImage.path, 'doctor-profile');
 
-        doctorBasicDetails.profileImage = uploadedImagePath;
+        doctorProfileDetails.profileImage = uploadedImagePath;
       }
 
       return await firstValueFrom(
-        this.doctorGrpcService.updateDoctorProfileDetails(doctorBasicDetails),
+        this.doctorGrpcService.updateDoctorProfileDetails(doctorProfileDetails),
       );
     } catch (error) {
       if (uploadedImagePath) {

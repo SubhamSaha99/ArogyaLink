@@ -5,7 +5,7 @@ package doctor;
 service DoctorService {
   rpc CreateDoctorProfile(DoctorProfileReq) returns (DoctorProfileRes);
 
-  rpc UpdateDoctorBasicDetails(UpdateDoctorBasicDeatilsReq) returns (UpdateDoctorBasicDeatilsRes);
+  rpc UpdateDoctorProfileDetails(UpdateDoctorProfileReq) returns (UpdateDoctorProfileRes);
 
   rpc UpdateDoctorProfessionalDetails(UpdateDoctorProfessionalDetailsReq) returns (UpdateDoctorProfessionalDetailsRes);
 
@@ -16,6 +16,8 @@ service DoctorService {
   rpc GetDoctorMasterData(GetDoctorMasterDataReq) returns (GetDoctorMasterDataRes);
 
   rpc GetDoctorList(GetDoctorListReq) returns (GetDoctorListRes);
+
+  rpc GetAppointedDoctorDetails(GetAppointedDoctorDetailsReq) returns (GetAppointedDoctorDetailsRes);
 }
 
 message DoctorProfileReq {
@@ -32,7 +34,7 @@ message DoctorProfileRes {
   string doctorId = 1;
 }
 
-message UpdateDoctorBasicDeatilsReq {
+message UpdateDoctorProfileReq {
   uint32          doctorProfileId = 1;
   string          doctorId        = 2;
   optional string firstName       = 3;
@@ -42,7 +44,7 @@ message UpdateDoctorBasicDeatilsReq {
   optional string profileImage    = 7;
 }
 
-message UpdateDoctorBasicDeatilsRes {
+message UpdateDoctorProfileRes {
   string doctorId = 1;
 }
 
@@ -167,4 +169,21 @@ message GetDoctorListRes {
   uint32                  total   = 2;
   uint32                  offset  = 3;
   uint32                  limit   = 4;
+}
+
+message GetAppointedDoctorDetailsReq {
+  repeated uint32 doctorPrimaryKeys = 1;
+}
+
+message DoctorDetails {
+  uint32          doctorPrimaryKey    = 1;
+  string          firstName           = 2;
+  optional string middleName          = 3;
+  string          lastName            = 4;
+  string          medicalRegistration = 5;
+  uint32          licenseStatus       = 6;
+}
+
+message GetAppointedDoctorDetailsRes {
+  repeated DoctorDetails doctors = 1;
 }

@@ -1,9 +1,11 @@
+import { Type } from 'class-transformer';
 import {
   IsDateString,
   IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
   Min,
 } from 'class-validator';
@@ -57,7 +59,7 @@ export class AppointDoctorDto {
 
   @IsInt()
   @Min(1)
-  departmentId!: string;
+  departmentId!: number;
 
   @IsInt()
   @Min(1)
@@ -73,4 +75,35 @@ export class AppointDoctorDto {
   @IsOptional()
   @IsString()
   affiliationNotes?: string;
+}
+
+export class GetAppointedDoctorsListDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset: number = 0;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 10;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsInt()
+  @IsOptional()
+  departmentId?: number;
+
+  @IsInt()
+  @IsOptional()
+  designationId?: number;
+
+  @IsInt()
+  @IsOptional()
+  consultationScopeId?: number;
 }

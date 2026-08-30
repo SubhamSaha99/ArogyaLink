@@ -4,15 +4,17 @@ import {
   DoctorProfileRes,
   DoctorServiceController,
   DoctorServiceControllerMethods,
+  GetAppointedDoctorDetailsReq,
+  GetAppointedDoctorDetailsRes,
   GetDoctorDetailsReq,
   GetDoctorDetailsRes,
   GetDoctorListReq,
   GetDoctorListRes,
   GetDoctorMasterDataRes,
-  UpdateDoctorBasicDeatilsReq,
-  UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
+  UpdateDoctorProfileReq,
+  UpdateDoctorProfileRes,
   UpdateDoctorQualificationsReq,
   UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
@@ -29,8 +31,8 @@ export class DoctorController implements DoctorServiceController {
   }
 
   async updateDoctorProfileDetails(
-    request: UpdateDoctorBasicDeatilsReq,
-  ): Promise<UpdateDoctorBasicDeatilsRes> {
+    request: UpdateDoctorProfileReq,
+  ): Promise<UpdateDoctorProfileRes> {
     return this.doctorService.updateDoctorProfileDetails(request);
   }
 
@@ -58,5 +60,9 @@ export class DoctorController implements DoctorServiceController {
 
   async getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> {
       return this.doctorService.getDoctorList(request);
+  }
+
+  async getAppointedDoctorDetails(request: GetAppointedDoctorDetailsReq): Promise<GetAppointedDoctorDetailsRes> {
+      return this.doctorService.getAppointedDoctorDetails(request);
   }
 }

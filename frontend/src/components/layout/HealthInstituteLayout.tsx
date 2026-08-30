@@ -1,6 +1,13 @@
 import React from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { Building2, LogOut, Activity, LayoutDashboard, UserCheck } from "lucide-react";
+import {
+  Building2,
+  LogOut,
+  Activity,
+  LayoutDashboard,
+  UserCheck,
+  UserPlus,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -76,7 +83,7 @@ export const HealthInstituteLayout: React.FC = () => {
             </NavLink>
 
             <NavLink
-              to="/health-institute/appoint-doctor"
+              to="/health-institute/appointed-doctors"
               className={({ isActive }) =>
                 `w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
                   isActive
@@ -86,7 +93,21 @@ export const HealthInstituteLayout: React.FC = () => {
               }
             >
               <UserCheck className="w-5 h-5 shrink-0" />
-              <span>Appoint Doctors</span>
+              <span>Appointed Doctors</span>
+            </NavLink>
+
+            <NavLink
+              to="/health-institute/appoint-doctor"
+              className={({ isActive }) =>
+                `w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  isActive
+                    ? "bg-teal-600 text-white shadow-lg shadow-teal-600/30 font-bold"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`
+              }
+            >
+              <UserPlus className="w-5 h-5 shrink-0" />
+              <span>Find & Appoint Doctors</span>
             </NavLink>
           </nav>
         </div>

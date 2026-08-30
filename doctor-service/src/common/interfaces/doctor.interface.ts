@@ -85,3 +85,17 @@ export interface GetDoctorListResponse {
   resultOffset: number;
   resultLimit: number;
 }
+
+export interface AppointedDoctorDetailsItem {
+  doctorPrimaryKey: number;
+  firstName: string;
+  middleName?: string | undefined;
+  lastName: string;
+  medicalRegistration: string;
+  licenseStatus: number;
+}
+
+export interface GetAppointedDoctorDetailsResponse {
+  status: string;
+  doctors: AppointedDoctorDetailsItem[];
+}

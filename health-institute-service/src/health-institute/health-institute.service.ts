@@ -4,6 +4,8 @@ import {
   AppointDoctorReq,
   AppointDoctorRes,
   GetAppointDoctorMasterDataRes,
+  GetAppointedDoctorsReq,
+  GetAppointedDoctorsRes,
   GetDistrictsReq,
   GetDistrictsRes,
   GetHealthInstituteDetailsReq,
@@ -16,6 +18,7 @@ import {
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
 import {
+  GetAppointedDoctorsDatabaseResponse,
   GetDoctorMasterDataResponse,
   GetHealthInstituteDetailsResponse,
   MasterDataItemResposne,
@@ -304,6 +307,10 @@ export class HealthInstituteService {
     }
   }
 
+  /**
+   * @description Get Appoint Doctor Master Data
+   * @returns GetAppointDoctorMasterDataRes
+   */
   async getAppointDoctorMasterData(): Promise<GetAppointDoctorMasterDataRes> {
     try {
       const cacheKey = 'apoint-doctor:master-data';
@@ -349,6 +356,11 @@ export class HealthInstituteService {
     }
   }
 
+  /**
+   * @description Appoint Doctor
+   * @param request 
+   * @returns AppointDoctorRes
+   */
   async appointDoctor(request: AppointDoctorReq): Promise<AppointDoctorRes> {
     const result = await this.dataSource.query<UpdateHealthInstituteResponse[]>(
       `SELECT appoint_doctor($1, $2, $3, $4, $5, $6, $7, $8, $9) AS f_result`,
@@ -377,6 +389,42 @@ export class HealthInstituteService {
     }
     return {
       mappingId: Number(procedureResult),
+    };
+  }
+
+  /**
+   * @description Get Appointed Doctors
+   * @param request
+   * @returns GetAppointedDoctorsRes
+   */
+  async getAppointedDoctors(
+    request: GetAppointedDoctorsReq,
+  ): Promise<GetAppointedDoctorsRes> {
+    const result = await this.dataSource.query<
+      GetAppointedDoctorsDatabaseResponse[]
+    >(`SELECT * FROM get_appointed_doctors($1, $2, $3, $4, $5, $6, $7)`, [
+      request.healthInstitutePrimaryKey,
+      request.offset,
+      request.limit,
+      request.search ?? null,
+      request.departmentId ?? null,
+      request.designationId ?? null,
+      request.consultationScopeId ?? null,
+    ]);
+
+    const procedureResult = result[0];
+
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
+
+    return {
+      doctors: Array.isArray(procedureResult.doctors)
+        ? procedureResult.doctors
+        : [],
+      total: Number(procedureResult.total ?? 0),
+      offset: Number(procedureResult.offset ?? request.offset ?? 0),
+      limit: Number(procedureResult.limit ?? request.limit ?? 0),
     };
   }
 }

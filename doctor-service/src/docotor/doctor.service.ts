@@ -3,15 +3,17 @@ import { DataSource } from 'typeorm';
 import {
   DoctorProfileReq,
   DoctorProfileRes,
+  GetAppointedDoctorDetailsReq,
+  GetAppointedDoctorDetailsRes,
   GetDoctorDetailsReq,
   GetDoctorDetailsRes,
   GetDoctorListReq,
   GetDoctorListRes,
   GetDoctorMasterDataRes,
-  UpdateDoctorBasicDeatilsReq,
-  UpdateDoctorBasicDeatilsRes,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
+  UpdateDoctorProfileReq,
+  UpdateDoctorProfileRes,
   UpdateDoctorQualificationsReq,
   UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
@@ -26,6 +28,7 @@ import {
   GetDoctorDetailsResponse,
   GetDoctorMasterDataResponse,
   GetDoctorListResponse,
+  GetAppointedDoctorDetailsResponse,
 } from '../common/interfaces/doctor.interface';
 
 @Injectable()
@@ -86,8 +89,8 @@ export class DoctorService {
    * @returns UpdateDoctorBasicDeatilsRes
    */
   async updateDoctorProfileDetails(
-    request: UpdateDoctorBasicDeatilsReq,
-  ): Promise<UpdateDoctorBasicDeatilsRes> {
+    request: UpdateDoctorProfileReq,
+  ): Promise<UpdateDoctorProfileRes> {
     const result = await this.dataSource.query<UpdateDoctorResponse[]>(
       `SELECT update_doctor_basic_details($1, $2, $3, $4, $5, $6) AS f_result`,
       [
@@ -355,7 +358,7 @@ export class DoctorService {
 
   /**
    * @description Get doctor List
-   * @param request 
+   * @param request
    * @returns GetDoctorListRes
    */
   async getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> {
@@ -377,10 +380,39 @@ export class DoctorService {
     }
 
     return {
-      doctors: procedureResult.doctors,
-      total: procedureResult.total,
-      offset: procedureResult.resultOffset,
-      limit: procedureResult.resultLimit,
+      doctors: Array.isArray(procedureResult.doctors)
+        ? procedureResult.doctors
+        : [],
+      total: Number(procedureResult.total ?? 0),
+      offset: Number(procedureResult.resultOffset ?? request.offset ?? 0),
+      limit: Number(procedureResult.resultLimit ?? request.limit ?? 0),
+    };
+  }
+
+  /**
+   * @description Get Appointed Doctor Details.
+   * @param request
+   * @returns GetAppointedDoctorDetailsRes
+   */
+  async getAppointedDoctorDetails(
+    request: GetAppointedDoctorDetailsReq,
+  ): Promise<GetAppointedDoctorDetailsRes> {
+    const result = await this.dataSource.query<
+      GetAppointedDoctorDetailsResponse[]
+    >(`SELECT * FROM get_appointed_doctors_by_primary_key($1:: INTEGER[])`, [
+      request.doctorPrimaryKeys,
+    ]);
+
+    const procedureResult = result?.[0];
+
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Database Error!');
+    }
+
+    return {
+      doctors: Array.isArray(procedureResult.doctors)
+        ? procedureResult.doctors
+        : [],
     };
   }
 }

@@ -24,7 +24,7 @@ export interface DoctorProfileRes {
   doctorId: string;
 }
 
-export interface UpdateDoctorBasicDeatilsReq {
+export interface UpdateDoctorProfileReq {
   doctorProfileId: number;
   doctorId: string;
   firstName?: string | undefined;
@@ -34,7 +34,7 @@ export interface UpdateDoctorBasicDeatilsReq {
   profileImage?: string | undefined;
 }
 
-export interface UpdateDoctorBasicDeatilsRes {
+export interface UpdateDoctorProfileRes {
   doctorId: string;
 }
 
@@ -162,12 +162,29 @@ export interface GetDoctorListRes {
   limit: number;
 }
 
+export interface GetAppointedDoctorDetailsReq {
+  doctorPrimaryKeys: number[];
+}
+
+export interface DoctorDetails {
+  doctorPrimaryKey: number;
+  firstName: string;
+  middleName?: string | undefined;
+  lastName: string;
+  medicalRegistration: string;
+  licenseStatus: number;
+}
+
+export interface GetAppointedDoctorDetailsRes {
+  doctors: DoctorDetails[];
+}
+
 export const DOCTOR_PACKAGE_NAME = "doctor";
 
 export interface DoctorServiceClient {
   createDoctorProfile(request: DoctorProfileReq): Observable<DoctorProfileRes>;
 
-  updateDoctorProfileDetails(request: UpdateDoctorBasicDeatilsReq): Observable<UpdateDoctorBasicDeatilsRes>;
+  updateDoctorProfileDetails(request: UpdateDoctorProfileReq): Observable<UpdateDoctorProfileRes>;
 
   updateDoctorProfessionalDetails(
     request: UpdateDoctorProfessionalDetailsReq,
@@ -180,6 +197,8 @@ export interface DoctorServiceClient {
   getDoctorMasterData(request: GetDoctorMasterDataReq): Observable<GetDoctorMasterDataRes>;
 
   getDoctorList(request: GetDoctorListReq): Observable<GetDoctorListRes>;
+
+  getAppointedDoctorDetails(request: GetAppointedDoctorDetailsReq): Observable<GetAppointedDoctorDetailsRes>;
 }
 
 export interface DoctorServiceController {
@@ -188,8 +207,8 @@ export interface DoctorServiceController {
   ): Promise<DoctorProfileRes> | Observable<DoctorProfileRes> | DoctorProfileRes;
 
   updateDoctorProfileDetails(
-    request: UpdateDoctorBasicDeatilsReq,
-  ): Promise<UpdateDoctorBasicDeatilsRes> | Observable<UpdateDoctorBasicDeatilsRes> | UpdateDoctorBasicDeatilsRes;
+    request: UpdateDoctorProfileReq,
+  ): Promise<UpdateDoctorProfileRes> | Observable<UpdateDoctorProfileRes> | UpdateDoctorProfileRes;
 
   updateDoctorProfessionalDetails(
     request: UpdateDoctorProfessionalDetailsReq,
@@ -211,6 +230,10 @@ export interface DoctorServiceController {
   ): Promise<GetDoctorMasterDataRes> | Observable<GetDoctorMasterDataRes> | GetDoctorMasterDataRes;
 
   getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> | Observable<GetDoctorListRes> | GetDoctorListRes;
+
+  getAppointedDoctorDetails(
+    request: GetAppointedDoctorDetailsReq,
+  ): Promise<GetAppointedDoctorDetailsRes> | Observable<GetAppointedDoctorDetailsRes> | GetAppointedDoctorDetailsRes;
 }
 
 export function DoctorServiceControllerMethods() {
@@ -223,6 +246,7 @@ export function DoctorServiceControllerMethods() {
       "getDoctorDetails",
       "getDoctorMasterData",
       "getDoctorList",
+      "getAppointedDoctorDetails",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
