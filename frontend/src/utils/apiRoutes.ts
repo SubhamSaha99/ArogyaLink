@@ -14,6 +14,7 @@ export const API_ROUTES = {
   getDoctorDetails: "/api/doctor/getDoctorDetails",
   getDoctorMasterData: "/api/doctor/getDoctorMasterData",
   getDoctorList: "/api/doctor/getDoctorList",
+  getAssociatedHealthInstitutes: "/api/doctor/getAssociatedHealthInstitutes",
 
   // Health Institute Routes
   updateHealthInstituteProfile: "/api/healthInstitute/updateHealthInstituteProfile",

@@ -6,6 +6,8 @@ import {
   GetAppointDoctorMasterDataRes,
   GetAppointedDoctorsReq,
   GetAppointedDoctorsRes,
+  GetAssociatedHealthInstitutesReq,
+  GetAssociatedHealthInstitutesRes,
   GetDistrictsReq,
   GetDistrictsRes,
   GetHealthInstituteDetailsReq,
@@ -19,6 +21,7 @@ import {
 } from '../proto/generated/health-institute';
 import {
   GetAppointedDoctorsDatabaseResponse,
+  GetAssociatedHealthInstituteDatabaseResponse,
   GetDoctorMasterDataResponse,
   GetHealthInstituteDetailsResponse,
   MasterDataItemResposne,
@@ -358,7 +361,7 @@ export class HealthInstituteService {
 
   /**
    * @description Appoint Doctor
-   * @param request 
+   * @param request
    * @returns AppointDoctorRes
    */
   async appointDoctor(request: AppointDoctorReq): Promise<AppointDoctorRes> {
@@ -426,5 +429,58 @@ export class HealthInstituteService {
       offset: Number(procedureResult.offset ?? request.offset ?? 0),
       limit: Number(procedureResult.limit ?? request.limit ?? 0),
     };
+  }
+
+  /**
+   * @description Get Associated Health Institute
+   * @param request
+   * @returns GetAssociatedHealthInstitutesRes
+   */
+  async getAssociatedHealthInstitutes(
+    request: GetAssociatedHealthInstitutesReq,
+  ): Promise<GetAssociatedHealthInstitutesRes> {
+    try {
+      const cacheKey = `associated-health-institute:${request.doctorId}`;
+      const cachedData = await this.redisService.get(cacheKey);
+
+      if (cachedData) {
+        return JSON.parse(cachedData) as GetAssociatedHealthInstitutesRes;
+      }
+
+      const result = await this.dataSource.query<
+        GetAssociatedHealthInstituteDatabaseResponse[]
+      >(`SELECT * FROM get_associated_health_institutes($1)`, [
+        request.doctorPrimaryKey,
+      ]);
+      const procedureResult = result?.[0];
+
+      if (!procedureResult) {
+        throwRpcException(status.INTERNAL, 'Invalid response from database');
+      }
+
+      if (procedureResult.status === Errors.dbError) {
+        throwRpcException(status.INTERNAL, 'Database error');
+      }
+
+      const response: GetAssociatedHealthInstitutesRes = {
+        healthInstitutes: Array.isArray(procedureResult.healthInstitutes)
+          ? procedureResult.healthInstitutes
+          : [],
+      };
+      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
+      return response;
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          `Redis operation failed for doctor ${request.doctorId}`,
+          error.message,
+        );
+      }
+
+      throw error;
+    }
   }
 }

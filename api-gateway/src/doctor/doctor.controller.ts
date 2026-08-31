@@ -186,4 +186,24 @@ export class DoctorController {
       data: result,
     };
   }
+
+  /**
+   * @description Get Associated Health Institutes.
+   * @param user
+   * @returns json
+   */
+  @Get('getAssociatedHealthInstitutes')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.DOCTOR)
+  async getAssociatedHealthInstitutes(@CurrentUser() user: JwtPayload) {
+    const result = await this.doctorService.getAssociatedHealthInstitutes(
+      user.userPrimaryKey,
+      user.userBusinessId,
+    );
+    return {
+      success: true,
+      message: 'Associated Health Institutes Fetched Successfully.',
+      data: result,
+    };
+  }
 }

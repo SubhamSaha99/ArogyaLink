@@ -24,12 +24,16 @@ import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/utils/file-util';
 import { moveFile } from '../common/utils/upload-file';
 import { GrpcServiceName } from '../common/utils/constant';
-import { HealthInstituteServiceClient } from '../proto/generated/health-institute';
+import {
+  GetAssociatedHealthInstitutesRes,
+  HEALTH_INSTITUTE_SERVICE_NAME,
+  HealthInstituteServiceClient,
+} from '../proto/generated/health-institute';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {
   private doctorGrpcService!: DoctorServiceClient;
-  private healthInstituteGrpcService!: HealthInstituteServiceClient; 
+  private healthInstituteGrpcService!: HealthInstituteServiceClient;
   constructor(
     @Inject(GrpcServiceName.DOCTOR) private readonly doctorClient: ClientGrpc,
     @Inject(GrpcServiceName.HEALTH_INSTITUTE)
@@ -39,6 +43,11 @@ export class DoctorService implements OnModuleInit {
   onModuleInit() {
     this.doctorGrpcService =
       this.doctorClient.getService<DoctorServiceClient>(DOCTOR_SERVICE_NAME);
+
+    this.healthInstituteGrpcService =
+      this.healInstituteClient.getService<HealthInstituteServiceClient>(
+        HEALTH_INSTITUTE_SERVICE_NAME,
+      );
   }
 
   /**
@@ -116,7 +125,8 @@ export class DoctorService implements OnModuleInit {
       qualifications:
         request.qualifications?.map((qualification) => ({
           ...qualification,
-          doctorQualificationId: qualification.doctorQualificationId ?? undefined,
+          doctorQualificationId:
+            qualification.doctorQualificationId ?? undefined,
           qualificationId: qualification.qualificationId,
           specializationId: qualification.specializationId ?? undefined,
           institutionName: qualification.institutionName ?? '',
@@ -157,9 +167,23 @@ export class DoctorService implements OnModuleInit {
    * @returns GetDoctorListRes
    */
   async getDoctorList(request: GetDoctorListDto): Promise<GetDoctorListRes> {
-    const result = await firstValueFrom(
-      this.doctorGrpcService.getDoctorList(request),
+    return await firstValueFrom(this.doctorGrpcService.getDoctorList(request));
+  }
+
+  /**
+   * @description Get Associated Health Institutes.
+   * @param doctorPrimaryKey
+   * @returns GetAssociatedHealthInstitutesRes
+   */
+  async getAssociatedHealthInstitutes(
+    doctorPrimaryKey: number,
+    doctorId: string,
+  ): Promise<GetAssociatedHealthInstitutesRes> {
+    return await firstValueFrom(
+      this.healthInstituteGrpcService.getAssociatedHealthInstitutes({
+        doctorPrimaryKey,
+        doctorId,
+      }),
     );
-    return result;
   }
 }

@@ -151,6 +151,28 @@ export interface GetAppointedDoctorsRes {
   limit: number;
 }
 
+export interface GetAssociatedHealthInstitutesReq {
+  doctorPrimaryKey: number;
+  doctorId: string;
+}
+
+export interface GetAssociatedHealthInstitutesData {
+  healthInstitutePrimaryKey: number;
+  healthInstituteId: string;
+  healthInstituteName: string;
+  departmentId: number;
+  departmentName: string;
+  designationId: number;
+  designationName: string;
+  joiningDate: string;
+  consultationScopeId: number;
+  consultationScopeName: string;
+}
+
+export interface GetAssociatedHealthInstitutesRes {
+  healthInstitutes: GetAssociatedHealthInstitutesData[];
+}
+
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
@@ -171,6 +193,10 @@ export interface HealthInstituteServiceClient {
   appointDoctor(request: AppointDoctorReq): Observable<AppointDoctorRes>;
 
   getAppointedDoctors(request: GetAppointedDoctorsReq): Observable<GetAppointedDoctorsRes>;
+
+  getAssociatedHealthInstitutes(
+    request: GetAssociatedHealthInstitutesReq,
+  ): Observable<GetAssociatedHealthInstitutesRes>;
 }
 
 export interface HealthInstituteServiceController {
@@ -206,6 +232,13 @@ export interface HealthInstituteServiceController {
   getAppointedDoctors(
     request: GetAppointedDoctorsReq,
   ): Promise<GetAppointedDoctorsRes> | Observable<GetAppointedDoctorsRes> | GetAppointedDoctorsRes;
+
+  getAssociatedHealthInstitutes(
+    request: GetAssociatedHealthInstitutesReq,
+  ):
+    | Promise<GetAssociatedHealthInstitutesRes>
+    | Observable<GetAssociatedHealthInstitutesRes>
+    | GetAssociatedHealthInstitutesRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {
@@ -220,6 +253,7 @@ export function HealthInstituteServiceControllerMethods() {
       "getAppointDoctorMasterData",
       "appointDoctor",
       "getAppointedDoctors",
+      "getAssociatedHealthInstitutes",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

@@ -1,3 +1,5 @@
+import { GetAssociatedHealthInstitutesRes } from '../../proto/generated/health-institute';
+
 export interface UpdateHealthInstituteResponse {
   f_result: string;
 }
@@ -56,4 +58,9 @@ export interface GetAppointedDoctorsDatabaseResponse {
   total: number;
   offset: number;
   limit: number;
+}
+
+export interface GetAssociatedHealthInstituteDatabaseResponse {
+  status: string;
+  healthInstitutes: GetAssociatedHealthInstitutesRes;
 }
