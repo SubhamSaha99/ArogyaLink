@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import {
   Building2,
-  Search,
   RefreshCw,
   Calendar,
   Layers,
@@ -14,7 +13,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
@@ -343,7 +341,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
                       <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                         Designation
                       </span>
-                      <span className="text-xs font-semibold text-slate-800 truncate max-w-[180px]">
+                      <span className="text-xs font-semibold text-slate-800 truncate max-w-45">
                         {inst.designationName || "Consultant"}
                       </span>
                     </div>
@@ -352,7 +350,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
                       <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                         Practice Scope
                       </span>
-                      <span className="text-xs font-semibold text-cyan-700 truncate max-w-[180px]">
+                      <span className="text-xs font-semibold text-cyan-700 truncate max-w-45">
                         {inst.consultationScopeName || "Full Scope"}
                       </span>
                     </div>

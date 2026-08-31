@@ -38,7 +38,7 @@ export const HealthInstituteLayout: React.FC = () => {
           {/* Sidebar Header / Brand */}
           <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-slate-950 shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-teal-500 to-cyan-600 flex items-center justify-center text-slate-950 shadow-md">
                 <Activity className="w-6 h-6 text-slate-950 font-bold" />
               </div>
               <div className="flex flex-col">
