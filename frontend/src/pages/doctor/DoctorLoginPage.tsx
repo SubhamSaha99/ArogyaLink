@@ -6,7 +6,6 @@ import {
   Stethoscope,
   Lock,
   Mail,
-  Phone,
   Eye,
   EyeOff,
   ShieldCheck,
@@ -16,15 +15,6 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
@@ -119,115 +109,134 @@ export const DoctorLoginPage: React.FC = () => {
   });
 
   return (
-    <div className="min-h-[85vh] flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8 bg-slate-50 relative overflow-hidden">
-      {/* Ambient background decoration */}
-      <div className="absolute top-10 left-10 w-72 h-72 bg-teal-200/40 rounded-full blur-3xl pointer-events-none"></div>
-      <div className="absolute bottom-10 right-10 w-72 h-72 bg-cyan-200/40 rounded-full blur-3xl pointer-events-none"></div>
+    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-50 relative overflow-hidden">
+      {/* Ambient background glows */}
+      <div className="absolute top-1/4 -left-20 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-10 -right-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
-      <div className="w-full max-w-md space-y-6 relative z-10">
-        {/* Header Branding */}
-        <div className="text-center space-y-2">
-          <Link to="/" className="inline-flex items-center gap-2 group">
-            <div className="w-10 h-10 rounded-xl bg-teal-700 flex items-center justify-center text-white shadow-md shadow-teal-700/20 group-hover:scale-105 transition-transform">
-              <Activity className="w-6 h-6 animate-pulse" />
+      <div className="w-full max-w-4xl grid grid-cols-1 lg:grid-cols-2 bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-900/5 overflow-hidden relative z-10">
+        {/* Left Hero Column */}
+        <div className="bg-linear-to-br from-slate-900 via-slate-900 to-teal-950 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
+
+          <div className="space-y-6 relative z-10">
+            <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 text-teal-300 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
+              <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
+              NMC Certified Portal
             </div>
-            <span className="text-2xl font-black tracking-tight text-slate-900">
-              Arogya<span className="text-teal-700">Link</span>
-            </span>
-          </Link>
-          <div className="flex justify-center">
-            <Badge variant="teal" className="text-xs px-3 py-1 gap-1">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              Verified Doctor Portal
-            </Badge>
+
+            <div className="space-y-2">
+              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+                Doctor Access Terminal
+              </h2>
+              <p className="text-xs text-slate-400 leading-relaxed">
+                Seamlessly access longitudinal patient health records, diagnostic
+                imaging, and clinical summaries across the unified ArogyaLink network.
+              </p>
+            </div>
+
+            <div className="space-y-3 pt-2">
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center shrink-0">
+                  <Activity className="w-4 h-4" />
+                </div>
+                <div className="text-xs">
+                  <span className="font-bold text-white block">ABDM Interoperability</span>
+                  <span className="text-slate-400 text-[11px]">Instant consent-driven EHR discovery</span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
+                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0">
+                  <Stethoscope className="w-4 h-4" />
+                </div>
+                <div className="text-xs">
+                  <span className="font-bold text-white block">Multi-Hospital Roster</span>
+                  <span className="text-slate-400 text-[11px]">Manage all clinical appointments in one place</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="pt-8 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
+            <span>256-Bit Encrypted Session</span>
+            <span className="font-mono text-teal-400">HIPAA & ABDM Ready</span>
           </div>
         </div>
 
-        <Card className="shadow-xl border-slate-200/90 bg-white/95 backdrop-blur-sm">
-          <CardHeader className="space-y-1 pb-4">
-            <CardTitle className="text-2xl font-extrabold text-slate-900 text-center">
-              Doctor Sign In
-            </CardTitle>
-            <CardDescription className="text-center text-slate-500">
-              Enter your registered Email or Mobile number to access
-              consolidated patient records.
-            </CardDescription>
-          </CardHeader>
+        {/* Right Form Column */}
+        <div className="p-8 sm:p-10 flex flex-col justify-center">
+          <div className="space-y-2 mb-6">
+            <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+              Sign In to Your Account
+            </h3>
+            <p className="text-xs text-slate-500">
+              Enter your registered medical credentials to continue.
+            </p>
+          </div>
 
-          <CardContent>
-            <form onSubmit={formik.handleSubmit} className="space-y-5">
-              {/* API Error Alert */}
-              {apiError && (
-                <div className="p-3.5 rounded-lg bg-red-50 border border-red-200 flex items-start gap-2.5 text-xs text-red-700 font-medium">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
-                  <span>{apiError}</span>
-                </div>
-              )}
+          {apiError && (
+            <div className="mb-5 p-3.5 rounded-xl bg-red-50 border border-red-200 flex items-center gap-2.5 text-red-700 text-xs animate-in fade-in">
+              <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
+              <span>{apiError}</span>
+            </div>
+          )}
 
-              {/* Field 1: Email or Mobile */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-700 flex items-center justify-between">
-                  <span>Email or Mobile Number *</span>
-                  <span className="text-[11px] text-slate-400 font-normal">
-                    e.g. doctor@hospital.org or +919876543210
-                  </span>
+          <form onSubmit={formik.handleSubmit} className="space-y-4">
+            <div>
+              <label
+                htmlFor="emailOrMobile"
+                className="block text-xs font-semibold text-slate-700 mb-1.5"
+              >
+                Email Address or Mobile Number
+              </label>
+              <Input
+                id="emailOrMobile"
+                name="emailOrMobile"
+                type="text"
+                placeholder="doctor@hospital.org or +919876543210"
+                icon={<Mail className="w-4 h-4" />}
+                value={formik.values.emailOrMobile}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.emailOrMobile && formik.errors.emailOrMobile
+                    ? formik.errors.emailOrMobile
+                    : undefined
+                }
+              />
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between mb-1.5">
+                <label
+                  htmlFor="password"
+                  className="block text-xs font-semibold text-slate-700"
+                >
+                  Password
                 </label>
-                <Input
-                  type="text"
-                  name="emailOrMobile"
-                  placeholder="Enter email address or +919876543210"
-                  value={formik.values.emailOrMobile}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={
-                    formik.touched.emailOrMobile && formik.errors.emailOrMobile
-                      ? formik.errors.emailOrMobile
-                      : undefined
-                  }
-                  icon={
-                    formik.values.emailOrMobile.includes("@") ? (
-                      <Mail className="w-4 h-4 text-teal-600" />
-                    ) : (
-                      <Phone className="w-4 h-4 text-teal-600" />
-                    )
-                  }
-                />
+                <a
+                  href="#forgot"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    alert("Please contact hospital administrator or use reset password flow.");
+                  }}
+                  className="text-[11px] font-semibold text-teal-700 hover:text-teal-800"
+                >
+                  Forgot password?
+                </a>
               </div>
-
-              {/* Field 2: Password */}
-              <div className="space-y-1.5">
-                <div className="flex items-center justify-between">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                    Password *
-                  </label>
-                  <a
-                    href="#"
-                    className="text-xs text-teal-700 font-semibold hover:underline"
-                  >
-                    Forgot password?
-                  </a>
-                </div>
-
-                <div className="relative">
-                  <Input
-                    type={showPassword ? "text" : "password"}
-                    name="password"
-                    placeholder="••••••••••••"
-                    value={formik.values.password}
-                    onChange={formik.handleChange}
-                    onBlur={formik.handleBlur}
-                    error={
-                      formik.touched.password && formik.errors.password
-                        ? formik.errors.password
-                        : undefined
-                    }
-                    icon={<Lock className="w-4 h-4 text-teal-600" />}
-                  />
+              <Input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="••••••••"
+                icon={<Lock className="w-4 h-4" />}
+                endAdornment={
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 p-1"
-                    aria-label="Toggle password visibility"
+                    className="text-slate-400 hover:text-slate-600 focus:outline-none cursor-pointer"
                   >
                     {showPassword ? (
                       <EyeOff className="w-4 h-4" />
@@ -235,62 +244,50 @@ export const DoctorLoginPage: React.FC = () => {
                       <Eye className="w-4 h-4" />
                     )}
                   </button>
-                </div>
-              </div>
+                }
+                value={formik.values.password}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                error={
+                  formik.touched.password && formik.errors.password
+                    ? formik.errors.password
+                    : undefined
+                }
+              />
+            </div>
 
-              {/* Remember Me */}
-              <div className="flex items-center justify-between text-xs text-slate-600">
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input
-                    type="checkbox"
-                    defaultChecked
-                    className="rounded border-slate-300 text-teal-600 focus:ring-teal-500 h-4 w-4"
-                  />
-                  <span>Keep me logged in on this device</span>
-                </label>
-              </div>
+            <Button
+              type="submit"
+              variant="teal"
+              className="w-full h-11 text-xs font-bold shadow-md shadow-teal-700/20 cursor-pointer mt-2"
+              loading={formik.isSubmitting}
+            >
+              Sign In to Doctor Terminal
+              <ArrowRight className="w-4 h-4 ml-1.5" />
+            </Button>
+          </form>
 
-              {/* Submit Button */}
-              <Button
-                type="submit"
-                variant="emerald"
-                size="lg"
-                className="w-full text-base font-bold shadow-lg shadow-emerald-600/20 py-6"
-                disabled={formik.isSubmitting}
-              >
-                {formik.isSubmitting ? (
-                  <span className="flex items-center gap-2">
-                    <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
-                    Authenticating Doctor...
-                  </span>
-                ) : (
-                  <span className="flex items-center justify-center gap-2">
-                    <Stethoscope className="w-5 h-5" />
-                    Sign In to Portal
-                    <ArrowRight className="w-4 h-4" />
-                  </span>
-                )}
-              </Button>
-            </form>
-          </CardContent>
-
-          <CardFooter className="flex flex-col space-y-4 pt-2 border-t border-slate-100 bg-slate-50/50 rounded-b-2xl">
-            <div className="text-center text-xs text-slate-600">
-              Not registered on ArogyaLink yet?{" "}
+          <div className="mt-8 pt-6 border-t border-slate-100 text-center space-y-2">
+            <p className="text-xs text-slate-600">
+              New medical practitioner?{" "}
               <Link
                 to="/register"
-                className="font-bold text-teal-700 hover:underline"
+                className="font-bold text-teal-700 hover:text-teal-800 hover:underline"
               >
-                Register Doctor Profile
+                Register Doctor Account
               </Link>
-            </div>
-
-            <div className="text-[11px] text-center text-slate-400">
-              Protected by National Medical Commission (NMC) verification
-              protocol.
-            </div>
-          </CardFooter>
-        </Card>
+            </p>
+            <p className="text-xs text-slate-500">
+              Are you a hospital or clinic?{" "}
+              <Link
+                to="/health-institute/login"
+                className="font-semibold text-cyan-700 hover:text-cyan-800 hover:underline"
+              >
+                Health Institute Portal
+              </Link>
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

@@ -760,7 +760,7 @@ export const DoctorProfilePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Profile Key Identity Card */}
           <Card className="lg:col-span-4 border-slate-200 shadow-sm bg-white overflow-hidden">
-            <div className="h-24 bg-gradient-to-r from-teal-800 to-cyan-900 p-4"></div>
+            <div className="h-24 bg-linear-to-r from-teal-800 to-cyan-900 p-4"></div>
             <CardContent className="pt-0 relative space-y-4 pb-6">
               <div className="relative w-20 h-20 -mt-10 mb-2 group">
                 <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-md border-2 border-teal-500 overflow-hidden flex items-center justify-center">

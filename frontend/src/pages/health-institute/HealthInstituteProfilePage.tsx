@@ -337,27 +337,29 @@ export const HealthInstituteProfilePage: React.FC = () => {
   return (
     <div className="space-y-6 relative">
       {/* Header Title Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
-        <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 text-xs text-teal-700 font-bold uppercase tracking-wider bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200">
-            <ShieldCheck className="w-4 h-4 text-teal-600" />
-            ABDM Verified Health Facility
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-72 h-full bg-linear-to-l from-cyan-500/10 via-teal-500/5 to-transparent pointer-events-none" />
+
+        <div className="space-y-1.5 relative z-10">
+          <div className="inline-flex items-center gap-2 text-[11px] text-cyan-800 font-bold uppercase tracking-wider bg-cyan-50 px-3 py-1 rounded-full border border-cyan-200/60">
+            <ShieldCheck className="w-3.5 h-3.5 text-cyan-600" />
+            ABDM Health Facility Registry (HFR)
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
-            Health Institute Profile
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+            Health Facility Profile
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500">
-            Registered hospital & healthcare provider details from ArogyaLink Gateway.
+          <p className="text-xs text-slate-500 max-w-xl">
+            Registered hospital and healthcare provider credentials synced with ArogyaLink National Health Gateway.
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2.5 relative z-10 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={fetchInstituteDetails}
             disabled={loading}
-            className="text-xs font-semibold text-slate-700 hover:text-teal-700 border-slate-300"
+            className="text-xs font-semibold text-slate-700 hover:text-cyan-700 border-slate-300 h-9 px-3.5 rounded-xl cursor-pointer"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`}
@@ -366,11 +368,11 @@ export const HealthInstituteProfilePage: React.FC = () => {
           </Button>
 
           <Button
-            variant="emerald"
+            variant="cyan"
             size="sm"
             onClick={openEditModal}
             disabled={loading}
-            className="text-xs font-bold shadow-md"
+            className="text-xs font-bold shadow-md h-9 px-4 rounded-xl cursor-pointer"
           >
             <Edit className="w-3.5 h-3.5 mr-1.5" />
             Edit Profile Details
@@ -398,7 +400,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Key Identity Card */}
           <Card className="lg:col-span-4 border-slate-200 shadow-sm bg-white overflow-hidden">
-            <div className="h-28 bg-gradient-to-r from-teal-800 to-cyan-900 p-4"></div>
+            <div className="h-28 bg-linear-to-r from-teal-800 to-cyan-900 p-4"></div>
             <CardContent className="pt-0 relative space-y-4 pb-6">
               <div className="relative w-20 h-20 -mt-10 mb-2">
                 <div className="w-20 h-20 rounded-2xl bg-white p-1 shadow-md border-2 border-teal-500 overflow-hidden flex items-center justify-center">
