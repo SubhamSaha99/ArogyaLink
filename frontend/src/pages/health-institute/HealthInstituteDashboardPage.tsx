@@ -23,6 +23,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
@@ -121,7 +122,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
     return null;
   }, []);
 
-  // Initial Load: ONLY Fetch Institute Details once (stateName and districtName are included in details)
+  // Initial Load: ONLY Fetch Institute Details once
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
@@ -158,16 +159,13 @@ export const HealthInstituteDashboardPage: React.FC = () => {
   const instituteStateId = instituteData?.profileDetails?.stateId;
   const instituteDistrictId = instituteData?.profileDetails?.districtId;
 
-  // State and District names directly from getHealthInstituteDetails
   const instituteStateName = instituteData?.profileDetails?.stateName || null;
   const instituteDistrictName = instituteData?.profileDetails?.districtName || null;
 
-  // Selected State object
   const selectedState = useMemo(() => {
     return states.find((s) => s.id === selectedStateId) || null;
   }, [states, selectedStateId]);
 
-  // Filtered districts by search term
   const filteredDistricts = useMemo(() => {
     if (!districtSearchTerm.trim()) return districts;
     const query = districtSearchTerm.toLowerCase();
@@ -218,35 +216,29 @@ export const HealthInstituteDashboardPage: React.FC = () => {
     },
     {
       id: 2,
-      title: "Health Record Pushed to ABDM",
-      time: "45 mins ago",
-      desc: "OPD Visit Summary #AB-8849 synced with National Health Vault.",
+      title: "ABDM Gateway Synced",
+      time: "1 hour ago",
+      desc: "Successfully pushed 42 OPD patient encounters to the national repository.",
     },
     {
       id: 3,
-      title: "Regional State Registry Synced",
-      time: "1 hour ago",
-      desc: "Updated ABDM state & district nodal endpoints with Ministry registry.",
-    },
-    {
-      id: 4,
-      title: "Institute License Verified",
-      time: "2 hours ago",
-      desc: "Annual Hospital Registration license verified with State Council.",
+      title: "District Registry Updated",
+      time: "Yesterday",
+      desc: "Facility address confirmed with state medical directorate.",
     },
   ];
 
   return (
     <div className="space-y-8">
       {/* Top Banner */}
-      <div className="bg-linear-to-r from-slate-900 via-teal-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden border border-slate-800">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+      <div className="bg-linear-to-r from-slate-900 via-slate-900 to-cyan-950 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden border border-slate-800">
+        <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge
-              variant="teal"
-              className="bg-teal-500/20 text-teal-300 border-teal-500/30 text-xs px-3 py-1"
+              variant="cyan"
+              className="text-xs px-3 py-1 font-bold"
             >
               <Building2 className="w-3.5 h-3.5 mr-1" />
               Official Facility Terminal
@@ -262,9 +254,9 @@ export const HealthInstituteDashboardPage: React.FC = () => {
             {instituteStateName && (
               <Badge
                 variant="outline"
-                className="text-xs text-teal-300 border-teal-500/40 bg-teal-950/50 flex items-center gap-1"
+                className="text-xs text-cyan-300 border-cyan-500/40 bg-cyan-950/50 flex items-center gap-1"
               >
-                <MapPin className="w-3 h-3 text-teal-400" />
+                <MapPin className="w-3 h-3 text-cyan-400" />
                 {instituteDistrictName ? `${instituteDistrictName}, ` : ""}
                 {instituteStateName}
               </Badge>
@@ -272,12 +264,12 @@ export const HealthInstituteDashboardPage: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight">
+            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
               Welcome, {instituteName}
             </h1>
-            <p className="text-slate-400 text-sm max-w-2xl font-mono flex items-center gap-2">
+            <p className="text-slate-400 text-xs sm:text-sm max-w-2xl font-mono flex items-center gap-2">
               Health Institute ID:{" "}
-              <span className="text-teal-300 font-bold">{instituteId}</span>
+              <span className="text-cyan-300 font-bold">{instituteId}</span>
               {loadingInstitute && (
                 <span className="text-xs text-slate-500 font-sans">
                   (Loading details...)
@@ -288,7 +280,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
 
           <div className="pt-2 flex flex-wrap gap-3">
             <Link to="/health-institute/profile">
-              <Button variant="emerald" className="font-bold text-xs px-5 cursor-pointer">
+              <Button variant="cyan" className="font-bold text-xs px-5 cursor-pointer shadow-md">
                 View Institute Profile
                 <ArrowRight className="w-4 h-4 ml-1.5" />
               </Button>
@@ -302,11 +294,11 @@ export const HealthInstituteDashboardPage: React.FC = () => {
         {STATS.map((stat, i) => (
           <Card
             key={i}
-            className="border-slate-200 shadow-xs hover:shadow-md transition-shadow bg-white"
+            className="border-slate-200 shadow-xs hover:shadow-md transition-shadow bg-white rounded-2xl"
           >
             <CardContent className="p-5 flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
                   {stat.label}
                 </p>
                 <h3 className="text-2xl font-black text-slate-900">{stat.value}</h3>
@@ -322,12 +314,12 @@ export const HealthInstituteDashboardPage: React.FC = () => {
       </div>
 
       {/* ABDM Regional Jurisdiction & District Coverage Explorer (State & District API Integration) */}
-      <Card className="border-slate-200 shadow-xs bg-white overflow-hidden">
+      <Card className="border-slate-200 shadow-xs bg-white rounded-3xl overflow-hidden">
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-1">
               <div className="flex items-center gap-2">
-                <div className="p-2 rounded-xl bg-teal-100 text-teal-800">
+                <div className="p-2 rounded-xl bg-cyan-100 text-cyan-800">
                   <Compass className="w-5 h-5" />
                 </div>
                 <CardTitle className="text-lg font-bold text-slate-900">
@@ -352,7 +344,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                     if (states.length === 0) handleOpenExplorer();
                   }}
                   disabled={loadingStates}
-                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer shadow-xs"
+                  className="px-3 py-1.5 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer shadow-xs"
                 >
                   {states.length === 0 && (
                     <option value="">Select State (Click Sync)</option>
@@ -370,11 +362,11 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                 size="sm"
                 onClick={handleOpenExplorer}
                 disabled={loadingStates || loadingDistricts}
-                className="text-xs text-slate-700 hover:text-teal-700 border-slate-300 h-8 px-3"
+                className="text-xs text-slate-700 hover:text-cyan-700 border-slate-300 h-8 px-3 rounded-xl cursor-pointer"
               >
                 <RefreshCw
                   className={`w-3.5 h-3.5 mr-1.5 ${
-                    loadingStates || loadingDistricts ? "animate-spin text-teal-600" : ""
+                    loadingStates || loadingDistricts ? "animate-spin text-cyan-600" : ""
                   }`}
                 />
                 Sync Registry
@@ -385,9 +377,9 @@ export const HealthInstituteDashboardPage: React.FC = () => {
 
         <CardContent className="p-6 space-y-6">
           {/* Active State Details Banner */}
-          <div className="bg-linear-to-r from-teal-50/70 via-cyan-50/50 to-slate-50 border border-teal-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="bg-linear-to-r from-cyan-50/70 via-teal-50/50 to-slate-50 border border-cyan-100 rounded-2xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-teal-600 text-white flex items-center justify-center font-bold text-sm shadow-xs">
+              <div className="w-10 h-10 rounded-xl bg-cyan-700 text-white flex items-center justify-center font-bold text-sm shadow-xs">
                 {selectedState?.code || "IN"}
               </div>
               <div>
@@ -395,8 +387,8 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                   {selectedState?.name || "Selected State"}
                   {instituteStateId && Number(instituteStateId) === selectedStateId && (
                     <Badge
-                      variant="teal"
-                      className="text-[10px] bg-teal-100 text-teal-800 border-teal-200 py-0"
+                      variant="cyan"
+                      className="text-[10px] py-0"
                     >
                       Facility Base State
                     </Badge>
@@ -432,35 +424,37 @@ export const HealthInstituteDashboardPage: React.FC = () => {
           {/* Search bar & Districts Header */}
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="flex items-center gap-2">
-              <Network className="w-4 h-4 text-teal-700" />
+              <Network className="w-4 h-4 text-cyan-700" />
               <span className="text-xs font-bold uppercase tracking-wider text-slate-700">
                 Districts in {selectedState?.name || "State"} ({filteredDistricts.length} found)
               </span>
             </div>
 
             <div className="relative w-full sm:w-64">
-              <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
                 placeholder="Filter district by name..."
                 value={districtSearchTerm}
                 onChange={(e) => setDistrictSearchTerm(e.target.value)}
-                className="pl-8 py-1.5 h-8 text-xs bg-slate-50/50 border-slate-200 focus:bg-white"
+                icon={<Search className="w-3.5 h-3.5 text-slate-400" />}
+                className="h-9 text-xs bg-slate-50 border-slate-200 focus:bg-white rounded-xl"
               />
             </div>
           </div>
 
           {/* Error Message if any */}
           {(errorStates || errorDistricts) && (
-            <div className="p-3 rounded-xl bg-red-50 border border-red-200 text-xs text-red-700 flex items-center gap-2 font-medium">
+            <Alert variant="destructive" className="p-3">
               <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-              <span>{errorStates || errorDistricts}</span>
-            </div>
+              <AlertDescription className="text-xs font-medium">
+                {errorStates || errorDistricts}
+              </AlertDescription>
+            </Alert>
           )}
 
           {/* Loading Districts Spinner / Grid */}
           {loadingDistricts ? (
             <div className="py-12 flex flex-col items-center justify-center text-slate-400 space-y-3">
-              <RefreshCw className="w-6 h-6 animate-spin text-teal-600" />
+              <RefreshCw className="w-6 h-6 animate-spin text-cyan-600" />
               <p className="text-xs font-medium">
                 Fetching districts for {selectedState?.name || "state"}...
               </p>
@@ -476,7 +470,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                   variant="outline"
                   size="sm"
                   onClick={() => setDistrictSearchTerm("")}
-                  className="text-xs text-teal-700 h-7"
+                  className="text-xs text-cyan-700 h-7 rounded-xl"
                 >
                   Clear Filter
                 </Button>
@@ -491,17 +485,17 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                 return (
                   <div
                     key={district.id}
-                    className={`p-3 rounded-xl border transition-all text-left flex items-start justify-between gap-2 ${
+                    className={`p-3 rounded-2xl border transition-all text-left flex items-start justify-between gap-2 ${
                       isInstituteDistrict
-                        ? "bg-teal-50/80 border-teal-300 shadow-xs ring-1 ring-teal-400/40"
-                        : "bg-slate-50/60 hover:bg-white border-slate-200 hover:border-teal-300 hover:shadow-xs"
+                        ? "bg-cyan-50/80 border-cyan-300 shadow-xs ring-1 ring-cyan-400/40"
+                        : "bg-slate-50/60 hover:bg-white border-slate-200 hover:border-cyan-300 hover:shadow-xs"
                     }`}
                   >
                     <div className="space-y-1 min-w-0">
                       <div className="flex items-center gap-1.5">
                         <MapPin
                           className={`w-3.5 h-3.5 shrink-0 ${
-                            isInstituteDistrict ? "text-teal-700" : "text-slate-400"
+                            isInstituteDistrict ? "text-cyan-700" : "text-slate-400"
                           }`}
                         />
                         <span className="text-xs font-bold text-slate-900 truncate">
@@ -513,7 +507,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                           {district.code || `ID:${district.id}`}
                         </span>
                         <span className="text-[10px] text-emerald-700 font-medium flex items-center gap-1">
-                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500"></span>
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                           ABDM Linked
                         </span>
                       </div>
@@ -521,8 +515,8 @@ export const HealthInstituteDashboardPage: React.FC = () => {
 
                     {isInstituteDistrict && (
                       <Badge
-                        variant="teal"
-                        className="text-[9px] px-1.5 py-0 bg-teal-600 text-white shrink-0"
+                        variant="cyan"
+                        className="text-[9px] px-1.5 py-0 shrink-0 font-bold"
                       >
                         Base
                       </Badge>
@@ -538,17 +532,17 @@ export const HealthInstituteDashboardPage: React.FC = () => {
       {/* Main Grid Section */}
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
         {/* Quick Actions & Overview */}
-        <Card className="lg:col-span-7 border-slate-200 shadow-xs bg-white">
+        <Card className="lg:col-span-7 border-slate-200 shadow-xs bg-white rounded-3xl">
           <CardHeader className="border-b border-slate-100 pb-4">
             <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Activity className="w-5 h-5 text-teal-700" />
+              <Activity className="w-5 h-5 text-cyan-700" />
               Facility Operations & Quick Shortcuts
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="p-4 rounded-2xl border border-slate-200 hover:border-teal-400 hover:shadow-sm transition-all bg-slate-50/50 space-y-2">
-                <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+              <div className="p-4 rounded-2xl border border-slate-200 hover:border-cyan-400 hover:shadow-xs transition-all bg-slate-50/50 space-y-2">
+                <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
                   <Building2 className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Institute Profile</h4>
@@ -557,14 +551,14 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                 </p>
                 <Link
                   to="/health-institute/profile"
-                  className="inline-block pt-1 text-xs font-bold text-teal-700 hover:underline"
+                  className="inline-block pt-1 text-xs font-bold text-cyan-700 hover:underline"
                 >
                   Go to Profile →
                 </Link>
               </div>
 
-              <div className="p-4 rounded-2xl border border-slate-200 hover:border-teal-400 hover:shadow-sm transition-all bg-slate-50/50 space-y-2">
-                <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
+              <div className="p-4 rounded-2xl border border-slate-200 hover:border-cyan-400 hover:shadow-xs transition-all bg-slate-50/50 space-y-2">
+                <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
                   <Stethoscope className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Doctor Roster</h4>
@@ -583,10 +577,10 @@ export const HealthInstituteDashboardPage: React.FC = () => {
         </Card>
 
         {/* Recent Audit / Event Log */}
-        <Card className="lg:col-span-5 border-slate-200 shadow-xs bg-white">
+        <Card className="lg:col-span-5 border-slate-200 shadow-xs bg-white rounded-3xl">
           <CardHeader className="border-b border-slate-100 pb-4">
             <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
-              <Clock className="w-5 h-5 text-teal-700" />
+              <Clock className="w-5 h-5 text-cyan-700" />
               Recent Facility Audit Logs
             </CardTitle>
           </CardHeader>
@@ -597,7 +591,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
                   key={act.id}
                   className="flex items-start gap-3 pb-3 border-b border-slate-100 last:border-0 last:pb-0"
                 >
-                  <div className="w-2 h-2 rounded-full bg-teal-600 mt-2 shrink-0"></div>
+                  <div className="w-2 h-2 rounded-full bg-cyan-600 mt-2 shrink-0" />
                   <div className="space-y-0.5">
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs font-bold text-slate-900">{act.title}</span>

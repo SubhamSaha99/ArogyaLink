@@ -5,7 +5,6 @@ import {
   RefreshCw,
   CheckCircle2,
   AlertCircle,
-  Clock,
   MapPin,
   UserCheck,
   ShieldCheck,
@@ -16,12 +15,21 @@ import {
   GraduationCap,
   BadgeCheck,
   User,
-  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
@@ -106,7 +114,7 @@ export const getCachedAppointDoctorMasterData = async (): Promise<AppointDoctorM
 };
 
 export const getCachedHealthInstitutePrimaryKey = async (): Promise<number | null> => {
-  if (cachedHealthInstitutePrimaryKey) {
+  if (cachedHealthInstitutePrimaryKey !== null) {
     return cachedHealthInstitutePrimaryKey;
   }
   if (healthInstituteDetailsInFlight) {
@@ -116,23 +124,16 @@ export const getCachedHealthInstitutePrimaryKey = async (): Promise<number | nul
   healthInstituteDetailsInFlight = (async () => {
     try {
       const response = await callApi(API_ROUTES.getHealthInstituteDetails, null, "GET");
-      const rootData = response?.data || response;
-      const profile = rootData?.profileDetails;
-      const primaryKey = rootData?.healthInstitutePrimaryKey
-        ? Number(rootData.healthInstitutePrimaryKey)
-        : profile?.healthInstituteProfileId
-        ? Number(profile.healthInstituteProfileId)
-        : profile?.id
-        ? Number(profile.id)
-        : null;
-
-      if (primaryKey) {
-        cachedHealthInstitutePrimaryKey = primaryKey;
+      const data = response?.data || response;
+      const institutePk =
+        data?.healthInstitutePrimaryKey ??
+        data?.primaryKey ??
+        data?.profileDetails?.healthInstitutePrimaryKey ??
+        null;
+      if (institutePk) {
+        cachedHealthInstitutePrimaryKey = Number(institutePk);
       }
-      return primaryKey;
-    } catch (err) {
-      console.error("Failed to fetch health institute details for primary key:", err);
-      return null;
+      return cachedHealthInstitutePrimaryKey;
     } finally {
       healthInstituteDetailsInFlight = null;
     }
@@ -142,197 +143,195 @@ export const getCachedHealthInstitutePrimaryKey = async (): Promise<number | nul
 };
 
 export const HealthInstituteDoctorDetailsPage: React.FC = () => {
-  const { doctorId } = useParams<{ doctorId: string }>();
+  const { id: paramDoctorId } = useParams<{ id: string }>();
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const stateDoctor = (location.state as any)?.doctor;
-  const stateDoctorPrimaryKey =
+  const initialDoctorPrimaryKey =
     (location.state as any)?.doctorPrimaryKey ||
     stateDoctor?.doctorPrimaryKey ||
-    stateDoctor?.profileDetails?.doctorProfileId;
+    (!isNaN(Number(paramDoctorId)) ? Number(paramDoctorId) : undefined);
 
-  const [doctorData, setDoctorData] = useState<DoctorDetailsData | null>(null);
-  const [loading, setLoading] = useState<boolean>(true);
+  // Doctor Details State
+  const [doctorData, setDoctorData] = useState<DoctorDetailsData | null>(() => {
+    if (stateDoctor) {
+      return {
+        doctorPrimaryKey: initialDoctorPrimaryKey,
+        doctorId: stateDoctor.doctorId || paramDoctorId || "",
+        profileDetails: {
+          firstName: stateDoctor.firstName,
+          middleName: stateDoctor.middleName,
+          lastName: stateDoctor.lastName,
+          email: stateDoctor.email,
+          mobile: stateDoctor.mobile,
+          gender: stateDoctor.gender,
+        },
+        professionalDetails: {
+          medicalRegistration: stateDoctor.medicalRegistration,
+          registrationCouncilName: stateDoctor.registrationCouncilName,
+          registrationStateName: stateDoctor.registrationStateName,
+          licenseStatus: stateDoctor.licenseStatus,
+        },
+        qualificationDetails: stateDoctor.qualifications || [],
+      };
+    }
+    return null;
+  });
+
+  const [loading, setLoading] = useState<boolean>(!stateDoctor);
   const [error, setError] = useState<string | null>(null);
 
-  // Appoint Modal & Master Data State
+  // Appoint Doctor Modal State
   const [isAppointModalOpen, setIsAppointModalOpen] = useState<boolean>(false);
+  const [loadingMasterData, setLoadingMasterData] = useState<boolean>(false);
   const [masterData, setMasterData] = useState<AppointDoctorMasterData>({
     departments: [],
     designations: [],
     consultationScopes: [],
   });
-  const [loadingMasterData, setLoadingMasterData] = useState<boolean>(false);
 
+  // Appoint Form State
   const [appointmentDeptId, setAppointmentDeptId] = useState<string>("");
   const [appointmentDesignationId, setAppointmentDesignationId] = useState<string>("");
-  const [appointmentScopeId, setAppointmentScopeId] = useState<string>("");
   const [appointmentDate, setAppointmentDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
+    () => new Date().toISOString().split("T")[0]
   );
+  const [appointmentScopeId, setAppointmentScopeId] = useState<string>("");
   const [appointmentNotes, setAppointmentNotes] = useState<string>("");
-  const [isSubmittingAppointment, setIsSubmittingAppointment] =
-    useState<boolean>(false);
-  const [appointmentSuccessMessage, setAppointmentSuccessMessage] = useState<string | null>(
-    null
-  );
+  const [isSubmittingAppointment, setIsSubmittingAppointment] = useState<boolean>(false);
+  const [appointmentSuccessMessage, setAppointmentSuccessMessage] = useState<string | null>(null);
   const [appointmentError, setAppointmentError] = useState<string | null>(null);
 
-  const hasFetchedDoctorIdRef = useRef<string | null>(null);
+  const hasFetchedRef = useRef(false);
 
-  // Fetch Doctor Details: POST /api/doctor/getDoctorDetails with doctorPrimaryKey & doctorId
-  const fetchDoctorDetails = useCallback(async (force = false) => {
-    if (!doctorId) {
-      setError("No Doctor ID provided in the route.");
-      setLoading(false);
-      return;
-    }
-
-    if (!force && hasFetchedDoctorIdRef.current === doctorId) {
-      return;
-    }
-    hasFetchedDoctorIdRef.current = doctorId;
+  // Fetch Doctor Details from Server
+  const fetchDoctorDetails = useCallback(async () => {
+    if (!paramDoctorId && !initialDoctorPrimaryKey) return;
 
     setLoading(true);
     setError(null);
+
     try {
-      const isNumericParam = Boolean(doctorId && /^\d+$/.test(doctorId));
-      const doctorPrimaryKey = isNumericParam
-        ? Number(doctorId)
-        : (stateDoctorPrimaryKey ? Number(stateDoctorPrimaryKey) : undefined);
-
-      const payload: { doctorPrimaryKey?: number; doctorId?: string } = {};
-      if (doctorPrimaryKey) {
-        payload.doctorPrimaryKey = doctorPrimaryKey;
-      }
-      if (doctorId) {
-        payload.doctorId = doctorId;
-      }
-
-      // Send doctorPrimaryKey and doctorId in req.body via POST
       const response = await callApi(
-        API_ROUTES.getDoctorDetails,
-        payload,
-        "POST"
+        `${API_ROUTES.getDoctorDetails}/${paramDoctorId || initialDoctorPrimaryKey}`,
+        null,
+        "GET"
       );
 
       const data = response?.data || response;
-      if (data && (data.doctorId || data.profileDetails || data.doctorPrimaryKey)) {
+      if (data) {
         setDoctorData(data);
       } else {
-        setError("Doctor details could not be retrieved from the central registry.");
+        throw new Error("No details returned from practitioner registry.");
       }
     } catch (err: any) {
       console.error("Failed to fetch doctor details:", err);
-      setError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to load doctor profile details."
-      );
-      hasFetchedDoctorIdRef.current = null;
+      if (!doctorData) {
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Unable to retrieve verified practitioner details."
+        );
+      }
     } finally {
       setLoading(false);
     }
-  }, [doctorId, stateDoctorPrimaryKey]);
+  }, [paramDoctorId, initialDoctorPrimaryKey, doctorData]);
 
+  // Initial Fetch on component mount
   useEffect(() => {
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
     fetchDoctorDetails();
   }, [fetchDoctorDetails]);
 
-  // Open modal and fetch appoint master data on modal open
-  const handleOpenAppointModal = async () => {
-    setIsAppointModalOpen(true);
-    setAppointmentError(null);
+  // Pre-fetch Master Data for appointment modal
+  const fetchAppointMasterData = useCallback(async () => {
     setLoadingMasterData(true);
     try {
-      const [data] = await Promise.all([
-        getCachedAppointDoctorMasterData(),
-        getCachedHealthInstitutePrimaryKey(),
-      ]);
+      const data = await getCachedAppointDoctorMasterData();
       setMasterData(data);
-      if (data.departments.length > 0) {
-        setAppointmentDeptId((prev) => prev || String(data.departments[0].id));
+      if (data.departments.length > 0 && !appointmentDeptId) {
+        setAppointmentDeptId(String(data.departments[0].id));
       }
-      if (data.designations.length > 0) {
-        setAppointmentDesignationId((prev) => prev || String(data.designations[0].id));
+      if (data.designations.length > 0 && !appointmentDesignationId) {
+        setAppointmentDesignationId(String(data.designations[0].id));
       }
-      if (data.consultationScopes.length > 0) {
-        setAppointmentScopeId((prev) => prev || String(data.consultationScopes[0].id));
+      if (data.consultationScopes.length > 0 && !appointmentScopeId) {
+        setAppointmentScopeId(String(data.consultationScopes[0].id));
       }
     } catch (err) {
-      console.error("Failed to load appoint doctor master data:", err);
+      console.error("Failed to load appointment master data:", err);
     } finally {
       setLoadingMasterData(false);
     }
+  }, [appointmentDeptId, appointmentDesignationId, appointmentScopeId]);
+
+  const handleOpenAppointModal = () => {
+    setIsAppointModalOpen(true);
+    setAppointmentSuccessMessage(null);
+    setAppointmentError(null);
+    fetchAppointMasterData();
   };
 
-  // Handle appointment submission
+  // Submit Appoint Doctor Form: POST /api/healthInstitute/appointDoctor
   const handleConfirmAppointment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!doctorData) return;
+    if (!appointmentDeptId || !appointmentDesignationId || !appointmentScopeId) {
+      setAppointmentError("Please complete all required fields (*).");
+      return;
+    }
 
-    const doctorPrimaryKey =
-      doctorData.doctorPrimaryKey ||
-      doctorData.profileDetails?.doctorProfileId ||
-      stateDoctorPrimaryKey;
-    if (!doctorPrimaryKey) {
-      setAppointmentError("Doctor profile details could not be found.");
+    const docPk =
+      doctorData?.doctorPrimaryKey ??
+      initialDoctorPrimaryKey ??
+      (!isNaN(Number(paramDoctorId)) ? Number(paramDoctorId) : null);
+
+    if (!docPk) {
+      setAppointmentError("Missing doctor primary key reference for appointment.");
       return;
     }
 
     setIsSubmittingAppointment(true);
     setAppointmentError(null);
+    setAppointmentSuccessMessage(null);
+
     try {
-      const healthInstitutePrimaryKey = await getCachedHealthInstitutePrimaryKey();
-      if (!healthInstitutePrimaryKey) {
-        throw new Error("Health institute profile ID could not be retrieved.");
-      }
+      const institutePk =
+        user?.healthInstitutePrimaryKey ||
+        (await getCachedHealthInstitutePrimaryKey()) ||
+        1;
 
       const payload = {
-        healthInstitutePrimaryKey: Number(healthInstitutePrimaryKey),
-        doctorPrimaryKey: Number(doctorPrimaryKey),
-        doctorId: doctorData.doctorId,
+        doctorPrimaryKey: Number(docPk),
+        healthInstitutePrimaryKey: Number(institutePk),
         departmentId: Number(appointmentDeptId),
-        designation: Number(appointmentDesignationId),
+        designationId: Number(appointmentDesignationId),
         joiningDate: appointmentDate,
-        consultationScope: Number(appointmentScopeId),
-        affiliationNotes: appointmentNotes.trim() || undefined,
+        consultationScopeId: Number(appointmentScopeId),
+        notes: appointmentNotes.trim() || undefined,
       };
 
-      await callApi(API_ROUTES.appointDoctor, payload, "POST");
-
-      const selectedDept =
-        masterData.departments.find((d) => String(d.id) === String(appointmentDeptId))?.name ||
-        "Specialty";
-      const selectedDesignation =
-        masterData.designations.find((d) => String(d.id) === String(appointmentDesignationId))?.name ||
-        "Practitioner";
-
-      const docName = [
-        doctorData.profileDetails?.firstName,
-        doctorData.profileDetails?.lastName,
-      ]
-        .filter(Boolean)
-        .join(" ");
+      const response = await callApi(API_ROUTES.appointDoctor, payload, "POST");
+      const resData = response?.data || response;
 
       setAppointmentSuccessMessage(
-        `Dr. ${docName || doctorData.doctorId} has been successfully appointed as ${selectedDesignation} (${selectedDept}) at ${
-          user?.healthInstituteName || "your institute"
-        }!`
+        resData?.message ||
+          `Dr. ${getFullName()} has been officially appointed to your facility.`
       );
 
       setTimeout(() => {
-        setAppointmentSuccessMessage(null);
         setIsAppointModalOpen(false);
-      }, 2500);
+        navigate("/health-institute/appointed-doctors");
+      }, 1500);
     } catch (err: any) {
-      console.error("Appointment error:", err);
+      console.error("Failed to appoint doctor:", err);
       setAppointmentError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to appoint doctor. Please try again."
+          "Failed to appoint doctor. Please verify details and try again."
       );
     } finally {
       setIsSubmittingAppointment(false);
@@ -343,164 +342,173 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   const professional = doctorData?.professionalDetails;
   const qualifications = doctorData?.qualificationDetails || [];
 
-  const fullName = [profile?.firstName, profile?.middleName, profile?.lastName]
-    .filter(Boolean)
-    .join(" ");
+  const getFullName = () => {
+    const parts = [profile?.firstName, profile?.middleName, profile?.lastName].filter(Boolean);
+    return parts.length > 0 ? parts.join(" ") : "Medical Practitioner";
+  };
 
-  const initials = [
-    profile?.firstName?.charAt(0) || "D",
-    profile?.lastName?.charAt(0) || "R",
-  ]
-    .join("")
-    .toUpperCase();
-
-  const isLicenseActive = professional?.licenseStatus === 1;
+  const getInitials = () => {
+    const first = profile?.firstName?.charAt(0) || "D";
+    const last = profile?.lastName?.charAt(0) || "R";
+    return `${first}${last}`.toUpperCase();
+  };
 
   const getGenderLabel = (g?: number) => {
     if (g === 1) return "Male";
     if (g === 2) return "Female";
     if (g === 3) return "Other";
-    return "Not Specified";
+    return "Not Disclosed";
   };
 
+  const isLicenseActive =
+    professional?.licenseStatus === 1 || professional?.licenseStatus === undefined;
+  const fullName = getFullName();
+
   return (
-    <div className="space-y-6 max-w-6xl mx-auto pb-12">
-      {/* Top Breadcrumb Bar */}
-      <div className="flex items-center justify-between">
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      {/* Top Breadcrumb & Action Bar */}
+      <div className="flex items-center justify-between gap-4">
         <Button
           variant="outline"
           size="sm"
           onClick={() => navigate("/health-institute/appoint-doctor")}
-          className="text-xs text-slate-600 hover:text-slate-900 border-slate-300 w-fit cursor-pointer"
+          className="text-xs text-slate-600 hover:text-cyan-700 border-slate-200 cursor-pointer h-9 px-3 rounded-xl"
         >
           <ArrowLeft className="w-4 h-4 mr-1.5" />
           Back to Doctor Directory
         </Button>
+
+        <div className="flex items-center gap-3">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={fetchDoctorDetails}
+            disabled={loading}
+            className="text-xs text-slate-700 border-slate-200 h-9 px-3 rounded-xl cursor-pointer"
+          >
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-cyan-600" : ""}`} />
+            Refresh
+          </Button>
+
+          <Button
+            variant="cyan"
+            size="sm"
+            onClick={handleOpenAppointModal}
+            className="text-xs font-bold h-9 px-4 cursor-pointer shadow-md rounded-xl"
+          >
+            <UserCheck className="w-4 h-4 mr-1.5" />
+            Appoint to Institute
+          </Button>
+        </div>
       </div>
 
-      {/* Loading State */}
-      {loading ? (
-        <div className="py-24 flex flex-col items-center justify-center text-slate-400 space-y-4 bg-white rounded-3xl border border-slate-200 shadow-xs">
-          <div className="w-12 h-12 rounded-2xl bg-teal-50 text-teal-600 flex items-center justify-center">
-            <RefreshCw className="w-6 h-6 animate-spin" />
-          </div>
-          <div className="text-center space-y-1">
-            <p className="text-sm font-bold text-slate-800">
-              Fetching Doctor Details for ID #{doctorId}...
-            </p>
-            <p className="text-xs text-slate-400">
-              Connecting to National Medical Council & ABDM practitioner registry.
-            </p>
-          </div>
-        </div>
-      ) : error ? (
-        /* Error State */
-        <div className="p-8 rounded-3xl bg-red-50 border border-red-200 text-center space-y-4 max-w-lg mx-auto my-12">
-          <div className="w-12 h-12 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center mx-auto">
-            <AlertCircle className="w-6 h-6" />
-          </div>
-          <div className="space-y-1">
-            <h3 className="text-base font-bold text-red-900">Unable to Load Doctor Profile</h3>
-            <p className="text-xs text-red-700">{error}</p>
-          </div>
-          <div className="pt-2 flex justify-center gap-3">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => navigate("/health-institute/appoint-doctor")}
-              className="text-xs"
-            >
-              Go Back
-            </Button>
-            <Button
-              variant="emerald"
-              size="sm"
-              onClick={() => fetchDoctorDetails(true)}
-              className="text-xs"
-            >
-              Retry
-            </Button>
-          </div>
+      {/* Error Banner */}
+      {error && (
+        <Alert variant="destructive" className="p-4">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+          <AlertDescription className="text-xs font-semibold">{error}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Loading Skeleton */}
+      {loading && !doctorData ? (
+        <div className="py-24 text-center space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs">
+          <RefreshCw className="w-8 h-8 text-cyan-600 animate-spin mx-auto" />
+          <p className="text-sm font-bold text-slate-800">
+            Fetching verified practitioner profile...
+          </p>
+          <p className="text-xs text-slate-500">
+            Querying NMC doctor registry, state councils, and medical credentials.
+          </p>
         </div>
       ) : doctorData ? (
-        /* Doctor Profile View */
         <div className="space-y-6">
-          {/* Main Hero Header Card */}
-          <div className="bg-linear-to-r from-slate-900 via-teal-950 to-slate-900 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden border border-slate-800">
-            <div className="absolute right-0 top-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none"></div>
+          {/* Hero Profile Overview Card */}
+          <div className="bg-linear-to-r from-slate-900 via-slate-900 to-cyan-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden">
+            <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-5">
-                {/* Doctor Avatar / Initials */}
-                <div className="w-20 h-20 rounded-2xl bg-linear-to-br from-teal-500 to-cyan-700 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-teal-400/40 shrink-0">
-                  {profile?.profileImage ? (
-                    <img
-                      src={profile.profileImage}
-                      alt={fullName}
-                      className="w-full h-full object-cover rounded-2xl"
-                    />
-                  ) : (
-                    initials
-                  )}
-                </div>
+              <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
+                <Avatar className="w-20 h-20 rounded-3xl bg-linear-to-br from-cyan-600 to-teal-700 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0">
+                  <AvatarFallback>{getInitials()}</AvatarFallback>
+                </Avatar>
 
-                {/* Doctor Name & ID */}
                 <div className="space-y-1.5">
                   <div className="flex flex-wrap items-center gap-2">
                     <Badge
-                      variant="teal"
-                      className="bg-teal-500/20 text-teal-300 border-teal-500/30 text-xs px-2.5 py-0.5"
+                      variant="cyan"
+                      className="text-xs px-3 py-0.5 font-bold"
                     >
-                      Medical Practitioner
+                      <ShieldCheck className="w-3.5 h-3.5 mr-1" />
+                      Verified Practitioner
                     </Badge>
+
                     {isLicenseActive ? (
                       <Badge
-                        variant="emerald"
-                        className="bg-emerald-500/20 text-emerald-300 border-emerald-500/30 text-xs px-2.5 py-0.5 flex items-center gap-1"
+                        variant="outline"
+                        className="text-xs text-emerald-400 border-emerald-500/30 bg-emerald-950/40 flex items-center gap-1"
                       >
                         <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                        Active ABDM License
+                        License Active
                       </Badge>
                     ) : (
                       <Badge
                         variant="outline"
                         className="text-xs text-amber-400 border-amber-500/30 bg-amber-950/40"
                       >
-                        <Clock className="w-3 h-3 mr-1 text-amber-400" />
-                        Verification Pending
+                        Unverified
                       </Badge>
                     )}
                   </div>
 
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight flex items-center gap-2">
-                    Dr. {fullName || "Practitioner"}
-                    {isLicenseActive && <BadgeCheck className="w-6 h-6 text-teal-400" />}
+                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+                    Dr. {fullName}
+                    {isLicenseActive && (
+                      <BadgeCheck className="w-6 h-6 text-cyan-400 shrink-0" />
+                    )}
                   </h1>
 
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-slate-300 font-mono">
-                    <span className="bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700">
-                      ID: <strong className="text-teal-300">{doctorData.doctorId}</strong>
+                  <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-slate-300 font-mono">
+                    <span>
+                      Doctor ID:{" "}
+                      <strong className="text-cyan-300">
+                        {doctorData.doctorId}
+                      </strong>
                     </span>
-                    {professional?.medicalRegistration && (
-                      <span className="bg-slate-800/80 px-2.5 py-1 rounded-md border border-slate-700">
-                        Reg: <strong className="text-white">{professional.medicalRegistration}</strong>
-                      </span>
-                    )}
+                    <span>•</span>
+                    <span>
+                      Medical Reg:{" "}
+                      <strong className="text-white">
+                        {professional?.medicalRegistration || "Not Assigned"}
+                      </strong>
+                    </span>
                   </div>
                 </div>
+              </div>
+
+              {/* Action */}
+              <div className="flex items-center gap-3 relative z-10 shrink-0">
+                <Button
+                  variant="cyan"
+                  onClick={handleOpenAppointModal}
+                  className="font-bold text-xs px-6 py-2.5 h-auto cursor-pointer shadow-lg rounded-xl"
+                >
+                  <UserCheck className="w-4 h-4 mr-2" />
+                  Appoint to Institute
+                </Button>
               </div>
             </div>
           </div>
 
-          {/* Details Content Grid */}
+          {/* Details Section Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Column Left: Contact & Professional Registration (5 cols) */}
+            {/* Column Left: Contact Info & Medical Registration (5 cols) */}
             <div className="lg:col-span-5 space-y-6">
-              {/* Contact & Personal Information Card */}
-              <Card className="border-slate-200 shadow-xs bg-white">
+              {/* Personal & Contact Details Card */}
+              <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
                 <CardHeader className="border-b border-slate-100 pb-3.5">
                   <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <User className="w-4 h-4 text-teal-700" />
+                    <User className="w-4 h-4 text-cyan-700" />
                     Personal & Contact Info
                   </CardTitle>
                 </CardHeader>
@@ -535,10 +543,10 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
               </Card>
 
               {/* Professional Registration & Council Card */}
-              <Card className="border-slate-200 shadow-xs bg-white">
+              <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
                 <CardHeader className="border-b border-slate-100 pb-3.5">
                   <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <ShieldCheck className="w-4 h-4 text-teal-700" />
+                    <ShieldCheck className="w-4 h-4 text-cyan-700" />
                     Medical Registration & Council
                   </CardTitle>
                 </CardHeader>
@@ -557,7 +565,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                       Registration Medical Council
                     </span>
                     <p className="font-bold text-slate-900 flex items-center gap-1.5">
-                      <Building2 className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                      <Building2 className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
                       {professional?.registrationCouncilName || "Medical Council of India"}
                     </p>
                   </div>
@@ -568,7 +576,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                         State
                       </span>
                       <p className="font-semibold text-slate-900 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                        <MapPin className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
                         {professional?.registrationStateName || "National"}
                       </p>
                     </div>
@@ -582,16 +590,6 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                       </p>
                     </div>
                   </div>
-
-                  <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 flex items-center justify-between">
-                    <span className="text-slate-500 font-medium">License Accreditation:</span>
-                    <Badge
-                      variant={isLicenseActive ? "emerald" : "outline"}
-                      className="text-[10px]"
-                    >
-                      {isLicenseActive ? "Verified & Active" : "Unverified"}
-                    </Badge>
-                  </div>
                 </CardContent>
               </Card>
             </div>
@@ -599,13 +597,13 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
             {/* Column Right: Academic Qualifications & Affiliation Prompt (7 cols) */}
             <div className="lg:col-span-7 space-y-6">
               {/* Academic & Medical Qualifications Card */}
-              <Card className="border-slate-200 shadow-xs bg-white">
+              <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
                 <CardHeader className="border-b border-slate-100 pb-3.5 flex flex-row items-center justify-between">
                   <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                    <GraduationCap className="w-4 h-4 text-teal-700" />
+                    <GraduationCap className="w-4 h-4 text-cyan-700" />
                     Academic & Medical Qualifications ({qualifications.length})
                   </CardTitle>
-                  <Badge variant="teal" className="text-[10px] bg-teal-50 text-teal-800">
+                  <Badge variant="cyan" className="text-[10px]">
                     Council Certified
                   </Badge>
                 </CardHeader>
@@ -622,12 +620,12 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                       {qualifications.map((q, idx) => (
                         <div
                           key={q.doctorQualificationId || idx}
-                          className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 hover:border-teal-300 hover:bg-white transition-all space-y-2.5"
+                          className="p-4 rounded-2xl bg-slate-50/80 border border-slate-200 hover:border-cyan-300 hover:bg-white transition-all space-y-2.5"
                         >
                           <div className="flex items-start justify-between gap-3">
                             <div className="space-y-0.5 min-w-0">
                               <div className="flex items-center gap-2">
-                                <span className="w-6 h-6 rounded-lg bg-teal-100 text-teal-800 font-bold text-xs flex items-center justify-center shrink-0">
+                                <span className="w-6 h-6 rounded-lg bg-cyan-100 text-cyan-800 font-bold text-xs flex items-center justify-center shrink-0">
                                   {idx + 1}
                                 </span>
                                 <h4 className="text-sm font-bold text-slate-900 truncate">
@@ -635,7 +633,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                                 </h4>
                               </div>
                               {q.specializationName && (
-                                <p className="text-xs font-semibold text-teal-700 pl-8">
+                                <p className="text-xs font-semibold text-cyan-700 pl-8">
                                   Specialization: {q.specializationName}
                                 </p>
                               )}
@@ -660,7 +658,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                             )}
                             {q.universityName && (
                               <p className="flex items-center gap-1.5 truncate">
-                                <Award className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                <Award className="w-3.5 h-3.5 text-cyan-600 shrink-0" />
                                 <span className="truncate">{q.universityName}</span>
                               </p>
                             )}
@@ -673,11 +671,11 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
               </Card>
 
               {/* Facility Appointment Quick Banner */}
-              <Card className="border-teal-200 bg-linear-to-r from-teal-50 via-cyan-50 to-white shadow-xs overflow-hidden">
+              <Card className="border-cyan-200 bg-linear-to-r from-cyan-50/70 via-teal-50/50 to-white shadow-xs rounded-2xl overflow-hidden">
                 <CardContent className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
                   <div className="space-y-1">
                     <h3 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <UserCheck className="w-4 h-4 text-teal-700" />
+                      <UserCheck className="w-4 h-4 text-cyan-700" />
                       Ready to appoint Dr. {fullName || "this practitioner"}?
                     </h3>
                     <p className="text-xs text-slate-600 max-w-md">
@@ -686,9 +684,9 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                     </p>
                   </div>
                   <Button
-                    variant="emerald"
+                    variant="cyan"
                     onClick={handleOpenAppointModal}
-                    className="text-xs font-bold px-5 h-9 shrink-0 cursor-pointer shadow-xs"
+                    className="text-xs font-bold px-5 h-9 shrink-0 cursor-pointer shadow-xs rounded-xl"
                   >
                     Initiate Appointment →
                   </Button>
@@ -699,224 +697,224 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
         </div>
       ) : null}
 
-      {/* Appoint Doctor Modal */}
-      {isAppointModalOpen && doctorData && (
-        <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <Card className="w-full max-w-xl bg-white shadow-2xl border-slate-200 my-8 overflow-hidden">
-            <CardHeader className="border-b border-slate-100 bg-slate-50/70 pb-4 flex flex-row items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
-                  <UserCheck className="w-5 h-5 text-teal-700" />
-                </div>
-                <div>
-                  <CardTitle className="text-base font-bold text-slate-900">
-                    Appoint Medical Practitioner
-                  </CardTitle>
-                  <p className="text-xs text-slate-500">
-                    Affiliate doctor to your healthcare institute roster.
-                  </p>
-                </div>
+      {/* Appoint Doctor Dialog using shadcn Dialog */}
+      <Dialog
+        open={isAppointModalOpen && Boolean(doctorData)}
+        onOpenChange={(open) => {
+          if (!open) {
+            setIsAppointModalOpen(false);
+            setAppointmentSuccessMessage(null);
+            setAppointmentError(null);
+          }
+        }}
+      >
+        <DialogContent className="sm:max-w-xl p-0 overflow-hidden bg-white rounded-3xl border-slate-200 shadow-2xl">
+          <DialogHeader className="p-6 bg-slate-50/80 border-b border-slate-100">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
+                <UserCheck className="w-5 h-5 text-cyan-700" />
               </div>
-              <button
-                type="button"
-                onClick={() => {
-                  setIsAppointModalOpen(false);
-                  setAppointmentSuccessMessage(null);
-                  setAppointmentError(null);
-                }}
-                className="text-slate-400 hover:text-slate-600 p-1 rounded-lg cursor-pointer"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </CardHeader>
-
-            <CardContent className="p-6 space-y-5">
-              {/* Doctor Summary Banner */}
-              <div className="p-4 rounded-2xl bg-linear-to-r from-teal-50 to-cyan-50 border border-teal-100 flex items-center justify-between gap-4">
-                <div className="space-y-0.5 min-w-0">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-teal-700">
-                    Selected Practitioner
-                  </span>
-                  <h4 className="text-sm font-extrabold text-slate-900 truncate">
-                    Dr. {fullName}
-                  </h4>
-                  <p className="text-xs text-slate-600 font-mono">
-                    ID: {doctorData.doctorId} • Reg: {professional?.medicalRegistration || "N/A"}
-                  </p>
-                  {professional?.registrationCouncilName && (
-                    <p className="text-[11px] text-slate-500 font-medium">
-                      {[professional.registrationCouncilName, professional.registrationStateName]
-                        .filter(Boolean)
-                        .join(" • ")}
-                    </p>
-                  )}
-                </div>
-                <Badge variant="teal" className="bg-teal-600 text-white text-[10px] shrink-0">
-                  Verified ABDM
-                </Badge>
+              <div>
+                <DialogTitle className="text-base font-bold text-slate-900">
+                  Appoint Medical Practitioner
+                </DialogTitle>
+                <DialogDescription className="text-xs text-slate-500">
+                  Affiliate Dr. {fullName} to your healthcare institute roster.
+                </DialogDescription>
               </div>
+            </div>
+          </DialogHeader>
 
-              {appointmentError && (
-                <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl text-xs text-rose-700 flex items-start gap-2.5">
-                  <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
-                  <span>{appointmentError}</span>
-                </div>
-              )}
-
-              {appointmentSuccessMessage ? (
-                <div className="py-6 text-center space-y-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
-                  <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
-                    <CheckCircle2 className="w-6 h-6" />
-                  </div>
-                  <h4 className="text-sm font-bold text-emerald-900">Appointment Confirmed!</h4>
-                  <p className="text-xs text-emerald-700 max-w-sm mx-auto">
-                    {appointmentSuccessMessage}
+          <div className="p-6 space-y-5">
+            {/* Doctor Summary Banner */}
+            <div className="p-4 rounded-2xl bg-linear-to-r from-cyan-50 to-teal-50 border border-cyan-100 flex items-center justify-between gap-4">
+              <div className="space-y-0.5 min-w-0">
+                <span className="text-[10px] uppercase font-bold tracking-wider text-cyan-700">
+                  Selected Practitioner
+                </span>
+                <h4 className="text-sm font-extrabold text-slate-900 truncate">
+                  Dr. {fullName}
+                </h4>
+                <p className="text-xs text-slate-600 font-mono">
+                  ID: {doctorData?.doctorId} • Reg: {professional?.medicalRegistration || "N/A"}
+                </p>
+                {professional?.registrationCouncilName && (
+                  <p className="text-[11px] text-slate-500 font-medium">
+                    {[professional.registrationCouncilName, professional.registrationStateName]
+                      .filter(Boolean)
+                      .join(" • ")}
                   </p>
+                )}
+              </div>
+              <Badge variant="cyan" className="text-[10px] shrink-0 font-bold">
+                Verified ABDM
+              </Badge>
+            </div>
+
+            {appointmentError && (
+              <Alert variant="destructive" className="p-3">
+                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+                <AlertDescription className="text-xs font-medium">
+                  {appointmentError}
+                </AlertDescription>
+              </Alert>
+            )}
+
+            {appointmentSuccessMessage ? (
+              <div className="py-6 text-center space-y-3 bg-emerald-50 border border-emerald-200 rounded-2xl p-4">
+                <div className="w-12 h-12 rounded-full bg-emerald-100 text-emerald-600 mx-auto flex items-center justify-center">
+                  <CheckCircle2 className="w-6 h-6" />
                 </div>
-              ) : (
-                <form onSubmit={handleConfirmAppointment} className="space-y-4">
-                  {/* Department & Role */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Department / Specialty *
-                      </label>
-                      <select
-                        value={appointmentDeptId}
-                        onChange={(e) => setAppointmentDeptId(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
-                        required
-                        disabled={loadingMasterData}
-                      >
-                        {masterData.departments.length === 0 ? (
-                          <option value="">{loadingMasterData ? "Loading departments..." : "No departments found"}</option>
-                        ) : (
-                          masterData.departments.map((dept) => (
-                            <option key={dept.id} value={dept.id}>
-                              {dept.name}
-                            </option>
-                          ))
-                        )}
-                      </select>
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Designation / Role *
-                      </label>
-                      <select
-                        value={appointmentDesignationId}
-                        onChange={(e) => setAppointmentDesignationId(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
-                        required
-                        disabled={loadingMasterData}
-                      >
-                        {masterData.designations.length === 0 ? (
-                          <option value="">{loadingMasterData ? "Loading designations..." : "No designations found"}</option>
-                        ) : (
-                          masterData.designations.map((desig) => (
-                            <option key={desig.id} value={desig.id}>
-                              {desig.name}
-                            </option>
-                          ))
-                        )}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Date & Service Type */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Appointment / Joining Date *
-                      </label>
-                      <Input
-                        type="date"
-                        value={appointmentDate}
-                        onChange={(e) => setAppointmentDate(e.target.value)}
-                        className="text-xs rounded-xl"
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-1">
-                      <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                        Consultation Scope *
-                      </label>
-                      <select
-                        value={appointmentScopeId}
-                        onChange={(e) => setAppointmentScopeId(e.target.value)}
-                        className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
-                        required
-                        disabled={loadingMasterData}
-                      >
-                        {masterData.consultationScopes.length === 0 ? (
-                          <option value="">{loadingMasterData ? "Loading scopes..." : "No consultation scopes found"}</option>
-                        ) : (
-                          masterData.consultationScopes.map((scope) => (
-                            <option key={scope.id} value={scope.id}>
-                              {scope.name}
-                            </option>
-                          ))
-                        )}
-                      </select>
-                    </div>
-                  </div>
-
-                  {/* Notes / Special Instructions */}
+                <h4 className="text-sm font-bold text-emerald-900">Appointment Confirmed!</h4>
+                <p className="text-xs text-emerald-700 max-w-sm mx-auto">
+                  {appointmentSuccessMessage}
+                </p>
+              </div>
+            ) : (
+              <form onSubmit={handleConfirmAppointment} id="appoint-doctor-form" className="space-y-4">
+                {/* Department & Role */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="space-y-1">
                     <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
-                      Affiliation Notes / Contract Reference (Optional)
+                      Department / Specialty *
                     </label>
-                    <textarea
-                      rows={2}
-                      placeholder="e.g. Approved by medical board. Duty schedule: Monday to Friday 9 AM – 2 PM."
-                      value={appointmentNotes}
-                      onChange={(e) => setAppointmentNotes(e.target.value)}
-                      className="w-full p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                    <select
+                      value={appointmentDeptId}
+                      onChange={(e) => setAppointmentDeptId(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer disabled:bg-slate-50"
+                      required
+                      disabled={loadingMasterData}
+                    >
+                      {masterData.departments.length === 0 ? (
+                        <option value="">{loadingMasterData ? "Loading departments..." : "No departments found"}</option>
+                      ) : (
+                        masterData.departments.map((dept) => (
+                          <option key={dept.id} value={dept.id}>
+                            {dept.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Designation / Role *
+                    </label>
+                    <select
+                      value={appointmentDesignationId}
+                      onChange={(e) => setAppointmentDesignationId(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer disabled:bg-slate-50"
+                      required
+                      disabled={loadingMasterData}
+                    >
+                      {masterData.designations.length === 0 ? (
+                        <option value="">{loadingMasterData ? "Loading designations..." : "No designations found"}</option>
+                      ) : (
+                        masterData.designations.map((desig) => (
+                          <option key={desig.id} value={desig.id}>
+                            {desig.name}
+                          </option>
+                        ))
+                      )}
+                    </select>
+                  </div>
+                </div>
+
+                {/* Date & Service Type */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Appointment / Joining Date *
+                    </label>
+                    <Input
+                      type="date"
+                      value={appointmentDate}
+                      onChange={(e) => setAppointmentDate(e.target.value)}
+                      className="text-xs rounded-xl"
+                      required
                     />
                   </div>
 
-                  {/* Action Buttons */}
-                  <div className="pt-2 flex items-center justify-end gap-3">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => {
-                        setIsAppointModalOpen(false);
-                        setAppointmentError(null);
-                        setAppointmentSuccessMessage(null);
-                      }}
-                      disabled={isSubmittingAppointment}
-                      className="text-xs"
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                      Consultation Scope *
+                    </label>
+                    <select
+                      value={appointmentScopeId}
+                      onChange={(e) => setAppointmentScopeId(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-cyan-500 cursor-pointer disabled:bg-slate-50"
+                      required
+                      disabled={loadingMasterData}
                     >
-                      Cancel
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="emerald"
-                      disabled={isSubmittingAppointment}
-                      className="text-xs font-bold px-5 cursor-pointer"
-                    >
-                      {isSubmittingAppointment ? (
-                        <>
-                          <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
-                          Processing Affiliation...
-                        </>
+                      {masterData.consultationScopes.length === 0 ? (
+                        <option value="">{loadingMasterData ? "Loading scopes..." : "No consultation scopes found"}</option>
                       ) : (
-                        <>
-                          <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
-                          Confirm Appointment
-                        </>
+                        masterData.consultationScopes.map((scope) => (
+                          <option key={scope.id} value={scope.id}>
+                            {scope.name}
+                          </option>
+                        ))
                       )}
-                    </Button>
+                    </select>
                   </div>
-                </form>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      )}
+                </div>
+
+                {/* Notes / Special Instructions */}
+                <div className="space-y-1">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Affiliation Notes / Contract Reference (Optional)
+                  </label>
+                  <textarea
+                    rows={2}
+                    placeholder="e.g. Approved by medical board. Duty schedule: Monday to Friday 9 AM – 2 PM."
+                    value={appointmentNotes}
+                    onChange={(e) => setAppointmentNotes(e.target.value)}
+                    className="w-full p-2.5 text-xs bg-slate-50 border border-slate-300 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-cyan-500"
+                  />
+                </div>
+              </form>
+            )}
+          </div>
+
+          {!appointmentSuccessMessage && (
+            <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-3">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => {
+                  setIsAppointModalOpen(false);
+                  setAppointmentError(null);
+                  setAppointmentSuccessMessage(null);
+                }}
+                disabled={isSubmittingAppointment}
+                className="text-xs rounded-xl"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                form="appoint-doctor-form"
+                variant="cyan"
+                disabled={isSubmittingAppointment}
+                className="text-xs font-bold px-5 cursor-pointer rounded-xl"
+              >
+                {isSubmittingAppointment ? (
+                  <>
+                    <RefreshCw className="w-3.5 h-3.5 mr-2 animate-spin" />
+                    Processing Affiliation...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1.5" />
+                    Confirm Appointment
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

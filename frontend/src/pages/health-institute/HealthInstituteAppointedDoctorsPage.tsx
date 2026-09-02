@@ -586,7 +586,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
                         <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                           Designation
                         </span>
-                        <span className="text-xs font-semibold text-slate-800 truncate max-w-[180px]">
+                        <span className="text-xs font-semibold text-slate-800 truncate max-w-45">
                           {doc.designationName || "Practitioner"}
                         </span>
                       </div>
@@ -595,7 +595,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
                         <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                           Scope
                         </span>
-                        <span className="text-xs font-semibold text-cyan-700 truncate max-w-[180px]">
+                        <span className="text-xs font-semibold text-cyan-700 truncate max-w-45">
                           {doc.consultationScopeName || "Full Consultation"}
                         </span>
                       </div>
@@ -615,7 +615,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
                           <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
                             Reg. No.
                           </span>
-                          <span className="text-[11px] font-mono font-medium text-slate-600 truncate max-w-[180px]">
+                          <span className="text-[11px] font-mono font-medium text-slate-600 truncate max-w-45">
                             {doc.medicalRegistration}
                           </span>
                         </div>

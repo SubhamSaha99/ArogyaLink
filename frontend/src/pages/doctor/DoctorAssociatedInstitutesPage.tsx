@@ -9,10 +9,14 @@ import {
   FilterX,
   Stethoscope,
   CheckCircle2,
+  Search,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
@@ -126,19 +130,19 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
   return (
     <div className="space-y-6 max-w-7xl mx-auto pb-10">
       {/* Header Banner */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-80 h-full bg-linear-to-l from-teal-50/60 to-transparent pointer-events-none" />
+      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-80 h-full bg-linear-to-l from-teal-500/10 via-cyan-500/5 to-transparent pointer-events-none" />
 
-        <div className="space-y-1 relative z-10">
+        <div className="space-y-1.5 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/60">
+            <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200/60">
               Clinical Affiliations
             </span>
             <Badge variant="outline" className="text-[10px] text-slate-500 font-mono">
               {user?.doctorId || "Doctor Terminal"}
             </Badge>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2.5">
+          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2.5">
             <Building2 className="w-6 h-6 text-teal-700" />
             Associated Healthcare Institutes
           </h1>
@@ -155,7 +159,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
             size="sm"
             onClick={fetchAssociatedInstitutes}
             disabled={loading}
-            className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3"
+            className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3.5 rounded-xl"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
             Refresh
@@ -165,7 +169,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-slate-200 shadow-xs bg-white">
+        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -181,7 +185,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white">
+        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -197,7 +201,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white">
+        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -213,7 +217,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white">
+        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
@@ -231,17 +235,87 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
         </Card>
       </div>
 
+      {/* Search & Filter Bar */}
+      <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+        <CardContent className="p-4">
+          <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+            {/* Search Input */}
+            <div className="relative flex-1">
+              <Input
+                type="text"
+                placeholder="Search hospital name, ID, department, or designation..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                icon={<Search className="w-4 h-4 text-slate-400" />}
+                className="h-10 text-xs bg-slate-50 border-slate-200 focus:bg-white rounded-xl"
+              />
+            </div>
+
+            {/* Filter Dropdowns */}
+            <div className="flex flex-wrap items-center gap-2.5">
+              {/* Department Filter */}
+              {uniqueDepartments.length > 0 && (
+                <div className="min-w-40">
+                  <select
+                    value={selectedDept}
+                    onChange={(e) => setSelectedDept(e.target.value)}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  >
+                    <option value="">All Departments</option>
+                    {uniqueDepartments.map((dept) => (
+                      <option key={dept} value={dept}>
+                        {dept}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {/* Scope Filter */}
+              {uniqueScopes.length > 0 && (
+                <div className="min-w-36">
+                  <select
+                    value={selectedScope}
+                    onChange={(e) => setSelectedScope(e.target.value)}
+                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                  >
+                    <option value="">All Scopes</option>
+                    {uniqueScopes.map((scope) => (
+                      <option key={scope} value={scope}>
+                        {scope}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
+              {hasActiveFilters && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="h-10 px-3 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 border-red-200 rounded-xl cursor-pointer"
+                >
+                  <FilterX className="w-3.5 h-3.5 mr-1" />
+                  Clear Filters
+                </Button>
+              )}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Error Alert */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700 text-xs">
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-          <span>{error}</span>
-        </div>
+        <Alert variant="destructive" className="p-4">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+          <AlertDescription className="text-xs">{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Content Area */}
       {loading ? (
-        <div className="py-20 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
+        <div className="py-20 text-center space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs">
           <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">
             Loading associated healthcare institutes...
@@ -251,7 +325,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
           </p>
         </div>
       ) : filteredInstitutes.length === 0 ? (
-        <div className="py-16 text-center space-y-4 bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
+        <div className="py-16 text-center space-y-4 bg-white rounded-3xl border border-slate-200 shadow-xs p-6">
           <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 mx-auto flex items-center justify-center border border-teal-100">
             <Building2 className="w-8 h-8 text-teal-600" />
           </div>
@@ -274,7 +348,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleClearFilters}
-                className="text-xs cursor-pointer"
+                className="text-xs cursor-pointer rounded-xl"
               >
                 <FilterX className="w-3.5 h-3.5 mr-1" />
                 Reset Filters
@@ -296,15 +370,15 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
             return (
               <Card
                 key={`${inst.healthInstitutePrimaryKey}-${inst.departmentId}-${index}`}
-                className="border-slate-200 shadow-xs hover:shadow-md transition-all bg-white flex flex-col justify-between overflow-hidden group"
+                className="border-slate-200 shadow-xs hover:shadow-md transition-all bg-white flex flex-col justify-between overflow-hidden group rounded-2xl"
               >
                 <CardContent className="p-5 space-y-4">
                   {/* Top Row: Institute Icon, Name & Verified Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <div className="w-12 h-12 rounded-xl bg-linear-to-br from-teal-600 to-cyan-700 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
-                        {initials || <Building2 className="w-6 h-6" />}
-                      </div>
+                      <Avatar className="w-12 h-12 rounded-2xl bg-linear-to-br from-teal-600 to-cyan-700 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                        <AvatarFallback>{initials || <Building2 className="w-6 h-6" />}</AvatarFallback>
+                      </Avatar>
                       <div className="min-w-0">
                         <h4 className="text-sm font-extrabold text-slate-900 truncate">
                           {inst.healthInstituteName || "Healthcare Institute"}
@@ -316,8 +390,8 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
                     </div>
 
                     <Badge
-                      variant="teal"
-                      className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] shrink-0"
+                      variant="emerald"
+                      className="text-[10px] shrink-0 font-bold"
                     >
                       Active
                     </Badge>
