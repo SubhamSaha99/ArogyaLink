@@ -142,6 +142,15 @@ export interface GetDoctorListReq {
   councilId?: number | undefined;
 }
 
+export interface GetUnAppointedDoctorsListReq {
+  doctorPrimaryKeys: number[];
+  offset?: number | undefined;
+  limit?: number | undefined;
+  search?: string | undefined;
+  stateId?: number | undefined;
+  councilId?: number | undefined;
+}
+
 export interface DoctorListItem {
   doctorId: string;
   firstName: string;
@@ -199,6 +208,8 @@ export interface DoctorServiceClient {
   getDoctorList(request: GetDoctorListReq): Observable<GetDoctorListRes>;
 
   getAppointedDoctorDetails(request: GetAppointedDoctorDetailsReq): Observable<GetAppointedDoctorDetailsRes>;
+
+  getUnAppointedDoctorsList(request: GetUnAppointedDoctorsListReq): Observable<GetDoctorListRes>;
 }
 
 export interface DoctorServiceController {
@@ -234,6 +245,10 @@ export interface DoctorServiceController {
   getAppointedDoctorDetails(
     request: GetAppointedDoctorDetailsReq,
   ): Promise<GetAppointedDoctorDetailsRes> | Observable<GetAppointedDoctorDetailsRes> | GetAppointedDoctorDetailsRes;
+
+  getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+  ): Promise<GetDoctorListRes> | Observable<GetDoctorListRes> | GetDoctorListRes;
 }
 
 export function DoctorServiceControllerMethods() {
@@ -247,6 +262,7 @@ export function DoctorServiceControllerMethods() {
       "getDoctorMasterData",
       "getDoctorList",
       "getAppointedDoctorDetails",
+      "getUnAppointedDoctorsList",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

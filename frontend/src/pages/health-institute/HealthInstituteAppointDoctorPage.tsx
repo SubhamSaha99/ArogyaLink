@@ -66,9 +66,12 @@ const getCachedHealthInstituteMasterData = async (): Promise<{
       ]);
 
       const councilsData = councilsResp?.data || councilsResp;
-      const councilsList = councilsData?.registrationCouncils || (Array.isArray(councilsData) ? councilsData : []);
+      const councilsList =
+        councilsData?.registrationCouncils ||
+        (Array.isArray(councilsData) ? councilsData : []);
       const statesData = statesResp?.data || statesResp;
-      const statesList = statesData?.states || (Array.isArray(statesData) ? statesData : []);
+      const statesList =
+        statesData?.states || (Array.isArray(statesData) ? statesData : []);
 
       cachedMasterData = {
         states: Array.isArray(statesList) ? statesList : [],
@@ -91,7 +94,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
-  const [selectedCouncilId, setSelectedCouncilId] = useState<number | null>(null);
+  const [selectedCouncilId, setSelectedCouncilId] = useState<number | null>(
+    null,
+  );
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit, setLimit] = useState<number>(10);
 
@@ -119,45 +124,56 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
     }
   }, []);
 
-  const fetchDoctors = useCallback(async (force = false) => {
-    const offset = (currentPage - 1) * limit;
-    const queryKey = `${debouncedSearch}|${selectedStateId}|${selectedCouncilId}|${offset}|${limit}`;
+  const fetchDoctors = useCallback(
+    async (force = false) => {
+      const offset = (currentPage - 1) * limit;
+      const queryKey = `${debouncedSearch}|${selectedStateId}|${selectedCouncilId}|${offset}|${limit}`;
 
-    if (!force && lastQueryKeyRef.current === queryKey) return;
-    lastQueryKeyRef.current = queryKey;
+      if (!force && lastQueryKeyRef.current === queryKey) return;
+      lastQueryKeyRef.current = queryKey;
 
-    setLoading(true);
-    setError(null);
-    try {
-      const payload = {
-        offset,
-        limit,
-        search: debouncedSearch.trim() || undefined,
-        stateId: selectedStateId ? Number(selectedStateId) : null,
-        councilId: selectedCouncilId ? Number(selectedCouncilId) : null,
-      };
+      setLoading(true);
+      setError(null);
+      try {
+        const payload = {
+          offset,
+          limit,
+          search: debouncedSearch.trim() || undefined,
+          stateId: selectedStateId ? Number(selectedStateId) : null,
+          councilId: selectedCouncilId ? Number(selectedCouncilId) : null,
+        };
 
-      const response = await callApi(API_ROUTES.getDoctorList, payload, "POST");
-      const data = response?.data || response;
+        const response = await callApi(
+          API_ROUTES.getUnAppointedDoctorsList,
+          payload,
+          "POST",
+        );
+        const data = response?.data || response;
 
-      if (data && Array.isArray(data.doctors)) {
-        setDoctors(data.doctors);
-        setTotalCount(Number(data.total ?? data.doctors.length));
-      } else if (Array.isArray(data)) {
-        setDoctors(data);
-        setTotalCount(data.length);
-      } else {
-        setDoctors([]);
-        setTotalCount(0);
+        if (data && Array.isArray(data.doctors)) {
+          setDoctors(data.doctors);
+          setTotalCount(Number(data.total ?? data.doctors.length));
+        } else if (Array.isArray(data)) {
+          setDoctors(data);
+          setTotalCount(data.length);
+        } else {
+          setDoctors([]);
+          setTotalCount(0);
+        }
+      } catch (err: any) {
+        console.error("Failed to fetch doctors list:", err);
+        setError(
+          err?.response?.data?.message ||
+            err?.message ||
+            "Failed to load doctor directory.",
+        );
+        lastQueryKeyRef.current = "";
+      } finally {
+        setLoading(false);
       }
-    } catch (err: any) {
-      console.error("Failed to fetch doctors list:", err);
-      setError(err?.response?.data?.message || err?.message || "Failed to load doctor directory.");
-      lastQueryKeyRef.current = "";
-    } finally {
-      setLoading(false);
-    }
-  }, [currentPage, limit, debouncedSearch, selectedStateId, selectedCouncilId]);
+    },
+    [currentPage, limit, debouncedSearch, selectedStateId, selectedCouncilId],
+  );
 
   useEffect(() => {
     fetchDoctors();
@@ -180,7 +196,10 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
   };
 
   const getDoctorFullName = (doc: DoctorListItem) => {
-    return [doc.firstName, doc.middleName, doc.lastName].filter(Boolean).join(" ") || "Unnamed Practitioner";
+    return (
+      [doc.firstName, doc.middleName, doc.lastName].filter(Boolean).join(" ") ||
+      "Unnamed Practitioner"
+    );
   };
 
   const getDoctorInitials = (doc: DoctorListItem) => {
@@ -195,23 +214,38 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
         <div className={themeStyles.layout.ambientGlow} />
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
-            <Badge variant="secondary" className="text-xs px-3 py-1 font-bold bg-cyan-500/20 text-cyan-200 border-cyan-500/30">
+            <Badge
+              variant="secondary"
+              className="text-xs px-3 py-1 font-bold bg-cyan-500/20 text-cyan-200 border-cyan-500/30"
+            >
               <Building2 className="w-3.5 h-3.5 mr-1" />
               Facility Doctor Registry
             </Badge>
-            <Badge variant="outline" className="text-xs text-emerald-400 border-emerald-500/30 bg-emerald-950/40 flex items-center gap-1">
+            <Badge
+              variant="outline"
+              className="text-xs text-emerald-400 border-emerald-500/30 bg-emerald-950/40 flex items-center gap-1"
+            >
               <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
               National Doctor Council Synced
             </Badge>
           </div>
           <div className="space-y-1">
-            <h1 className={themeStyles.typography.h1White}>Appoint Certified Doctors</h1>
-            <p className={themeStyles.typography.bodyWhite}>Search the central ABDM medical registry, verify practitioner registration numbers & licenses, and recruit certified medical specialists to your institute.</p>
+            <h1 className={themeStyles.typography.h1White}>
+              Appoint Certified Doctors
+            </h1>
+            <p className={themeStyles.typography.bodyWhite}>
+              Search the central ABDM medical registry, verify practitioner
+              registration numbers & licenses, and recruit certified medical
+              specialists to your institute.
+            </p>
           </div>
           <div className="pt-2 flex flex-wrap gap-4 text-xs text-slate-300">
             <div className="flex items-center gap-2 bg-slate-800/80 px-3.5 py-1.5 rounded-xl border border-slate-700">
               <UserCheck className="w-4 h-4 text-cyan-400" />
-              <span>Total Registry Practitioners: <strong className="text-white font-mono">{totalCount}</strong></span>
+              <span>
+                Total Registry Practitioners:{" "}
+                <strong className="text-white font-mono">{totalCount}</strong>
+              </span>
             </div>
           </div>
         </div>
@@ -234,26 +268,38 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
               <select
                 value={selectedStateId || ""}
                 onChange={(e) => {
-                  setSelectedStateId(e.target.value ? Number(e.target.value) : null);
+                  setSelectedStateId(
+                    e.target.value ? Number(e.target.value) : null,
+                  );
                   setCurrentPage(1);
                 }}
                 onFocus={fetchMasterData}
                 className={themeStyles.form.select}
               >
                 <option value="">All States</option>
-                {states.map((st) => <option key={st.id} value={st.id}>{st.name} {st.code ? `(${st.code})` : ""}</option>)}
+                {states.map((st) => (
+                  <option key={st.id} value={st.id}>
+                    {st.name} {st.code ? `(${st.code})` : ""}
+                  </option>
+                ))}
               </select>
               <select
                 value={selectedCouncilId || ""}
                 onChange={(e) => {
-                  setSelectedCouncilId(e.target.value ? Number(e.target.value) : null);
+                  setSelectedCouncilId(
+                    e.target.value ? Number(e.target.value) : null,
+                  );
                   setCurrentPage(1);
                 }}
                 onFocus={fetchMasterData}
                 className={themeStyles.form.select}
               >
                 <option value="">All Medical Councils</option>
-                {councils.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
+                {councils.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
               </select>
               <select
                 value={limit}
@@ -261,57 +307,133 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                   setLimit(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className={themeStyles.combine(themeStyles.form.select, "w-auto px-2.5")}
+                className={themeStyles.combine(
+                  themeStyles.form.select,
+                  "w-auto px-2.5",
+                )}
               >
-                {[6, 10, 20, 50].map(n => <option key={n} value={n}>{n} rows</option>)}
+                {[6, 10, 20, 50].map((n) => (
+                  <option key={n} value={n}>
+                    {n} rows
+                  </option>
+                ))}
               </select>
-              <Button variant="outline" size="sm" onClick={() => fetchDoctors(true)} disabled={loading} className="h-9 px-3 rounded-xl cursor-pointer">
-                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-cyan-600" : ""}`} /> Refresh
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => fetchDoctors(true)}
+                disabled={loading}
+                className="h-9 px-3 rounded-xl cursor-pointer"
+              >
+                <RefreshCw
+                  className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-cyan-600" : ""}`}
+                />{" "}
+                Refresh
               </Button>
-              {(searchTerm || selectedStateId !== null || selectedCouncilId !== null) && (
-                <Button variant="outline" size="sm" onClick={handleClearFilters} className="text-red-600 h-9 px-3 rounded-xl cursor-pointer">Clear Filters</Button>
+              {(searchTerm ||
+                selectedStateId !== null ||
+                selectedCouncilId !== null) && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleClearFilters}
+                  className="text-red-600 h-9 px-3 rounded-xl cursor-pointer"
+                >
+                  Clear Filters
+                </Button>
               )}
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {error && <Alert variant="destructive"><AlertCircle className="w-4 h-4" /><AlertDescription className="text-xs font-semibold">{error}</AlertDescription></Alert>}
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle className="w-4 h-4" />
+          <AlertDescription className="text-xs font-semibold">
+            {error}
+          </AlertDescription>
+        </Alert>
+      )}
 
       {loading ? (
         <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-cyan-600 animate-spin mx-auto" />
-          <p className="text-sm font-bold text-slate-800">Fetching Central Doctor Directory...</p>
+          <p className="text-sm font-bold text-slate-800">
+            Fetching Central Doctor Directory...
+          </p>
         </div>
       ) : doctors.length === 0 ? (
         <div className={themeStyles.state.empty}>
           <UserCheck className="w-8 h-8 text-cyan-600 mx-auto" />
-          <h3 className="text-base font-bold text-slate-900">No doctors found</h3>
-          <Button variant="outline" size="sm" onClick={handleClearFilters} className="rounded-xl cursor-pointer">Reset All Filters</Button>
+          <h3 className="text-base font-bold text-slate-900">
+            No doctors found
+          </h3>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleClearFilters}
+            className="rounded-xl cursor-pointer"
+          >
+            Reset All Filters
+          </Button>
         </div>
       ) : (
         <div className="space-y-6">
           <div className={themeStyles.layout.grid3}>
             {doctors.map((doctor, index) => {
-              const isLicenseActive = doctor.licenseStatus === 1 || doctor.licenseStatus === undefined;
+              const isLicenseActive =
+                doctor.licenseStatus === 1 ||
+                doctor.licenseStatus === undefined;
               return (
-                <Card key={doctor.doctorPrimaryKey || doctor.doctorId || index} className={themeStyles.card.base}>
+                <Card
+                  key={doctor.doctorPrimaryKey || doctor.doctorId || index}
+                  className={themeStyles.card.base}
+                >
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-3">
-                      <Avatar className={themeStyles.avatar.doctor}><AvatarFallback>{getDoctorInitials(doctor)}</AvatarFallback></Avatar>
+                      <Avatar className={themeStyles.avatar.doctor}>
+                        <AvatarFallback>
+                          {getDoctorInitials(doctor)}
+                        </AvatarFallback>
+                      </Avatar>
                       <div>
-                        <h3 className={themeStyles.combine(themeStyles.typography.h4, "flex items-center gap-1.5")}>Dr. {getDoctorFullName(doctor)} {isLicenseActive && <BadgeCheck className="w-4 h-4 text-emerald-600" />}</h3>
-                        <span className={themeStyles.typography.monoCyan}>{doctor.doctorId}</span>
+                        <h3
+                          className={themeStyles.combine(
+                            themeStyles.typography.h4,
+                            "flex items-center gap-1.5",
+                          )}
+                        >
+                          Dr. {getDoctorFullName(doctor)}{" "}
+                          {isLicenseActive && (
+                            <BadgeCheck className="w-4 h-4 text-emerald-600" />
+                          )}
+                        </h3>
+                        <span className={themeStyles.typography.monoCyan}>
+                          {doctor.doctorId}
+                        </span>
                       </div>
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-400 font-bold uppercase text-[10px]">State</span>
-                        <p className="font-semibold text-slate-800">{doctor.registrationStateName || "National"}</p>
+                        <span className="text-slate-400 font-bold uppercase text-[10px]">
+                          State
+                        </span>
+                        <p className="font-semibold text-slate-800">
+                          {doctor.registrationStateName || "National"}
+                        </p>
                       </div>
                     </div>
-                    <Link to={`/health-institute/doctors/${doctor.doctorPrimaryKey || doctor.doctorId}`}>
-                      <Button variant="outline" size="sm" className="w-full text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50 border-cyan-200 rounded-xl cursor-pointer font-semibold">View Details →</Button>
+                    <Link
+                      to={`/health-institute/doctors/${doctor.doctorPrimaryKey || doctor.doctorId}`}
+                    >
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50 border-cyan-200 rounded-xl cursor-pointer font-semibold"
+                      >
+                        View Details →
+                      </Button>
                     </Link>
                   </CardContent>
                 </Card>
@@ -320,11 +442,37 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
           </div>
           {totalPages > 1 && (
             <div className="flex items-center justify-center gap-2 pt-4">
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage <= 1} className="rounded-xl cursor-pointer"><ChevronLeft className="w-4 h-4" /></Button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                <Button key={p} variant={currentPage === p ? "cyan" : "outline"} size="sm" onClick={() => setCurrentPage(p)} className="w-8 h-8 p-0 rounded-xl cursor-pointer font-bold">{p}</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={currentPage <= 1}
+                className="rounded-xl cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+                <Button
+                  key={p}
+                  variant={currentPage === p ? "cyan" : "outline"}
+                  size="sm"
+                  onClick={() => setCurrentPage(p)}
+                  className="w-8 h-8 p-0 rounded-xl cursor-pointer font-bold"
+                >
+                  {p}
+                </Button>
               ))}
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="rounded-xl cursor-pointer"><ChevronRight className="w-4 h-4" /></Button>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() =>
+                  setCurrentPage((p) => Math.min(totalPages, p + 1))
+                }
+                disabled={currentPage >= totalPages}
+                className="rounded-xl cursor-pointer"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </Button>
             </div>
           )}
         </div>

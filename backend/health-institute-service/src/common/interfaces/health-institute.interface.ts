@@ -1,4 +1,7 @@
-import { GetAssociatedHealthInstitutesRes } from '../../proto/generated/health-institute';
+import {
+  GetAssociatedDoctorsIdRes,
+  GetAssociatedHealthInstitutesRes,
+} from '../../proto/generated/health-institute';
 
 export interface UpdateHealthInstituteResponse {
   f_result: string;
@@ -63,4 +66,9 @@ export interface GetAppointedDoctorsDatabaseResponse {
 export interface GetAssociatedHealthInstituteDatabaseResponse {
   status: string;
   healthInstitutes: GetAssociatedHealthInstitutesRes;
+}
+
+export interface GetAssociatedDoctorsIdDatabaseResponse {
+  status: string;
+  doctorPrimaryKeys: GetAssociatedDoctorsIdRes;
 }

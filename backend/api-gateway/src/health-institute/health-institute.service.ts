@@ -5,6 +5,7 @@ import {
   GetAppointDoctorMasterDataRes,
   GetAppointedDoctorsReq,
   GetAppointedDoctorsRes,
+  GetAssociatedDoctorsIdRes,
   GetDistrictsRes,
   GetHealthInstituteDetailsReq,
   GetHealthInstituteDetailsRes,
@@ -20,6 +21,7 @@ import type { ClientGrpc } from '@nestjs/microservices';
 import {
   AppointDoctorDto,
   GetAppointedDoctorsListDto,
+  GetUnAppointedDoctorsListDto,
   UpdateHealthInstituteProfileDto,
 } from './health-institute.dto';
 import { firstValueFrom } from 'rxjs';
@@ -27,8 +29,13 @@ import {
   DOCTOR_SERVICE_NAME,
   DoctorServiceClient,
   GetAppointedDoctorDetailsRes,
+  GetDoctorListRes,
+  GetUnAppointedDoctorsListReq,
 } from '../proto/generated/doctor';
-import { GetAppointedDoctorsData, GetAppointedDoctorsList } from '../common/interfaces/health-institute.interface';
+import {
+  GetAppointedDoctorsData,
+  GetAppointedDoctorsList,
+} from '../common/interfaces/health-institute.interface';
 
 @Injectable()
 export class HealthInstituteService implements OnModuleInit {
@@ -147,6 +154,35 @@ export class HealthInstituteService implements OnModuleInit {
     };
     return await firstValueFrom(
       this.healthInstituteGrpcService.appointDoctor(appointDoctorData),
+    );
+  }
+
+  /**
+   * @description Get unappointed doctor list
+   * @param request
+   * @param user
+   * @returns GetDoctorListRes
+   */
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListDto,
+    healthInstitutePrimaryKey: number,
+  ): Promise<GetDoctorListRes> {
+    const appointedDoctorsPrimaryKey: GetAssociatedDoctorsIdRes =
+      await firstValueFrom(
+        this.healthInstituteGrpcService.getAssociatedDoctorsId({
+          healthInstitutePrimaryKey,
+        }),
+      );
+    const doctorPrimaryKeys =
+      appointedDoctorsPrimaryKey?.doctorPrimaryKeys ?? [];
+
+    const filterParameter: GetUnAppointedDoctorsListReq = {
+      ...request,
+      doctorPrimaryKeys,
+    };
+
+    return firstValueFrom(
+      this.doctorGrpcService.getUnAppointedDoctorsList(filterParameter),
     );
   }
 

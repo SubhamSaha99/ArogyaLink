@@ -18,6 +18,8 @@ service DoctorService {
   rpc GetDoctorList(GetDoctorListReq) returns (GetDoctorListRes);
 
   rpc GetAppointedDoctorDetails(GetAppointedDoctorDetailsReq) returns (GetAppointedDoctorDetailsRes);
+
+  rpc GetUnAppointedDoctorsList(GetUnAppointedDoctorsListReq) returns (GetDoctorListRes);
 }
 
 message DoctorProfileReq {
@@ -149,6 +151,15 @@ message GetDoctorListReq {
   optional string search    = 3;
   optional uint32 stateId   = 4;
   optional uint32 councilId = 5;
+}
+
+message GetUnAppointedDoctorsListReq {
+  repeated uint32 doctorPrimaryKeys = 1;
+  optional uint32 offset            = 2;
+  optional uint32 limit             = 3;
+  optional string search            = 4;
+  optional uint32 stateId           = 5;
+  optional uint32 councilId         = 6;
 }
 
 message DoctorListItem {

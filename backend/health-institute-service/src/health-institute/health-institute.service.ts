@@ -6,6 +6,8 @@ import {
   GetAppointDoctorMasterDataRes,
   GetAppointedDoctorsReq,
   GetAppointedDoctorsRes,
+  GetAssociatedDoctorsIdReq,
+  GetAssociatedDoctorsIdRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   GetDistrictsReq,
@@ -21,6 +23,7 @@ import {
 } from '../proto/generated/health-institute';
 import {
   GetAppointedDoctorsDatabaseResponse,
+  GetAssociatedDoctorsIdDatabaseResponse,
   GetAssociatedHealthInstituteDatabaseResponse,
   GetDoctorMasterDataResponse,
   GetHealthInstituteDetailsResponse,
@@ -59,21 +62,21 @@ export class HealthInstituteService {
         request.email,
       ],
     );
-    const procedureResult: string = result[0]?.f_result;
+    const queryResult: string = result[0]?.f_result;
 
-    if (procedureResult === Errors.dbError) {
+    if (queryResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
 
     if (
-      typeof procedureResult === 'string' &&
-      !/^AGL-[HND]\d{6}$/.test(procedureResult)
+      typeof queryResult === 'string' &&
+      !/^AGL-[HND]\d{6}$/.test(queryResult)
     ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
     return {
-      healthInstituteId: procedureResult,
+      healthInstituteId: queryResult,
     };
   }
 
@@ -98,15 +101,15 @@ export class HealthInstituteService {
       ],
     );
 
-    const procedureResult: string = result[0]?.f_result;
+    const queryResult: string = result[0]?.f_result;
 
-    if (procedureResult === Errors.dbError) {
+    if (queryResult === Errors.dbError) {
       throwRpcException(status.INTERNAL, 'Database error');
     }
 
     if (
-      typeof procedureResult === 'string' &&
-      !/^AGL-[HND]\d{6}$/.test(procedureResult)
+      typeof queryResult === 'string' &&
+      !/^AGL-[HND]\d{6}$/.test(queryResult)
     ) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
@@ -116,7 +119,7 @@ export class HealthInstituteService {
     );
 
     return {
-      healthInstituteId: procedureResult,
+      healthInstituteId: queryResult,
     };
   }
 
@@ -143,13 +146,13 @@ export class HealthInstituteService {
         request.healthInstitutePrimaryId,
       ]);
 
-      const procedureResult = result[0];
+      const queryResult = result[0];
 
-      if (!procedureResult) {
+      if (!queryResult) {
         throwRpcException(status.INTERNAL, 'Invalid response from procedure');
       }
 
-      switch (procedureResult.status) {
+      switch (queryResult.status) {
         case Errors.invalidIdError:
           throwRpcException(status.NOT_FOUND, 'Health institute not found');
           break;
@@ -160,7 +163,7 @@ export class HealthInstituteService {
       }
 
       const response: GetHealthInstituteDetailsRes = {
-        ...procedureResult,
+        ...queryResult,
       };
 
       await this.redisService.set(cacheKey, JSON.stringify(response), 300);
@@ -379,9 +382,9 @@ export class HealthInstituteService {
         request.affiliationNotes,
       ],
     );
-    const procedureResult: string = result[0]?.f_result;
+    const queryResult: string = result[0]?.f_result;
 
-    switch (procedureResult) {
+    switch (queryResult) {
       case Errors.doctorAlreadyMapped:
         throwRpcException(status.ALREADY_EXISTS, 'Doctor Alreday Appointed!');
         break;
@@ -391,7 +394,7 @@ export class HealthInstituteService {
         break;
     }
     return {
-      mappingId: Number(procedureResult),
+      mappingId: Number(queryResult),
     };
   }
 
@@ -415,19 +418,17 @@ export class HealthInstituteService {
       request.consultationScopeId ?? null,
     ]);
 
-    const procedureResult = result[0];
+    const queryResult = result[0];
 
-    if (!procedureResult) {
+    if (!queryResult) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
     }
 
     return {
-      doctors: Array.isArray(procedureResult.doctors)
-        ? procedureResult.doctors
-        : [],
-      total: Number(procedureResult.total ?? 0),
-      offset: Number(procedureResult.offset ?? request.offset ?? 0),
-      limit: Number(procedureResult.limit ?? request.limit ?? 0),
+      doctors: Array.isArray(queryResult.doctors) ? queryResult.doctors : [],
+      total: Number(queryResult.total ?? 0),
+      offset: Number(queryResult.offset ?? request.offset ?? 0),
+      limit: Number(queryResult.limit ?? request.limit ?? 0),
     };
   }
 
@@ -452,19 +453,19 @@ export class HealthInstituteService {
       >(`SELECT * FROM get_associated_health_institutes($1)`, [
         request.doctorPrimaryKey,
       ]);
-      const procedureResult = result?.[0];
+      const queryResult = result?.[0];
 
-      if (!procedureResult) {
+      if (!queryResult) {
         throwRpcException(status.INTERNAL, 'Invalid response from database');
       }
 
-      if (procedureResult.status === Errors.dbError) {
+      if (queryResult.status === Errors.dbError) {
         throwRpcException(status.INTERNAL, 'Database error');
       }
 
       const response: GetAssociatedHealthInstitutesRes = {
-        healthInstitutes: Array.isArray(procedureResult.healthInstitutes)
-          ? procedureResult.healthInstitutes
+        healthInstitutes: Array.isArray(queryResult.healthInstitutes)
+          ? queryResult.healthInstitutes
           : [],
       };
       await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
@@ -482,5 +483,36 @@ export class HealthInstituteService {
 
       throw error;
     }
+  }
+
+  /**
+   * @description Get Associated doctor primary key
+   * @param request
+   * @returns GetAssociatedDoctorsIdRes
+   */
+  async getAssociatedDoctorsId(
+    request: GetAssociatedDoctorsIdReq,
+  ): Promise<GetAssociatedDoctorsIdRes> {
+    const result = await this.dataSource.query<
+      GetAssociatedDoctorsIdDatabaseResponse[]
+    >(`SELECT * FROM get_appointed_doctors_primary_keys($1)`, [
+      request.healthInstitutePrimaryKey,
+    ]);
+    const queryResult = result?.[0];
+
+    if (!queryResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from database');
+    }
+
+    if (queryResult.status === Errors.dbError) {
+      throwRpcException(status.INTERNAL, 'Database error');
+    }
+
+    const doctorPrimaryKeys: GetAssociatedDoctorsIdRes = {
+      doctorPrimaryKeys: Array.isArray(queryResult.doctorPrimaryKeys)
+        ? queryResult.doctorPrimaryKeys
+        : [],
+    };
+    return doctorPrimaryKeys;
   }
 }

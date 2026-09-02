@@ -10,6 +10,7 @@ import {
 import {
   AppointDoctorDto,
   GetAppointedDoctorsListDto,
+  GetUnAppointedDoctorsListDto,
   UpdateHealthInstituteProfileDto,
 } from './health-institute.dto';
 import { HealthInstituteService } from './health-institute.service';
@@ -136,6 +137,31 @@ export class HealthInstituteController {
     return {
       success: true,
       message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Get unappointed doctor list
+   * @param request 
+   * @param user 
+   * @returns json
+   */
+  @Post('getUnAppointedDoctorsList')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getUnAppointedDoctorsList(
+    @Body() request: GetUnAppointedDoctorsListDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result = await this.healthInstituteService.getUnAppointedDoctorsList(
+      request,
+      user.userPrimaryKey,
+    );
+
+    return {
+      success: true,
+      message: 'Doctor List Fetched Successfully.',
       data: result,
     };
   }

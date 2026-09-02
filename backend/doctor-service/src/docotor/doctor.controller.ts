@@ -11,6 +11,7 @@ import {
   GetDoctorListReq,
   GetDoctorListRes,
   GetDoctorMasterDataRes,
+  GetUnAppointedDoctorsListReq,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
   UpdateDoctorProfileReq,
@@ -19,6 +20,7 @@ import {
   UpdateDoctorQualificationsRes,
 } from '../proto/generated/doctor';
 import { DoctorService } from './doctor.service';
+import { Observable } from 'rxjs';
 @Controller()
 @DoctorServiceControllerMethods()
 export class DoctorController implements DoctorServiceController {
@@ -58,11 +60,19 @@ export class DoctorController implements DoctorServiceController {
     return this.doctorService.getDoctorMasterData();
   }
 
-  async getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> {
-      return this.doctorService.getDoctorList(request);
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+  ): Promise<GetDoctorListRes> {
+    return this.doctorService.getUnAppointedDoctorsList(request);
   }
 
-  async getAppointedDoctorDetails(request: GetAppointedDoctorDetailsReq): Promise<GetAppointedDoctorDetailsRes> {
-      return this.doctorService.getAppointedDoctorDetails(request);
+  async getDoctorList(request: GetDoctorListReq): Promise<GetDoctorListRes> {
+    return this.doctorService.getDoctorList(request);
+  }
+
+  async getAppointedDoctorDetails(
+    request: GetAppointedDoctorDetailsReq,
+  ): Promise<GetAppointedDoctorDetailsRes> {
+    return this.doctorService.getAppointedDoctorDetails(request);
   }
 }

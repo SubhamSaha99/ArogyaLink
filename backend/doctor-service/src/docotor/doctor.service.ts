@@ -10,6 +10,7 @@ import {
   GetDoctorListReq,
   GetDoctorListRes,
   GetDoctorMasterDataRes,
+  GetUnAppointedDoctorsListReq,
   UpdateDoctorProfessionalDetailsReq,
   UpdateDoctorProfessionalDetailsRes,
   UpdateDoctorProfileReq,
@@ -354,6 +355,46 @@ export class DoctorService {
 
       throw error;
     }
+  }
+
+  /**
+   * @description Get unappointed doctors list
+   * @param request
+   * @returns GetDoctorListRes
+   */
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+  ): Promise<GetDoctorListRes> {
+    const doctorPrimaryKeys = Array.isArray(request.doctorPrimaryKeys)
+      ? request.doctorPrimaryKeys
+      : [];
+
+    const result = await this.dataSource.query<GetDoctorListResponse[]>(
+      `SELECT * FROM get_unappointed_doctors_list($1, $2, $3, $4, $5, $6::INTEGER[])`,
+      [
+        request.offset,
+        request.limit,
+        request.search,
+        request.stateId,
+        request.councilId,
+        doctorPrimaryKeys,
+      ],
+    );
+
+    const procedureResult = result?.[0];
+
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Database Error!');
+    }
+
+    return {
+      doctors: Array.isArray(procedureResult.doctors)
+        ? procedureResult.doctors
+        : [],
+      total: Number(procedureResult.total ?? 0),
+      offset: Number(procedureResult.resultOffset ?? request.offset ?? 0),
+      limit: Number(procedureResult.resultLimit ?? request.limit ?? 0),
+    };
   }
 
   /**

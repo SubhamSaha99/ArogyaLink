@@ -5,6 +5,8 @@ import {
   GetAppointDoctorMasterDataRes,
   GetAppointedDoctorsReq,
   GetAppointedDoctorsRes,
+  GetAssociatedDoctorsIdReq,
+  GetAssociatedDoctorsIdRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   GetDistrictsReq,
@@ -21,6 +23,7 @@ import {
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
 import { HealthInstituteService } from './health-institute.service';
+import { Observable } from 'rxjs';
 
 @Controller()
 @HealthInstituteServiceControllerMethods()
@@ -77,5 +80,11 @@ export class HealthInstituteController implements HealthInstituteServiceControll
     request: GetAssociatedHealthInstitutesReq,
   ): Promise<GetAssociatedHealthInstitutesRes> {
     return this.healthInstituteService.getAssociatedHealthInstitutes(request);
+  }
+
+  async getAssociatedDoctorsId(
+    request: GetAssociatedDoctorsIdReq,
+  ): Promise<GetAssociatedDoctorsIdRes> {
+    return this.healthInstituteService.getAssociatedDoctorsId(request);
   }
 }

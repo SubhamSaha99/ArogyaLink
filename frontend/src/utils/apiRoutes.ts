@@ -25,6 +25,7 @@ export const API_ROUTES = {
   getAppointDoctorMasterData: "/api/healthInstitute/appointDoctorMasterData",
   appointDoctor: "/api/healthInstitute/appointDoctor",
   getAppointedDoctorsList: "/api/healthInstitute/getAppointedDoctorsList",
+  getUnAppointedDoctorsList: "/api/healthInstitute/getUnAppointedDoctorsList",
 } as const;
 
 export type ApiRoute = (typeof API_ROUTES)[keyof typeof API_ROUTES] | string;

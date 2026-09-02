@@ -22,6 +22,8 @@ service HealthInstituteService {
   rpc GetAppointedDoctors(GetAppointedDoctorsReq) returns (GetAppointedDoctorsRes);
 
   rpc GetAssociatedHealthInstitutes(GetAssociatedHealthInstitutesReq) returns (GetAssociatedHealthInstitutesRes);
+  
+  rpc GetAssociatedDoctorsId(GetAssociatedDoctorsIdReq) returns (GetAssociatedDoctorsIdRes);
 }
 
 message HealthInstituteProfileReq {
@@ -182,4 +184,12 @@ message GetAssociatedHealthInstitutesData {
 
 message GetAssociatedHealthInstitutesRes {
   repeated GetAssociatedHealthInstitutesData healthInstitutes = 1;
+}
+
+message GetAssociatedDoctorsIdReq {
+  uint32 healthInstitutePrimaryKey = 1;
+}
+
+message GetAssociatedDoctorsIdRes {
+  repeated uint32 doctorPrimaryKeys = 1;
 }
