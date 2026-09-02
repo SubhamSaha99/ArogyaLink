@@ -20,6 +20,7 @@ import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 export interface AssociatedHealthInstituteItem {
   healthInstitutePrimaryKey: number;
@@ -128,25 +129,25 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
   );
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-10">
+    <div className={themeStyles.layout.pageContainer}>
       {/* Header Banner */}
-      <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200/80 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+      <div className={themeStyles.layout.headerBannerLight}>
         <div className="absolute top-0 right-0 w-80 h-full bg-linear-to-l from-teal-500/10 via-cyan-500/5 to-transparent pointer-events-none" />
 
         <div className="space-y-1.5 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-teal-800 bg-teal-50 px-3 py-1 rounded-full border border-teal-200/60">
+            <span className={themeStyles.typography.pillTeal}>
               Clinical Affiliations
             </span>
             <Badge variant="outline" className="text-[10px] text-slate-500 font-mono">
               {user?.doctorId || "Doctor Terminal"}
             </Badge>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900 flex items-center gap-2.5">
+          <h1 className={themeStyles.combine(themeStyles.typography.h1, "flex items-center gap-2.5")}>
             <Building2 className="w-6 h-6 text-teal-700" />
             Associated Healthcare Institutes
           </h1>
-          <p className="text-xs text-slate-500 max-w-2xl">
+          <p className={themeStyles.typography.subtext}>
             Review all hospitals, medical centers, and clinics where you are officially
             appointed as a certified practitioner with active clinical scopes.
           </p>
@@ -168,59 +169,59 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+      <div className={themeStyles.layout.grid4}>
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Affiliated Facilities
               </span>
               <p className="text-2xl font-black text-slate-900">
                 {institutes.length}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100">
+            <div className={themeStyles.iconBadge.teal}>
               <Building2 className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Specialty Roles
               </span>
               <p className="text-2xl font-black text-emerald-600">
                 {uniqueDepartments.length || "1"}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+            <div className={themeStyles.iconBadge.emerald}>
               <Stethoscope className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Practice Scopes
               </span>
               <p className="text-2xl font-black text-cyan-700">
                 {uniqueScopes.length || "1"}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center border border-cyan-100">
+            <div className={themeStyles.iconBadge.cyan}>
               <Layers className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Registry Verification
               </span>
               <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mt-1.5">
@@ -236,7 +237,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
       </div>
 
       {/* Search & Filter Bar */}
-      <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+      <Card className={themeStyles.card.base}>
         <CardContent className="p-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
             {/* Search Input */}
@@ -247,7 +248,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 icon={<Search className="w-4 h-4 text-slate-400" />}
-                className="h-10 text-xs bg-slate-50 border-slate-200 focus:bg-white rounded-xl"
+                className={themeStyles.form.input}
               />
             </div>
 
@@ -259,7 +260,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
                   <select
                     value={selectedDept}
                     onChange={(e) => setSelectedDept(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    className={themeStyles.form.select}
                   >
                     <option value="">All Departments</option>
                     {uniqueDepartments.map((dept) => (
@@ -277,7 +278,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
                   <select
                     value={selectedScope}
                     onChange={(e) => setSelectedScope(e.target.value)}
-                    className="w-full h-10 px-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                    className={themeStyles.form.select}
                   >
                     <option value="">All Scopes</option>
                     {uniqueScopes.map((scope) => (
@@ -315,7 +316,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
 
       {/* Content Area */}
       {loading ? (
-        <div className="py-20 text-center space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs">
+        <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">
             Loading associated healthcare institutes...
@@ -325,7 +326,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
           </p>
         </div>
       ) : filteredInstitutes.length === 0 ? (
-        <div className="py-16 text-center space-y-4 bg-white rounded-3xl border border-slate-200 shadow-xs p-6">
+        <div className={themeStyles.state.empty}>
           <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 mx-auto flex items-center justify-center border border-teal-100">
             <Building2 className="w-8 h-8 text-teal-600" />
           </div>
@@ -357,7 +358,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
           )}
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div className={themeStyles.layout.grid3}>
           {filteredInstitutes.map((inst, index) => {
             const initials = (inst.healthInstituteName || "H")
               .split(" ")
@@ -370,20 +371,20 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
             return (
               <Card
                 key={`${inst.healthInstitutePrimaryKey}-${inst.departmentId}-${index}`}
-                className="border-slate-200 shadow-xs hover:shadow-md transition-all bg-white flex flex-col justify-between overflow-hidden group rounded-2xl"
+                className={themeStyles.combine(themeStyles.card.base, "flex flex-col justify-between overflow-hidden group")}
               >
                 <CardContent className="p-5 space-y-4">
                   {/* Top Row: Institute Icon, Name & Verified Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className="w-12 h-12 rounded-2xl bg-linear-to-br from-teal-600 to-cyan-700 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                      <Avatar className={themeStyles.combine(themeStyles.avatar.institute, "group-hover:scale-105 transition-transform")}>
                         <AvatarFallback>{initials || <Building2 className="w-6 h-6" />}</AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <h4 className="text-sm font-extrabold text-slate-900 truncate">
+                        <h4 className={themeStyles.combine(themeStyles.typography.h4, "truncate")}>
                           {inst.healthInstituteName || "Healthcare Institute"}
                         </h4>
-                        <span className="text-[11px] font-mono text-teal-700 font-semibold block truncate">
+                        <span className={themeStyles.typography.monoTeal}>
                           {inst.healthInstituteId}
                         </span>
                       </div>

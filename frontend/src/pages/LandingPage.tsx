@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { themeStyles } from "@/styles/themeStyles";
 
 // Sample Patient Sandbox Data for the interactive preview
 const MOCK_PATIENTS = [
@@ -264,10 +265,10 @@ export const LandingPage: React.FC = () => {
             <Badge variant="teal" className="px-3 py-1 text-xs">
               Core Problem Solved
             </Badge>
-            <h2 className="text-3xl sm:text-4xl font-extrabold text-slate-900 tracking-tight">
+            <h2 className={themeStyles.typography.h2}>
               Why Healthcare Fragmentation Costs Lives
             </h2>
-            <p className="text-slate-600 leading-relaxed">
+            <p className={themeStyles.typography.body}>
               In India, when a patient visits an emergency room or a new clinic, their past diagnostic reports, prescriptions, and allergy records are trapped in separate hospital silos.
             </p>
           </div>

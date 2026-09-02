@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 /**
  * Validation schema matching backend DoctorRegDto:
@@ -146,15 +147,11 @@ export const DoctorRegisterPage: React.FC = () => {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-50 relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 -right-20 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-900/5 overflow-hidden relative z-10">
+    <div className={themeStyles.auth.container}>
+      <div className={themeStyles.auth.card}>
         {/* Left Hero Column (5 cols) */}
-        <div className="lg:col-span-5 bg-linear-to-br from-slate-900 via-slate-900 to-teal-950 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-teal-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className={themeStyles.auth.heroCol}>
+          <div className={themeStyles.layout.ambientGlowTeal} />
 
           <div className="space-y-6 relative z-10">
             <div className="inline-flex items-center gap-2 bg-teal-500/10 border border-teal-500/20 text-teal-300 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
@@ -163,18 +160,19 @@ export const DoctorRegisterPage: React.FC = () => {
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
-                Join the National Health Network
+              <h2 className={themeStyles.typography.h2White}>
+                Join the National Clinical Network
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Register once and get instantly affiliated with hospitals, clinics, and diagnostic centers across India with ABDM compliance.
+              <p className={themeStyles.typography.bodyWhite}>
+                Register your medical practitioner credentials to access cross-facility
+                health records, emergency lookups, and hospital clinical rosters.
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
               <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center shrink-0">
-                  <CheckCircle2 className="w-4 h-4" />
+                <div className={themeStyles.iconBadge.teal}>
+                  <ShieldCheck className="w-4 h-4" />
                 </div>
                 <div className="text-xs">
                   <span className="font-bold text-white block">Automated NMC Verification</span>
@@ -183,7 +181,7 @@ export const DoctorRegisterPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0">
+                <div className={themeStyles.iconBadge.cyan}>
                   <Activity className="w-4 h-4" />
                 </div>
                 <div className="text-xs">
@@ -196,23 +194,23 @@ export const DoctorRegisterPage: React.FC = () => {
 
           <div className="pt-8 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
             <span>Verified Practitioner Access</span>
-            <span className="font-mono text-teal-400">HIPAA & ABDM Ready</span>
+            <span className="font-mono text-teal-400 font-bold">HIPAA & ABDM Ready</span>
           </div>
         </div>
 
         {/* Right Form Column (7 cols) */}
-        <div className="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-center">
+        <div className={themeStyles.auth.formCol}>
           {registerSuccess ? (
             <div className="space-y-6 text-center py-4 animate-in fade-in">
               <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-xs">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-900">
+                <h3 className={themeStyles.typography.h3}>
                   Registration Complete!
                 </h3>
-                <p className="text-xs text-slate-600 max-w-md mx-auto">
-                  Welcome, <strong className="text-slate-900">Dr. {formik.values.firstName} {formik.values.lastName}</strong>! Your doctor account has been registered with mobile <span className="font-mono font-semibold text-teal-700">{formik.values.mobile}</span> and email <span className="font-mono font-semibold text-teal-700">{formik.values.email}</span>.
+                <p className={themeStyles.typography.body}>
+                  Welcome, <strong className="text-slate-900">Dr. {formik.values.firstName} {formik.values.lastName}</strong>! Your doctor account has been registered with mobile <span className={themeStyles.typography.monoTeal}>{formik.values.mobile}</span> and email <span className={themeStyles.typography.monoTeal}>{formik.values.email}</span>.
                 </p>
               </div>
 
@@ -221,7 +219,7 @@ export const DoctorRegisterPage: React.FC = () => {
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   Medical Credential Status:
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className={themeStyles.typography.muted}>
                   NMC verification pending registry synchronization. Emergency history lookup enabled.
                 </p>
               </div>
@@ -230,7 +228,7 @@ export const DoctorRegisterPage: React.FC = () => {
                 <Button
                   variant="teal"
                   onClick={() => navigate("/dashboard")}
-                  className="font-bold text-xs h-10 px-6 cursor-pointer shadow-md"
+                  className="font-bold text-xs h-10 px-6 cursor-pointer shadow-md rounded-xl"
                 >
                   Doctor Dashboard Demo
                   <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -238,7 +236,7 @@ export const DoctorRegisterPage: React.FC = () => {
                 <Button
                   variant="outline"
                   onClick={() => navigate("/login")}
-                  className="font-semibold text-xs h-10 px-6 cursor-pointer"
+                  className="font-semibold text-xs h-10 px-6 cursor-pointer rounded-xl"
                 >
                   Proceed to Sign In
                 </Button>
@@ -247,10 +245,10 @@ export const DoctorRegisterPage: React.FC = () => {
           ) : (
             <div>
               <div className="space-y-2 mb-6">
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                <h3 className={themeStyles.typography.h2}>
                   Register Doctor Profile
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className={themeStyles.typography.subtext}>
                   Enter your official details to create a verified practitioner account.
                 </p>
               </div>

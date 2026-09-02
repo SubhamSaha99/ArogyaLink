@@ -22,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 export interface AppointedDoctorItem {
   mappingId?: number;
@@ -244,25 +245,25 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
   ).length;
 
   return (
-    <div className="p-6 md:p-8 space-y-6 max-w-7xl mx-auto">
-      {/* Header Banner with Title, Subtitle, and Appoint CTA */}
-      <div className="bg-white rounded-2xl p-6 border border-slate-200 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-6 relative overflow-hidden">
+    <div className={themeStyles.layout.pageContainer}>
+      {/* Header Banner */}
+      <div className={themeStyles.layout.headerBannerLight}>
         <div className="absolute top-0 right-0 w-80 h-full bg-linear-to-l from-teal-50/60 to-transparent pointer-events-none" />
 
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2">
-            <span className="text-[11px] font-bold uppercase tracking-wider text-teal-700 bg-teal-50 px-2.5 py-0.5 rounded-full border border-teal-200/60">
+            <span className={themeStyles.typography.pillTeal}>
               Healthcare Facility Roster
             </span>
             <Badge variant="outline" className="text-[10px] text-slate-500 font-mono">
               {user?.healthInstituteId || "Hospital Terminal"}
             </Badge>
           </div>
-          <h1 className="text-2xl font-black tracking-tight text-slate-900 flex items-center gap-2.5">
+          <h1 className={themeStyles.combine(themeStyles.typography.h1, "flex items-center gap-2.5")}>
             <UserCheck className="w-6 h-6 text-teal-700" />
             Appointed Medical Staff
           </h1>
-          <p className="text-xs text-slate-500 max-w-2xl">
+          <p className={themeStyles.typography.subtext}>
             View, filter, and oversee all certified medical practitioners appointed
             to your healthcare institute across specialized clinical departments.
           </p>
@@ -275,16 +276,16 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
             size="sm"
             onClick={() => fetchAppointedDoctors(true)}
             disabled={loading}
-            className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3"
+            className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3 rounded-xl"
           >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-teal-600" : ""}`} />
             Refresh
           </Button>
 
           <Link to="/health-institute/appoint-doctor">
             <Button
               variant="emerald"
-              className="text-xs font-bold px-4 h-9 shadow-xs cursor-pointer flex items-center gap-1.5"
+              className="text-xs font-bold px-4 h-9 shadow-xs cursor-pointer flex items-center gap-1.5 rounded-xl"
             >
               <Plus className="w-4 h-4" />
               Appoint New Doctor
@@ -294,59 +295,59 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
       </div>
 
       {/* Metrics Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <Card className="border-slate-200 shadow-xs bg-white">
+      <div className={themeStyles.layout.grid4}>
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Total Appointed
               </span>
               <p className="text-2xl font-black text-slate-900">
                 {totalCount}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100">
+            <div className={themeStyles.iconBadge.teal}>
               <UserCheck className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white">
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Active Staff on Duty
               </span>
               <p className="text-2xl font-black text-emerald-600">
                 {activePractitionersCount || totalCount}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
+            <div className={themeStyles.iconBadge.emerald}>
               <ShieldCheck className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white">
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Clinical Specialties
               </span>
               <p className="text-2xl font-black text-cyan-700">
                 {uniqueDepartmentsCount || masterData.departments.length || "Active"}
               </p>
             </div>
-            <div className="w-10 h-10 rounded-xl bg-cyan-50 text-cyan-700 flex items-center justify-center border border-cyan-100">
+            <div className={themeStyles.iconBadge.cyan}>
               <Layers className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
 
-        <Card className="border-slate-200 shadow-xs bg-white">
+        <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className="text-[11px] font-bold text-slate-500 uppercase tracking-wider">
+              <span className={themeStyles.form.label}>
                 Roster Status
               </span>
               <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mt-1.5">
@@ -362,7 +363,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
       </div>
 
       {/* Filter & Search Bar */}
-      <Card className="border-slate-200 bg-white shadow-xs">
+      <Card className={themeStyles.card.base}>
         <CardContent className="p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Search Input */}
@@ -470,17 +471,17 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
       )}
 
       {loading ? (
-        <div className="py-20 text-center space-y-3 bg-white rounded-2xl border border-slate-200 shadow-xs">
+        <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">
             Loading appointed doctors...
           </p>
-          <p className="text-xs text-slate-500">
+          <p className={themeStyles.typography.subtext}>
             Retrieving clinical affiliation records from hospital registry.
           </p>
         </div>
       ) : appointedDoctors.length === 0 ? (
-        <div className="py-16 text-center space-y-4 bg-white rounded-2xl border border-slate-200 shadow-xs p-6">
+        <div className={themeStyles.state.empty}>
           <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 mx-auto flex items-center justify-center border border-teal-100">
             <UserCheck className="w-8 h-8 text-teal-600" />
           </div>
@@ -490,7 +491,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
                 ? "No matching appointed doctors"
                 : "No doctors appointed yet"}
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className={themeStyles.typography.subtext}>
               {hasActiveFilters
                 ? "Try adjusting your search query, department, or scope filters to find appointed practitioners."
                 : "Your hospital roster is currently empty. Explore verified practitioners in the national registry to appoint them."}
@@ -503,7 +504,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
                 variant="outline"
                 size="sm"
                 onClick={handleClearFilters}
-                className="text-xs cursor-pointer"
+                className="text-xs cursor-pointer rounded-xl"
               >
                 <FilterX className="w-3.5 h-3.5 mr-1" />
                 Reset Filters
@@ -514,7 +515,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
               <Button
                 variant="emerald"
                 size="sm"
-                className="text-xs font-bold px-4 cursor-pointer flex items-center gap-1.5"
+                className="text-xs font-bold px-4 cursor-pointer flex items-center gap-1.5 rounded-xl"
               >
                 <Plus className="w-4 h-4" />
                 Appoint Doctor Now
@@ -525,7 +526,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
       ) : (
         <div className="space-y-6">
           {/* Doctors Grid */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className={themeStyles.layout.grid3}>
             {appointedDoctors.map((doc) => {
               const fullName = [doc.firstName, doc.middleName, doc.lastName]
                 .filter(Boolean)
@@ -541,20 +542,20 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
               return (
                 <Card
                   key={doc.mappingId || `${doc.doctorId}-${doc.departmentId}`}
-                  className="border-slate-200 shadow-xs hover:shadow-md transition-all bg-white flex flex-col justify-between overflow-hidden group"
+                  className={themeStyles.combine(themeStyles.card.base, "flex flex-col justify-between overflow-hidden group")}
                 >
                   <CardContent className="p-5 space-y-4">
                     {/* Top Doctor Profile Row */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-xl bg-linear-to-br from-teal-500 to-cyan-600 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                        <div className={themeStyles.combine(themeStyles.avatar.doctor, "group-hover:scale-105 transition-transform")}>
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <h4 className="text-sm font-extrabold text-slate-900 truncate">
+                          <h4 className={themeStyles.combine(themeStyles.typography.h4, "truncate")}>
                             Dr. {fullName || doc.doctorId}
                           </h4>
-                          <span className="text-[11px] font-mono text-teal-700 font-semibold block truncate">
+                          <span className={themeStyles.typography.monoTeal}>
                             {doc.doctorId}
                           </span>
                         </div>

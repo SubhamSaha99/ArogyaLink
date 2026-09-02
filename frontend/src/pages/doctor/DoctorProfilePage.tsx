@@ -30,6 +30,7 @@ import { SelectDropdown } from "@/components/common/SelectDropdown";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 export interface MasterDataItem {
   id: number;
@@ -700,18 +701,18 @@ export const DoctorProfilePage: React.FC = () => {
   const profileImage = doctorDetails?.profileDetails?.profileImage;
 
   return (
-    <div className="space-y-6 relative">
+    <div className={themeStyles.layout.pageContainer}>
       {/* Header Title Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 rounded-2xl border border-slate-200 shadow-xs">
+      <div className={themeStyles.layout.headerBannerLight}>
         <div className="space-y-1">
-          <div className="inline-flex items-center gap-1.5 text-xs text-teal-700 font-bold uppercase tracking-wider bg-teal-50 px-2.5 py-1 rounded-md border border-teal-200">
-            <ShieldCheck className="w-4 h-4 text-teal-600" />
+          <div className={themeStyles.typography.pillTeal}>
+            <ShieldCheck className="w-4 h-4 text-teal-600 inline mr-1" />
             NMC Verified Medical Professional
           </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900">
+          <h1 className={themeStyles.typography.h1}>
             Doctor Profile Details
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500">
+          <p className={themeStyles.typography.subtext}>
             Official registered details fetched directly from the ArogyaLink
             National Health Registry.
           </p>
@@ -726,7 +727,7 @@ export const DoctorProfilePage: React.FC = () => {
               fetchMasterData();
             }}
             disabled={loading || masterDataLoading}
-            className="text-xs font-semibold text-slate-700 hover:text-teal-700 border-slate-300"
+            className="text-xs font-semibold text-slate-700 hover:text-teal-700 border-slate-300 rounded-xl"
           >
             <RefreshCw
               className={`w-3.5 h-3.5 mr-1.5 ${
@@ -739,8 +740,8 @@ export const DoctorProfilePage: React.FC = () => {
       </div>
 
       {loading ? (
-        <div className="flex flex-col items-center justify-center p-16 bg-white rounded-2xl border border-slate-200 space-y-4">
-          <Loader2 className="w-8 h-8 text-teal-600 animate-spin" />
+        <div className={themeStyles.state.loading}>
+          <Loader2 className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
           <p className="text-sm font-semibold text-slate-600">
             Fetching Doctor Details...
           </p>
@@ -751,13 +752,13 @@ export const DoctorProfilePage: React.FC = () => {
             <p className="text-sm text-red-700 font-semibold">
               {fetchingError}
             </p>
-            <Button size="sm" variant="outline" onClick={fetchDoctorDetails}>
+            <Button size="sm" variant="outline" onClick={fetchDoctorDetails} className="rounded-xl">
               Try Again
             </Button>
           </CardContent>
         </Card>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className={themeStyles.layout.split12}>
           {/* Profile Key Identity Card */}
           <Card className="lg:col-span-4 border-slate-200 shadow-sm bg-white overflow-hidden">
             <div className="h-24 bg-linear-to-r from-teal-800 to-cyan-900 p-4"></div>

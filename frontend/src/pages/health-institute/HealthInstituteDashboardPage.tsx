@@ -27,6 +27,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 export interface MasterDataItem {
   id: number;
@@ -229,10 +230,10 @@ export const HealthInstituteDashboardPage: React.FC = () => {
   ];
 
   return (
-    <div className="space-y-8">
+    <div className={themeStyles.layout.pageContainer}>
       {/* Top Banner */}
-      <div className="bg-linear-to-r from-slate-900 via-slate-900 to-cyan-950 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden border border-slate-800">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+      <div className={themeStyles.layout.headerBannerDark}>
+        <div className={themeStyles.layout.ambientGlow} />
 
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
@@ -264,14 +265,14 @@ export const HealthInstituteDashboardPage: React.FC = () => {
           </div>
 
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">
+            <h1 className={themeStyles.typography.h1White}>
               Welcome, {instituteName}
             </h1>
-            <p className="text-slate-400 text-xs sm:text-sm max-w-2xl font-mono flex items-center gap-2">
+            <p className={themeStyles.typography.bodyWhite}>
               Health Institute ID:{" "}
               <span className="text-cyan-300 font-bold">{instituteId}</span>
               {loadingInstitute && (
-                <span className="text-xs text-slate-500 font-sans">
+                <span className="text-xs text-slate-500 font-sans ml-2">
                   (Loading details...)
                 </span>
               )}
@@ -290,15 +291,15 @@ export const HealthInstituteDashboardPage: React.FC = () => {
       </div>
 
       {/* Metrics Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+      <div className={themeStyles.layout.grid4}>
         {STATS.map((stat, i) => (
           <Card
             key={i}
-            className="border-slate-200 shadow-xs hover:shadow-md transition-shadow bg-white rounded-2xl"
+            className={themeStyles.card.metric}
           >
             <CardContent className="p-5 flex items-center justify-between">
               <div className="space-y-1">
-                <p className="text-[11px] font-bold uppercase tracking-wider text-slate-500">
+                <p className={themeStyles.form.label}>
                   {stat.label}
                 </p>
                 <h3 className="text-2xl font-black text-slate-900">{stat.value}</h3>
@@ -314,7 +315,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
       </div>
 
       {/* ABDM Regional Jurisdiction & District Coverage Explorer (State & District API Integration) */}
-      <Card className="border-slate-200 shadow-xs bg-white rounded-3xl overflow-hidden">
+      <Card className={themeStyles.card.large}>
         <CardHeader className="border-b border-slate-100 bg-slate-50/50 p-6">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="space-y-1">
@@ -530,9 +531,9 @@ export const HealthInstituteDashboardPage: React.FC = () => {
       </Card>
 
       {/* Main Grid Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className={themeStyles.layout.split12}>
         {/* Quick Actions & Overview */}
-        <Card className="lg:col-span-7 border-slate-200 shadow-xs bg-white rounded-3xl">
+        <Card className={themeStyles.combine(themeStyles.card.large, "lg:col-span-7")}>
           <CardHeader className="border-b border-slate-100 pb-4">
             <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Activity className="w-5 h-5 text-cyan-700" />
@@ -542,11 +543,11 @@ export const HealthInstituteDashboardPage: React.FC = () => {
           <CardContent className="p-6 space-y-4">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-4 rounded-2xl border border-slate-200 hover:border-cyan-400 hover:shadow-xs transition-all bg-slate-50/50 space-y-2">
-                <div className="w-9 h-9 rounded-xl bg-cyan-100 text-cyan-800 flex items-center justify-center font-bold">
+                <div className={themeStyles.iconBadge.cyan}>
                   <Building2 className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Institute Profile</h4>
-                <p className="text-xs text-slate-500">
+                <p className={themeStyles.typography.subtext}>
                   Manage hospital name, category, license number, and location details.
                 </p>
                 <Link
@@ -558,11 +559,11 @@ export const HealthInstituteDashboardPage: React.FC = () => {
               </div>
 
               <div className="p-4 rounded-2xl border border-slate-200 hover:border-cyan-400 hover:shadow-xs transition-all bg-slate-50/50 space-y-2">
-                <div className="w-9 h-9 rounded-xl bg-teal-100 text-teal-800 flex items-center justify-center font-bold">
+                <div className={themeStyles.iconBadge.teal}>
                   <Stethoscope className="w-5 h-5" />
                 </div>
                 <h4 className="text-sm font-bold text-slate-900">Doctor Roster</h4>
-                <p className="text-xs text-slate-500">
+                <p className={themeStyles.typography.subtext}>
                   Search, verify medical registration, and appoint doctors to your facility.
                 </p>
                 <Link
@@ -577,7 +578,7 @@ export const HealthInstituteDashboardPage: React.FC = () => {
         </Card>
 
         {/* Recent Audit / Event Log */}
-        <Card className="lg:col-span-5 border-slate-200 shadow-xs bg-white rounded-3xl">
+        <Card className={themeStyles.combine(themeStyles.card.large, "lg:col-span-5")}>
           <CardHeader className="border-b border-slate-100 pb-4">
             <CardTitle className="text-base font-bold text-slate-900 flex items-center gap-2">
               <Clock className="w-5 h-5 text-cyan-700" />

@@ -19,6 +19,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 export interface DoctorListItem {
   doctorPrimaryKey?: number;
@@ -189,9 +190,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
   const totalPages = Math.max(1, Math.ceil(totalCount / limit));
 
   return (
-    <div className="space-y-8">
-      <div className="bg-linear-to-r from-slate-900 via-slate-900 to-cyan-950 text-white p-8 rounded-3xl shadow-xl relative overflow-hidden border border-slate-800">
-        <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+    <div className={themeStyles.layout.pageContainer}>
+      <div className={themeStyles.layout.headerBannerDark}>
+        <div className={themeStyles.layout.ambientGlow} />
         <div className="relative z-10 space-y-4">
           <div className="flex flex-wrap items-center gap-2">
             <Badge variant="secondary" className="text-xs px-3 py-1 font-bold bg-cyan-500/20 text-cyan-200 border-cyan-500/30">
@@ -204,8 +205,8 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
             </Badge>
           </div>
           <div className="space-y-1">
-            <h1 className="text-3xl sm:text-4xl font-black tracking-tight text-white">Appoint Certified Doctors</h1>
-            <p className="text-slate-400 text-xs sm:text-sm max-w-2xl">Search the central ABDM medical registry, verify practitioner registration numbers & licenses, and recruit certified medical specialists to your institute.</p>
+            <h1 className={themeStyles.typography.h1White}>Appoint Certified Doctors</h1>
+            <p className={themeStyles.typography.bodyWhite}>Search the central ABDM medical registry, verify practitioner registration numbers & licenses, and recruit certified medical specialists to your institute.</p>
           </div>
           <div className="pt-2 flex flex-wrap gap-4 text-xs text-slate-300">
             <div className="flex items-center gap-2 bg-slate-800/80 px-3.5 py-1.5 rounded-xl border border-slate-700">
@@ -216,7 +217,7 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
         </div>
       </div>
 
-      <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+      <Card className={themeStyles.card.base}>
         <CardContent className="p-5 space-y-4">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="relative flex-1">
@@ -225,9 +226,9 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                 placeholder="Search by Doctor ID (e.g. DOC000001), or Medical Reg No..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="h-10 text-xs bg-slate-50 border-slate-200 focus:bg-white rounded-xl pl-9"
+                icon={<Search className="w-4 h-4 text-slate-400" />}
+                className={themeStyles.form.input}
               />
-              <Search className="w-4 h-4 text-slate-400 absolute left-3 top-3" />
             </div>
             <div className="flex flex-wrap items-center gap-3">
               <select
@@ -237,7 +238,7 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                   setCurrentPage(1);
                 }}
                 onFocus={fetchMasterData}
-                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                className={themeStyles.form.select}
               >
                 <option value="">All States</option>
                 {states.map((st) => <option key={st.id} value={st.id}>{st.name} {st.code ? `(${st.code})` : ""}</option>)}
@@ -249,7 +250,7 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                   setCurrentPage(1);
                 }}
                 onFocus={fetchMasterData}
-                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                className={themeStyles.form.select}
               >
                 <option value="">All Medical Councils</option>
                 {councils.map((c) => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -260,15 +261,15 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
                   setLimit(Number(e.target.value));
                   setCurrentPage(1);
                 }}
-                className="px-2.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:ring-2 focus:ring-cyan-500 cursor-pointer"
+                className={themeStyles.combine(themeStyles.form.select, "w-auto px-2.5")}
               >
                 {[6, 10, 20, 50].map(n => <option key={n} value={n}>{n} rows</option>)}
               </select>
-              <Button variant="outline" size="sm" onClick={() => fetchDoctors(true)} disabled={loading} className="h-9 px-3 rounded-xl">
-                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} /> Refresh
+              <Button variant="outline" size="sm" onClick={() => fetchDoctors(true)} disabled={loading} className="h-9 px-3 rounded-xl cursor-pointer">
+                <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-cyan-600" : ""}`} /> Refresh
               </Button>
               {(searchTerm || selectedStateId !== null || selectedCouncilId !== null) && (
-                <Button variant="outline" size="sm" onClick={handleClearFilters} className="text-red-600 h-9 px-3 rounded-xl">Clear Filters</Button>
+                <Button variant="outline" size="sm" onClick={handleClearFilters} className="text-red-600 h-9 px-3 rounded-xl cursor-pointer">Clear Filters</Button>
               )}
             </div>
           </div>
@@ -278,39 +279,39 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
       {error && <Alert variant="destructive"><AlertCircle className="w-4 h-4" /><AlertDescription className="text-xs font-semibold">{error}</AlertDescription></Alert>}
 
       {loading ? (
-        <div className="py-20 text-center space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs">
+        <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-cyan-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">Fetching Central Doctor Directory...</p>
         </div>
       ) : doctors.length === 0 ? (
-        <div className="py-16 text-center space-y-4 bg-white rounded-3xl border border-slate-200 shadow-xs">
+        <div className={themeStyles.state.empty}>
           <UserCheck className="w-8 h-8 text-cyan-600 mx-auto" />
           <h3 className="text-base font-bold text-slate-900">No doctors found</h3>
-          <Button variant="outline" size="sm" onClick={handleClearFilters} className="rounded-xl">Reset All Filters</Button>
+          <Button variant="outline" size="sm" onClick={handleClearFilters} className="rounded-xl cursor-pointer">Reset All Filters</Button>
         </div>
       ) : (
         <div className="space-y-6">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+          <div className={themeStyles.layout.grid3}>
             {doctors.map((doctor, index) => {
               const isLicenseActive = doctor.licenseStatus === 1 || doctor.licenseStatus === undefined;
               return (
-                <Card key={doctor.doctorPrimaryKey || doctor.doctorId || index} className="border-slate-200 rounded-2xl">
+                <Card key={doctor.doctorPrimaryKey || doctor.doctorId || index} className={themeStyles.card.base}>
                   <CardContent className="p-5 space-y-4">
                     <div className="flex items-center gap-3">
-                      <Avatar className="w-12 h-12 rounded-2xl bg-cyan-700 text-white font-black"><AvatarFallback>{getDoctorInitials(doctor)}</AvatarFallback></Avatar>
+                      <Avatar className={themeStyles.avatar.doctor}><AvatarFallback>{getDoctorInitials(doctor)}</AvatarFallback></Avatar>
                       <div>
-                        <h3 className="text-sm font-extrabold text-slate-900 flex items-center gap-1.5">Dr. {getDoctorFullName(doctor)} {isLicenseActive && <BadgeCheck className="w-4 h-4 text-emerald-600" />}</h3>
-                        <span className="text-[11px] font-mono font-bold text-cyan-700 bg-cyan-50 px-2 py-0.5 rounded-md">{doctor.doctorId}</span>
+                        <h3 className={themeStyles.combine(themeStyles.typography.h4, "flex items-center gap-1.5")}>Dr. {getDoctorFullName(doctor)} {isLicenseActive && <BadgeCheck className="w-4 h-4 text-emerald-600" />}</h3>
+                        <span className={themeStyles.typography.monoCyan}>{doctor.doctorId}</span>
                       </div>
                     </div>
                     <div className="space-y-2 text-xs">
                       <div className="flex justify-between">
-                        <span className="text-slate-400 font-bold uppercase">State</span>
-                        <p className="font-semibold">{doctor.registrationStateName || "National"}</p>
+                        <span className="text-slate-400 font-bold uppercase text-[10px]">State</span>
+                        <p className="font-semibold text-slate-800">{doctor.registrationStateName || "National"}</p>
                       </div>
                     </div>
                     <Link to={`/health-institute/doctors/${doctor.doctorPrimaryKey || doctor.doctorId}`}>
-                      <Button variant="outline" size="sm" className="w-full text-cyan-700 rounded-xl">View Details →</Button>
+                      <Button variant="outline" size="sm" className="w-full text-cyan-700 hover:text-cyan-800 hover:bg-cyan-50 border-cyan-200 rounded-xl cursor-pointer font-semibold">View Details →</Button>
                     </Link>
                   </CardContent>
                 </Card>
@@ -318,12 +319,12 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
             })}
           </div>
           {totalPages > 1 && (
-            <div className="flex items-center justify-center gap-2">
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage <= 1} className="rounded-xl"><ChevronLeft className="w-4 h-4" /></Button>
+            <div className="flex items-center justify-center gap-2 pt-4">
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.max(1, p - 1))} disabled={currentPage <= 1} className="rounded-xl cursor-pointer"><ChevronLeft className="w-4 h-4" /></Button>
               {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-                <Button key={p} variant={currentPage === p ? "default" : "outline"} size="sm" onClick={() => setCurrentPage(p)} className="w-8 h-8 p-0 rounded-xl">{p}</Button>
+                <Button key={p} variant={currentPage === p ? "cyan" : "outline"} size="sm" onClick={() => setCurrentPage(p)} className="w-8 h-8 p-0 rounded-xl cursor-pointer font-bold">{p}</Button>
               ))}
-              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="rounded-xl"><ChevronRight className="w-4 h-4" /></Button>
+              <Button variant="outline" size="sm" onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} disabled={currentPage >= totalPages} className="rounded-xl cursor-pointer"><ChevronRight className="w-4 h-4" /></Button>
             </div>
           )}
         </div>

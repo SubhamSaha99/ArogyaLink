@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 /**
  * Health Institute Type Options
@@ -144,34 +145,30 @@ export const HealthInstituteRegisterPage: React.FC = () => {
   const passwordStrength = getPasswordStrength();
 
   return (
-    <div className="min-h-[calc(100vh-5rem)] flex items-center justify-center p-4 sm:p-6 lg:p-8 bg-slate-50 relative overflow-hidden">
-      {/* Ambient background glow */}
-      <div className="absolute top-1/4 -left-20 w-80 h-80 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-10 -right-20 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
-
-      <div className="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 bg-white rounded-3xl border border-slate-200/80 shadow-xl shadow-slate-900/5 overflow-hidden relative z-10">
+    <div className={themeStyles.auth.container}>
+      <div className={themeStyles.auth.card}>
         {/* Left Hero Column (5 cols) */}
-        <div className="lg:col-span-5 bg-linear-to-br from-slate-900 via-slate-900 to-cyan-950 p-8 sm:p-10 text-white flex flex-col justify-between relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-cyan-500/10 rounded-full blur-2xl pointer-events-none" />
+        <div className={themeStyles.auth.heroCol}>
+          <div className={themeStyles.layout.ambientGlow} />
 
           <div className="space-y-6 relative z-10">
             <div className="inline-flex items-center gap-2 bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-[11px] font-bold px-3 py-1 rounded-full uppercase tracking-wider">
               <Building2 className="w-3.5 h-3.5 text-cyan-400" />
-              Health Facility Registry
+              Health Facility Onboarding
             </div>
 
             <div className="space-y-2">
-              <h2 className="text-2xl sm:text-3xl font-black tracking-tight text-white">
+              <h2 className={themeStyles.typography.h2White}>
                 Register Your Healthcare Institution
               </h2>
-              <p className="text-xs text-slate-400 leading-relaxed">
-                Connect your hospital, medical center, or clinic to the national health grid. Manage doctor appointments and roster schedules in real-time.
+              <p className={themeStyles.typography.bodyWhite}>
+                Connect your medical hospital, clinic, or diagnostic center to the ABDM network to streamline clinical doctor appointments and unified EHR governance.
               </p>
             </div>
 
             <div className="space-y-3 pt-2">
               <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <div className="w-8 h-8 rounded-lg bg-cyan-500/20 text-cyan-300 flex items-center justify-center shrink-0">
+                <div className={themeStyles.iconBadge.cyan}>
                   <CheckCircle2 className="w-4 h-4" />
                 </div>
                 <div className="text-xs">
@@ -181,7 +178,7 @@ export const HealthInstituteRegisterPage: React.FC = () => {
               </div>
 
               <div className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/60 border border-slate-700/60">
-                <div className="w-8 h-8 rounded-lg bg-teal-500/20 text-teal-300 flex items-center justify-center shrink-0">
+                <div className={themeStyles.iconBadge.teal}>
                   <Activity className="w-4 h-4" />
                 </div>
                 <div className="text-xs">
@@ -194,23 +191,23 @@ export const HealthInstituteRegisterPage: React.FC = () => {
 
           <div className="pt-8 border-t border-slate-800 flex items-center justify-between text-[11px] text-slate-400 relative z-10">
             <span>Institutional Healthcare Gate</span>
-            <span className="font-mono text-cyan-400">ABDM Registry Ready</span>
+            <span className="font-mono text-cyan-400 font-bold">ABDM Registry Ready</span>
           </div>
         </div>
 
         {/* Right Form Column (7 cols) */}
-        <div className="lg:col-span-7 p-8 sm:p-10 flex flex-col justify-center">
+        <div className={themeStyles.auth.formCol}>
           {registerSuccess ? (
             <div className="space-y-6 text-center py-4 animate-in fade-in">
               <div className="w-16 h-16 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center mx-auto shadow-xs">
                 <CheckCircle2 className="w-8 h-8" />
               </div>
               <div className="space-y-1">
-                <h3 className="text-xl font-bold text-slate-900">
+                <h3 className={themeStyles.typography.h3}>
                   Institute Registered Successfully!
                 </h3>
-                <p className="text-xs text-slate-600 max-w-md mx-auto">
-                  <strong className="text-slate-900">{formik.values.healthInstituteName}</strong> has been registered on ArogyaLink with email <span className="font-mono font-semibold text-cyan-700">{formik.values.email}</span>.
+                <p className={themeStyles.typography.body}>
+                  <strong className="text-slate-900">{formik.values.healthInstituteName}</strong> has been registered on ArogyaLink with email <span className={themeStyles.typography.monoCyan}>{formik.values.email}</span>.
                 </p>
                 {registeredInstituteId && (
                   <div className="mt-2 inline-block px-3 py-1 bg-cyan-50 border border-cyan-200 rounded-full text-xs font-mono font-bold text-cyan-800">
@@ -224,7 +221,7 @@ export const HealthInstituteRegisterPage: React.FC = () => {
                   <ShieldCheck className="w-4 h-4 text-emerald-600" />
                   Facility Onboarding Status:
                 </div>
-                <p className="text-[11px] text-slate-500">
+                <p className={themeStyles.typography.muted}>
                   ABDM Health Facility Registry gateway sync initialized. You can now sign in to complete your hospital location and department details.
                 </p>
               </div>
@@ -233,7 +230,7 @@ export const HealthInstituteRegisterPage: React.FC = () => {
                 <Button
                   variant="cyan"
                   onClick={() => navigate("/health-institute/login")}
-                  className="font-bold text-xs h-10 px-6 cursor-pointer shadow-md"
+                  className="font-bold text-xs h-10 px-6 cursor-pointer shadow-md rounded-xl"
                 >
                   Proceed to Institute Sign In
                   <ArrowRight className="w-4 h-4 ml-1.5" />
@@ -243,10 +240,10 @@ export const HealthInstituteRegisterPage: React.FC = () => {
           ) : (
             <div>
               <div className="space-y-2 mb-6">
-                <h3 className="text-xl font-bold text-slate-900 tracking-tight">
+                <h3 className={themeStyles.typography.h2}>
                   Register Health Institute
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className={themeStyles.typography.subtext}>
                   Create an official portal account for your Hospital, Clinic, or Diagnostic Facility.
                 </p>
               </div>

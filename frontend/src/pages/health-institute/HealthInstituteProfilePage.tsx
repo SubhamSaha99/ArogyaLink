@@ -24,6 +24,7 @@ import { Input } from "@/components/ui/input";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 /**
  * Health Institute Category Mapping Helper
@@ -335,9 +336,9 @@ export const HealthInstituteProfilePage: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 relative">
+    <div className={themeStyles.layout.pageContainer}>
       {/* Header Title Bar */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-6 sm:p-7 rounded-3xl border border-slate-200/80 shadow-xs relative overflow-hidden">
+      <div className={themeStyles.layout.headerBannerLight}>
         <div className="absolute top-0 right-0 w-72 h-full bg-linear-to-l from-cyan-500/10 via-teal-500/5 to-transparent pointer-events-none" />
 
         <div className="space-y-1.5 relative z-10">
@@ -345,37 +346,35 @@ export const HealthInstituteProfilePage: React.FC = () => {
             <ShieldCheck className="w-3.5 h-3.5 text-cyan-600" />
             ABDM Health Facility Registry (HFR)
           </div>
-          <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-slate-900">
+          <h1 className={themeStyles.typography.h1}>
             Health Facility Profile
           </h1>
-          <p className="text-xs text-slate-500 max-w-xl">
-            Registered hospital and healthcare provider credentials synced with ArogyaLink National Health Gateway.
+          <p className={themeStyles.typography.subtext}>
+            Manage institutional licensing, address coordinates, and certified hospital contacts.
           </p>
         </div>
 
-        <div className="flex items-center gap-2.5 relative z-10 shrink-0">
+        {/* Action Buttons */}
+        <div className="flex items-center gap-3 relative z-10 shrink-0">
           <Button
             variant="outline"
             size="sm"
             onClick={fetchInstituteDetails}
             disabled={loading}
-            className="text-xs font-semibold text-slate-700 hover:text-cyan-700 border-slate-300 h-9 px-3.5 rounded-xl cursor-pointer"
+            className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3.5 rounded-xl"
           >
-            <RefreshCw
-              className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`}
-            />
-            Refresh Data
+            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            Refresh
           </Button>
 
           <Button
             variant="cyan"
             size="sm"
             onClick={openEditModal}
-            disabled={loading}
-            className="text-xs font-bold shadow-md h-9 px-4 rounded-xl cursor-pointer"
+            className="text-xs font-bold px-4 h-9 cursor-pointer shadow-xs rounded-xl"
           >
             <Edit className="w-3.5 h-3.5 mr-1.5" />
-            Edit Profile Details
+            Edit Profile
           </Button>
         </div>
       </div>
@@ -396,10 +395,20 @@ export const HealthInstituteProfilePage: React.FC = () => {
             </Button>
           </CardContent>
         </Card>
+      ) : null}
+
+      {/* Main Details Grid */}
+      {loading ? (
+        <div className={themeStyles.state.loading}>
+          <RefreshCw className="w-8 h-8 text-cyan-600 animate-spin mx-auto" />
+          <p className="text-sm font-bold text-slate-800">
+            Loading institute profile...
+          </p>
+        </div>
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        <div className={themeStyles.layout.split12}>
           {/* Key Identity Card */}
-          <Card className="lg:col-span-4 border-slate-200 shadow-sm bg-white overflow-hidden">
+          <Card className={themeStyles.combine(themeStyles.card.large, "lg:col-span-4 overflow-hidden")}>
             <div className="h-28 bg-linear-to-r from-teal-800 to-cyan-900 p-4"></div>
             <CardContent className="pt-0 relative space-y-4 pb-6">
               <div className="relative w-20 h-20 -mt-10 mb-2">
@@ -411,7 +420,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
               </div>
 
               <div>
-                <h2 className="text-xl font-extrabold text-slate-900 leading-tight">
+                <h2 className={themeStyles.typography.h3}>
                   {instituteName}
                 </h2>
                 <div className="flex flex-wrap gap-2 items-center mt-2">
@@ -442,9 +451,9 @@ export const HealthInstituteProfilePage: React.FC = () => {
           </Card>
 
           {/* Right Column: Detailed Cards */}
-          <div className="lg:col-span-8 space-y-6">
+          <div className={themeStyles.layout.col8}>
             {/* Primary Facility Information */}
-            <Card className="border-slate-200 shadow-xs bg-white">
+            <Card className={themeStyles.card.base}>
               <CardHeader className="border-b border-slate-100 pb-3 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
                   <Building className="w-5 h-5 text-teal-700" />
@@ -465,14 +474,14 @@ export const HealthInstituteProfilePage: React.FC = () => {
               <CardContent className="p-6">
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Institute / Hospital Name
                     </label>
                     <p className="text-sm font-bold text-slate-900">{instituteName}</p>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Facility Category
                     </label>
                     <p className="text-sm font-semibold text-teal-800">
@@ -481,7 +490,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Registration / License Number
                     </label>
                     <p className="text-sm font-mono font-bold text-slate-800">
@@ -490,14 +499,14 @@ export const HealthInstituteProfilePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Official Email Address
                     </label>
                     <p className="text-sm font-medium text-slate-800">{email}</p>
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Contact Phone Number
                     </label>
                     <p className="text-sm font-mono font-medium text-slate-800">
@@ -506,7 +515,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Verification Status
                     </label>
                     <div className="flex items-center gap-1.5 text-xs text-emerald-700 font-bold">
@@ -519,7 +528,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
             </Card>
 
             {/* Location & Postal Address Card */}
-            <Card className="border-slate-200 shadow-xs bg-white">
+            <Card className={themeStyles.card.base}>
               <CardHeader className="border-b border-slate-100 pb-3 flex flex-row items-center justify-between">
                 <div className="flex items-center gap-2">
                   <MapPin className="w-5 h-5 text-teal-700" />
@@ -531,7 +540,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
               <CardContent className="p-6 space-y-4">
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                   <div className="sm:col-span-3 space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Street Address
                     </label>
                     <p className="text-sm font-medium text-slate-800">
@@ -540,7 +549,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       State
                     </label>
                     <p className="text-sm font-semibold text-slate-800">
@@ -549,7 +558,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       District
                     </label>
                     <p className="text-sm font-semibold text-slate-800">
@@ -558,7 +567,7 @@ export const HealthInstituteProfilePage: React.FC = () => {
                   </div>
 
                   <div className="space-y-1">
-                    <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    <label className={themeStyles.form.label}>
                       Pincode / Postal Code
                     </label>
                     <p className="text-sm font-mono font-bold text-slate-800">

@@ -33,6 +33,7 @@ import {
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
+import { themeStyles } from "@/styles/themeStyles";
 
 export interface DoctorDetailsData {
   doctorPrimaryKey?: number;
@@ -143,23 +144,32 @@ export const getCachedHealthInstitutePrimaryKey = async (): Promise<number | nul
 };
 
 export const HealthInstituteDoctorDetailsPage: React.FC = () => {
-  const { id: paramDoctorId } = useParams<{ id: string }>();
+  const { doctorId: paramDoctorId, id: paramId } = useParams<{ doctorId?: string; id?: string }>();
+  const activeRouteId = paramDoctorId || paramId;
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth();
 
   const stateDoctor = (location.state as any)?.doctor;
+  const stateDoctorPrimaryKey = (location.state as any)?.doctorPrimaryKey;
+  const stateDoctorId = (location.state as any)?.doctorId;
+
+  const isNumericParam = Boolean(activeRouteId && /^\d+$/.test(activeRouteId));
   const initialDoctorPrimaryKey =
-    (location.state as any)?.doctorPrimaryKey ||
+    stateDoctorPrimaryKey ||
     stateDoctor?.doctorPrimaryKey ||
-    (!isNaN(Number(paramDoctorId)) ? Number(paramDoctorId) : undefined);
+    (isNumericParam ? Number(activeRouteId) : undefined);
+  const initialDoctorId =
+    stateDoctorId ||
+    stateDoctor?.doctorId ||
+    (!isNumericParam && activeRouteId ? activeRouteId : undefined);
 
   // Doctor Details State
   const [doctorData, setDoctorData] = useState<DoctorDetailsData | null>(() => {
     if (stateDoctor) {
       return {
         doctorPrimaryKey: initialDoctorPrimaryKey,
-        doctorId: stateDoctor.doctorId || paramDoctorId || "",
+        doctorId: initialDoctorId || stateDoctor.doctorId || "",
         profileDetails: {
           firstName: stateDoctor.firstName,
           middleName: stateDoctor.middleName,
@@ -206,22 +216,37 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
 
   const hasFetchedRef = useRef(false);
 
-  // Fetch Doctor Details from Server
+  // Fetch Doctor Details from Server: POST /api/doctor/getDoctorDetails with body payload
   const fetchDoctorDetails = useCallback(async () => {
-    if (!paramDoctorId && !initialDoctorPrimaryKey) return;
+    const docPk =
+      initialDoctorPrimaryKey ??
+      (isNumericParam ? Number(activeRouteId) : undefined);
+    const docId =
+      initialDoctorId ??
+      (!isNumericParam && activeRouteId ? activeRouteId : undefined);
+
+    if (!docPk && !docId) {
+      setError("No Doctor reference provided in route parameters.");
+      setLoading(false);
+      return;
+    }
 
     setLoading(true);
     setError(null);
 
     try {
+      const payload: { doctorPrimaryKey?: number; doctorId?: string } = {};
+      if (docPk) payload.doctorPrimaryKey = Number(docPk);
+      if (docId) payload.doctorId = docId;
+
       const response = await callApi(
-        `${API_ROUTES.getDoctorDetails}/${paramDoctorId || initialDoctorPrimaryKey}`,
-        null,
-        "GET"
+        API_ROUTES.getDoctorDetails,
+        payload,
+        "POST"
       );
 
-      const data = response?.data || response;
-      if (data) {
+      const data = response?.data?.data || response?.data || response;
+      if (data && (data.doctorId || data.profileDetails || data.doctorPrimaryKey)) {
         setDoctorData(data);
       } else {
         throw new Error("No details returned from practitioner registry.");
@@ -238,7 +263,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     } finally {
       setLoading(false);
     }
-  }, [paramDoctorId, initialDoctorPrimaryKey, doctorData]);
+  }, [activeRouteId, isNumericParam, initialDoctorPrimaryKey, initialDoctorId, doctorData]);
 
   // Initial Fetch on component mount
   useEffect(() => {
@@ -287,7 +312,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
     const docPk =
       doctorData?.doctorPrimaryKey ??
       initialDoctorPrimaryKey ??
-      (!isNaN(Number(paramDoctorId)) ? Number(paramDoctorId) : null);
+      (isNumericParam ? Number(activeRouteId) : null);
 
     if (!docPk) {
       setAppointmentError("Missing doctor primary key reference for appointment.");
@@ -365,7 +390,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   const fullName = getFullName();
 
   return (
-    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+    <div className={themeStyles.layout.pageContainer}>
       {/* Top Breadcrumb & Action Bar */}
       <div className="flex items-center justify-between gap-4">
         <Button
@@ -412,24 +437,24 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
 
       {/* Loading Skeleton */}
       {loading && !doctorData ? (
-        <div className="py-24 text-center space-y-3 bg-white rounded-3xl border border-slate-200 shadow-xs">
+        <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-cyan-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">
             Fetching verified practitioner profile...
           </p>
-          <p className="text-xs text-slate-500">
+          <p className={themeStyles.typography.subtext}>
             Querying NMC doctor registry, state councils, and medical credentials.
           </p>
         </div>
       ) : doctorData ? (
         <div className="space-y-6">
           {/* Hero Profile Overview Card */}
-          <div className="bg-linear-to-r from-slate-900 via-slate-900 to-cyan-950 text-white rounded-3xl p-6 sm:p-8 shadow-xl border border-slate-800 relative overflow-hidden">
-            <div className="absolute right-0 top-0 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className={themeStyles.layout.headerBannerDark}>
+            <div className={themeStyles.layout.ambientGlow} />
 
             <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
               <div className="flex flex-col sm:flex-row items-start sm:items-center gap-5">
-                <Avatar className="w-20 h-20 rounded-3xl bg-linear-to-br from-cyan-600 to-teal-700 text-white font-black text-2xl flex items-center justify-center shadow-lg border-2 border-white/20 shrink-0">
+                <Avatar className={themeStyles.avatar.hero}>
                   <AvatarFallback>{getInitials()}</AvatarFallback>
                 </Avatar>
 
@@ -461,7 +486,7 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
                     )}
                   </div>
 
-                  <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex items-center gap-2">
+                  <h1 className={themeStyles.combine(themeStyles.typography.h1White, "flex items-center gap-2")}>
                     Dr. {fullName}
                     {isLicenseActive && (
                       <BadgeCheck className="w-6 h-6 text-cyan-400 shrink-0" />
@@ -501,11 +526,11 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
           </div>
 
           {/* Details Section Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          <div className={themeStyles.layout.split12}>
             {/* Column Left: Contact Info & Medical Registration (5 cols) */}
-            <div className="lg:col-span-5 space-y-6">
+            <div className={themeStyles.layout.col5}>
               {/* Personal & Contact Details Card */}
-              <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+              <Card className={themeStyles.card.base}>
                 <CardHeader className="border-b border-slate-100 pb-3.5">
                   <CardTitle className="text-sm font-bold text-slate-900 flex items-center gap-2">
                     <User className="w-4 h-4 text-cyan-700" />

@@ -36,6 +36,7 @@ import {
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { useAuth } from "@/context/AuthContext";
+import { themeStyles } from "@/styles/themeStyles";
 
 // Mock Database of Patients for Dashboard Search
 const DASHBOARD_PATIENTS: Record<string, any> = {
@@ -213,22 +214,22 @@ export const DoctorDashboardPreview: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className={themeStyles.layout.pageContainer}>
       {/* Patient Search Banner */}
-      <Card className="bg-linear-to-r from-slate-900 via-slate-900 to-teal-950 text-white border-slate-800 shadow-xl rounded-3xl overflow-hidden relative">
-        <div className="absolute top-0 right-0 w-96 h-96 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+      <Card className={themeStyles.layout.headerBannerDark}>
+        <div className={themeStyles.layout.ambientGlowTeal} />
 
-        <CardContent className="p-6 sm:p-8 relative z-10">
+        <CardContent className="p-0 relative z-10">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="space-y-1.5 text-center md:text-left">
               <div className="inline-flex items-center gap-1.5 text-[11px] text-teal-300 font-bold uppercase tracking-wider bg-teal-500/10 border border-teal-500/20 px-3 py-1 rounded-full">
                 <ShieldCheck className="w-3.5 h-3.5 text-teal-400" />
                 National Patient History Query Engine
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
+              <h1 className={themeStyles.typography.h1White}>
                 Consolidated Medical Record Lookup
               </h1>
-              <p className="text-xs text-slate-300 max-w-xl">
+              <p className={themeStyles.typography.bodyWhite}>
                 Search by ABHA Health ID or Mobile number to aggregate records from all connected hospital nodes in real-time.
               </p>
             </div>
@@ -251,7 +252,7 @@ export const DoctorDashboardPreview: React.FC = () => {
               <Button
                 type="submit"
                 variant="teal"
-                className="font-bold text-xs h-10 px-5 shadow-md cursor-pointer"
+                className="font-bold text-xs h-10 px-5 shadow-md cursor-pointer rounded-xl"
               >
                 <Zap className="w-4 h-4 mr-1.5" />
                 Fetch History
@@ -262,11 +263,11 @@ export const DoctorDashboardPreview: React.FC = () => {
       </Card>
 
       {/* Patient Record Main Detail Container */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+      <div className={themeStyles.layout.split12}>
         {/* Left Column: Patient Profile & Allergies */}
-        <div className="lg:col-span-4 space-y-6">
+        <div className={themeStyles.layout.col4}>
           {/* Patient Identity Card */}
-          <Card className="border-slate-200 shadow-xs bg-white rounded-2xl">
+          <Card className={themeStyles.card.base}>
             <CardHeader className="pb-3 border-b border-slate-100">
               <div className="flex items-center justify-between">
                 <Badge variant="teal" className="text-[10px] font-mono">
