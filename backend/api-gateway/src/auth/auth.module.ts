@@ -12,6 +12,7 @@ import { GrpcServiceName } from '../common/utils/constant';
 import { HEALTH_INSTITUTE_PACKAGE_NAME } from '../proto/generated/health-institute';
 import { DOCTOR_PACKAGE_NAME } from '../proto/generated/doctor';
 import { AUTH_PACKAGE_NAME } from '../proto/generated/auth';
+import { PATIENT_PACKAGE_NAME } from '../proto/generated/patient';
 
 @Module({
   imports: [
@@ -74,6 +75,37 @@ import { AUTH_PACKAGE_NAME } from '../proto/generated/auth';
             url:
               configService.get<string>('HEALTH_INSTITUTE_SERVICE_GRPC_URL') ??
               '0.0.0.0:50053',
+            loader: {
+              keepCase: false,
+              longs: String,
+              enums: String,
+              defaults: true,
+              oneofs: false,
+              arrays: true,
+            },
+          },
+        }),
+      },
+      {
+        name: GrpcServiceName.PATIENT,
+        imports: [ConfigModule],
+        inject: [ConfigService],
+        useFactory: (configService: ConfigService) => ({
+          transport: Transport.GRPC,
+          options: {
+            package: PATIENT_PACKAGE_NAME,
+            protoPath: join(__dirname, '../proto/patient.proto'),
+            url:
+              configService.get<string>('PATIENT_SERVICE_GRPC_URL') ??
+              '0.0.0.0:50054',
+            loader: {
+              keepCase: false,
+              longs: String,
+              enums: String,
+              defaults: true,
+              oneofs: false,
+              arrays: true,
+            },
           },
         }),
       },

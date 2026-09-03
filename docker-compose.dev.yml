@@ -1,66 +1,82 @@
 services:
-    auth_postgres:
-        image: postgres:16
-        container_name: postgres_auth
-        restart: always
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: auth_db
-        ports:
-            - "5432:5432"
-        volumes:
-            - auth_postgres_data:/var/lib/postgresql/data
-        networks:
-            - arogyalink-network
+  auth_postgres:
+    image: postgres:16
+    container_name: postgres_auth
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: auth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - auth_postgres_data:/var/lib/postgresql/data
+    networks:
+      - arogyalink-network
 
-    doctor_postgres:
-        image: postgres:16
-        container_name: postgres_doctor
-        restart: always
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: doctor_db
-        ports:
-            - "5433:5432"
-        volumes:
-            - doctor_postgres_data:/var/lib/postgresql/data
-        networks:
-            - arogyalink-network
+  doctor_postgres:
+    image: postgres:16
+    container_name: postgres_doctor
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: doctor_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - doctor_postgres_data:/var/lib/postgresql/data
+    networks:
+      - arogyalink-network
 
-    health_institute_postgres:
-        image: postgres:16
-        container_name: postgres_health_institute
-        restart: always
-        environment:
-            POSTGRES_USER: postgres
-            POSTGRES_PASSWORD: postgres
-            POSTGRES_DB: health_institute_db
-        ports:
-            - "5434:5432"
-        volumes:
-            - health_institute_postgres_data:/var/lib/postgresql/data
-        networks:
-            - arogyalink-network
-    redis:
-        image: redis:latest
-        container_name: redis
-        restart: always
-        ports:
-            - "6379:6379"
-        command: ["redis-server", "--appendonly", "yes"]
-        volumes:
-            - redis_data:/data
-        networks:
-            - arogyalink-network
+  health_institute_postgres:
+    image: postgres:16
+    container_name: postgres_health_institute
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: health_institute_db
+    ports:
+      - "5434:5432"
+    volumes:
+      - health_institute_postgres_data:/var/lib/postgresql/data
+    networks:
+      - arogyalink-network
+
+  patient_mongo:
+    image: mongo:8.0.4
+    container_name: mongo_patient
+    restart: always
+    ports:
+      - "27017:27017"
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: root
+      MONGO_INITDB_ROOT_PASSWORD: root
+    volumes:
+      - patient_mongo_data:/data/db
+    networks:
+      - arogyalink-network
+
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - arogyalink-network
 
 networks:
-    arogyalink-network:
-        driver: bridge
+  arogyalink-network:
+    driver: bridge
 
 volumes:
-    auth_postgres_data:
-    doctor_postgres_data:
-    health_institute_postgres_data:
-    redis_data:
+  auth_postgres_data:
+  doctor_postgres_data:
+  health_institute_postgres_data:
+  patient_mongo_data:
+  redis_data:

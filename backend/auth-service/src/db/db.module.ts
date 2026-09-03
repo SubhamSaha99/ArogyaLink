@@ -7,6 +7,7 @@ import { DbExceptionLog } from './entities/db-exception-log.entity';
 import { Doctor } from './entities/doctor.entity';
 import { UserSession } from './entities/user-session.entity';
 import { SecurityAuditLog } from './entities/security-audit-log.entity';
+import { Patient } from './entities/patient.entity';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { SecurityAuditLog } from './entities/security-audit-log.entity';
         entities: [
           HealthInstitute,
           Doctor,
+          Patient,
           UserSession,
           SecurityAuditLog,
           DbExceptionLog,

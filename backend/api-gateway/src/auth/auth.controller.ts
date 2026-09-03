@@ -17,6 +17,7 @@ import {
   DoctorRegDto,
   DoctorLoginDto,
   RefreshTokenDto,
+  PatientRegDto,
 } from './auth.dto';
 import { UAParser } from 'ua-parser-js';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -129,6 +130,11 @@ export class AuthController {
       message: 'Doctor logged in successfully',
       data: result,
     };
+  }
+
+  @Post('patientRegistration')
+  async patientRegistration(@Body() request: PatientRegDto) {
+    
   }
 
   /**

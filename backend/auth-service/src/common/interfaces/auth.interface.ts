@@ -37,3 +37,9 @@ export interface doctorLoginQueryInterface {
   mobile: string;
   password: string;
 }
+
+export interface patientQueryInterface {
+    status: string;
+    patientPrimaryKey: number;
+    patientId: string;
+}

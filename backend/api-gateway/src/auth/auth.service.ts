@@ -6,6 +6,7 @@ import {
   DoctorRegDto,
   HealthInstituteLoginDto,
   HealthInstituteRegDto,
+  PatientRegDto,
   RefreshTokenDto,
 } from './auth.dto';
 import {
@@ -13,15 +14,19 @@ import {
   AuthServiceClient,
   DoctorLoginReq,
   DoctorLoginRes,
+  DoctorRegistrationRes,
   HealthInstituteLoginReq,
   HealthInstituteLoginRes,
+  HealthInstituteRegRes,
   LogoutRes,
+  PatientRegistrationRes,
   RefreshTokenReq,
   RefreshTokenRes,
   ValidateAccessTokenRes,
 } from '../proto/generated/auth';
 import {
   DOCTOR_SERVICE_NAME,
+  DoctorProfileRes,
   DoctorServiceClient,
 } from '../proto/generated/doctor';
 import { GrpcServiceName } from '../common/utils/constant';
@@ -29,6 +34,11 @@ import {
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteServiceClient,
 } from '../proto/generated/health-institute';
+import {
+  PATIENT_SERVICE_NAME,
+  PatientProfileRes,
+  PatientServiceClient,
+} from '../proto/generated/patient';
 
 @Injectable()
 export class AuthService implements OnModuleInit {
@@ -36,12 +46,14 @@ export class AuthService implements OnModuleInit {
   private authGrpcService!: AuthServiceClient;
   private doctorGrpcService!: DoctorServiceClient;
   private healthInstituteGrpcService!: HealthInstituteServiceClient;
+  private patientGrpcService!: PatientServiceClient;
 
   constructor(
     @Inject(GrpcServiceName.AUTH) private readonly authClient: ClientGrpc,
     @Inject(GrpcServiceName.DOCTOR) private readonly doctorClient: ClientGrpc,
     @Inject(GrpcServiceName.HEALTH_INSTITUTE)
     private readonly healthInstituteClient: ClientGrpc,
+    @Inject(GrpcServiceName.PATIENT) private readonly patientClient: ClientGrpc,
   ) {}
 
   onModuleInit() {
@@ -53,6 +65,8 @@ export class AuthService implements OnModuleInit {
       this.healthInstituteClient.getService<HealthInstituteServiceClient>(
         HEALTH_INSTITUTE_SERVICE_NAME,
       );
+    this.patientGrpcService =
+      this.patientClient.getService<PatientServiceClient>(PATIENT_SERVICE_NAME);
   }
 
   /**
@@ -66,7 +80,7 @@ export class AuthService implements OnModuleInit {
     let healthInstitutePrimaryKey: number | null = null;
     let healthInstituteId: string | null = null;
     try {
-      const authResponse = await firstValueFrom(
+      const authResponse: HealthInstituteRegRes = await firstValueFrom(
         this.authGrpcService.healthInstituteRegistration({
           email: request.email,
           password: request.password,
@@ -135,13 +149,11 @@ export class AuthService implements OnModuleInit {
    * @param request
    * @returns DoctorRegistrationRes
    */
-  async doctorRegistration(
-    request: DoctorRegDto,
-  ): Promise<{ doctorId: string }> {
+  async doctorRegistration(request: DoctorRegDto): Promise<DoctorProfileRes> {
     let doctorPrimaryKey: number | null = null;
     let doctorId: string | null = null;
     try {
-      const authResponse = await firstValueFrom(
+      const authResponse: DoctorRegistrationRes = await firstValueFrom(
         this.authGrpcService.createDoctorAuth({
           email: request.email,
           mobile: request.mobile,
@@ -207,6 +219,54 @@ export class AuthService implements OnModuleInit {
     };
 
     return firstValueFrom(this.authGrpcService.doctorLogin(loginRequest));
+  }
+
+  async patientRegistration(
+    request: PatientRegDto,
+  ): Promise<PatientProfileRes> {
+    let patientPrimaryKey: number | null = null;
+    let patientId: string | null = null;
+    try {
+      const authResponse: PatientRegistrationRes = await firstValueFrom(
+        this.authGrpcService.patientRegistration({
+          email: request.email,
+          mobile: request.mobile,
+          password: request.password,
+        }),
+      );
+      patientPrimaryKey = authResponse.patientPrimaryKey;
+      patientId = authResponse.patientId;
+
+      await firstValueFrom(
+        this.patientGrpcService.createPatient({
+          patientPrimaryKey,
+          patientId,
+          email: request.email,
+          mobile: request.mobile,
+          firstName: request.firstName,
+          middleName: request.middleName,
+          lastName: request.lastName,
+        }),
+      );
+
+      return { patientId };
+    } catch (error) {
+      if (patientPrimaryKey) {
+        try {
+          await firstValueFrom(
+            this.authGrpcService.compensatePatientRegistration({
+              patientPrimaryKey,
+            }),
+          );
+        } catch (rollbackError) {
+          this.logger.error(
+            `Rollback failed for Doctor ID: ${patientId}`,
+            rollbackError,
+          );
+        }
+      }
+      throw error;
+    }
   }
 
   /**

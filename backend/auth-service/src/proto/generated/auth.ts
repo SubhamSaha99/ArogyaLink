@@ -80,6 +80,25 @@ export interface DoctorLoginRes {
   refreshToken: string;
 }
 
+export interface PatientRegistrationReq {
+  email: string;
+  mobile: string;
+  password: string;
+}
+
+export interface PatientRegistrationRes {
+  patientPrimaryKey: number;
+  patientId: string;
+}
+
+export interface CompensatePatientRegistrationReq {
+  patientPrimaryKey: number;
+}
+
+export interface CompensatePatientRegistrationRes {
+  success: boolean;
+}
+
 export interface RefreshTokenReq {
   refreshToken: string;
 }
@@ -122,6 +141,12 @@ export interface AuthServiceClient {
 
   doctorLogin(request: DoctorLoginReq): Observable<DoctorLoginRes>;
 
+  patientRegistration(request: PatientRegistrationReq): Observable<PatientRegistrationRes>;
+
+  compensatePatientRegistration(
+    request: CompensatePatientRegistrationReq,
+  ): Observable<CompensatePatientRegistrationRes>;
+
   refreshToken(request: RefreshTokenReq): Observable<RefreshTokenRes>;
 
   logout(request: LogoutReq): Observable<LogoutRes>;
@@ -158,6 +183,17 @@ export interface AuthServiceController {
 
   doctorLogin(request: DoctorLoginReq): Promise<DoctorLoginRes> | Observable<DoctorLoginRes> | DoctorLoginRes;
 
+  patientRegistration(
+    request: PatientRegistrationReq,
+  ): Promise<PatientRegistrationRes> | Observable<PatientRegistrationRes> | PatientRegistrationRes;
+
+  compensatePatientRegistration(
+    request: CompensatePatientRegistrationReq,
+  ):
+    | Promise<CompensatePatientRegistrationRes>
+    | Observable<CompensatePatientRegistrationRes>
+    | CompensatePatientRegistrationRes;
+
   refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> | Observable<RefreshTokenRes> | RefreshTokenRes;
 
   logout(request: LogoutReq): Promise<LogoutRes> | Observable<LogoutRes> | LogoutRes;
@@ -176,6 +212,8 @@ export function AuthServiceControllerMethods() {
       "createDoctorAuth",
       "compensateDoctorRegistration",
       "doctorLogin",
+      "patientRegistration",
+      "compensatePatientRegistration",
       "refreshToken",
       "logout",
       "validateAccessToken",

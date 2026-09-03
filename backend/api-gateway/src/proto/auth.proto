@@ -15,6 +15,10 @@ service AuthService {
 
   rpc DoctorLogin(DoctorLoginReq) returns (DoctorLoginRes);
 
+  rpc PatientRegistration(PatientRegistrationReq) returns (PatientRegistrationRes);
+
+  rpc CompensatePatientRegistration(CompensatePatientRegistrationReq) returns (CompensatePatientRegistrationRes);
+
   rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenRes);
 
   rpc Logout(LogoutReq) returns (LogoutRes);
@@ -90,6 +94,25 @@ message DoctorLoginRes {
   string mobile       = 3;
   string accessToken  = 4;
   string refreshToken = 5;
+}
+
+message PatientRegistrationReq {
+  string email    = 1;
+  string mobile   = 2;
+  string password = 3;
+}
+
+message PatientRegistrationRes {
+  uint32 patientPrimaryKey = 1;
+  string patientId         = 2;
+}
+
+message CompensatePatientRegistrationReq {
+  uint32 patientPrimaryKey = 1;
+}
+
+message CompensatePatientRegistrationRes {
+  bool success = 1;
 }
 
 message RefreshTokenReq {

@@ -20,6 +20,10 @@ import {
   ValidateAccessTokenReq,
   ValidateAccessTokenRes,
   CompensateHealthInstituteRegistrationReq,
+  PatientRegistrationReq,
+  PatientRegistrationRes,
+  CompensatePatientRegistrationReq,
+  CompensatePatientRegistrationRes,
 } from '../proto/generated/auth';
 import {
   AuditAction,
@@ -43,6 +47,7 @@ import {
   doctorLoginQueryInterface,
   healthInstituteQueryInterface,
   doctorQueryInterface,
+  patientQueryInterface,
 } from '../common/interfaces/auth.interface';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { UserSession } from '../db/entities/user-session.entity';
@@ -421,6 +426,71 @@ export class AuthService {
   }
 
   /**
+   * @description Patient registration
+   * @param request
+   * @returns PatientRegistrationRes
+   */
+  async patientRegistration(
+    request: PatientRegistrationReq,
+  ): Promise<PatientRegistrationRes> {
+    const hashedPassword = await this.hashUtil.hash(request.password);
+
+    const result = await this.dataSource.query<patientQueryInterface[]>(
+      `SELECT * FROM register_patient($1, $2, $3)`,
+      [request.email, request.mobile, hashedPassword],
+    );
+
+    const procedureResult = result[0];
+
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure!');
+    }
+    switch (procedureResult.status) {
+      case Errors.emailExistError:
+        throwRpcException(status.ALREADY_EXISTS, 'Email already exists!');
+        break;
+      case Errors.mobileExistError:
+        throwRpcException(status.ALREADY_EXISTS, 'Mobile already exists!');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error!');
+        break;
+    }
+
+    return {
+      patientPrimaryKey: procedureResult.patientPrimaryKey,
+      patientId: procedureResult.patientId,
+    };
+  }
+
+  async compensatePatientRegistration(
+    request: CompensatePatientRegistrationReq,
+  ): Promise<CompensatePatientRegistrationRes> {
+    const result = await this.dataSource.query<authQueryInterface[]>(
+      `SELECT compensate_patient_registration($1) AS f_result`,
+      [request.patientPrimaryKey],
+    );
+
+    const procedureResult: string = result[0]?.f_result;
+    switch (procedureResult) {
+      case Errors.doctorNotFoundError:
+        throwRpcException(status.NOT_FOUND, 'Doctor auth record not found!');
+        break;
+      case Errors.dbError:
+        throwRpcException(
+          status.INTERNAL,
+          'Failed to compensate doctor registration!',
+        );
+        break;
+      default:
+        throwRpcException(status.INTERNAL, 'Something went wrong!');
+    }
+    return {
+      success: true,
+    };
+  }
+
+  /**
    * * Refresh Auth Token
    * @param request
    * @returns RefreshTokenRes
@@ -504,7 +574,7 @@ export class AuthService {
     await this.sessionService.deactivateSession(request.sessionId);
 
     await this.auditService.log({
-      userPrimaryKey: session!.userPrimaryKey,
+      userPrimaryKey: session.userPrimaryKey,
       userBusinessId: session.userBusinessId,
       role: session.role,
       sessionId: session.sessionId,
