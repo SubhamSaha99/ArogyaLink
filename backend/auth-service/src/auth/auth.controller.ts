@@ -25,6 +25,8 @@ import {
   PatientRegistrationRes,
   CompensatePatientRegistrationReq,
   CompensatePatientRegistrationRes,
+  PatientLoginReq,
+  PatientLoginRes,
 } from '../proto/generated/auth';
 import { Observable } from 'rxjs';
 
@@ -77,6 +79,10 @@ export class AuthController implements AuthServiceController {
     request: CompensatePatientRegistrationReq,
   ): Promise<CompensatePatientRegistrationRes> {
     return this.authService.compensatePatientRegistration(request);
+  }
+
+  async patientLogin(request: PatientLoginReq): Promise<PatientLoginRes> {
+    return this.authService.patientLogin(request);
   }
 
   async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {

@@ -43,3 +43,12 @@ export interface patientQueryInterface {
     patientPrimaryKey: number;
     patientId: string;
 }
+
+export interface patientLoginQueryInterface {
+  status: string;
+  patientPrimaryKey: number;
+  patientId: string;
+  email: string;
+  mobile: string;
+  password: string;
+}

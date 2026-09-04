@@ -1,3 +1,4 @@
+import sys
 import logging
 from datetime import datetime
 from typing import Any
@@ -8,8 +9,6 @@ from pymongo.monitoring import (
     CommandFailedEvent,
 )
 
-logger = logging.getLogger("patient_db")
-
 
 class AnsiColors:
     # High-intensity / Bright Colors
@@ -17,11 +16,88 @@ class AnsiColors:
     GREEN = "\033[92m"
     RED_BOLD = "\033[1;91m"
     RED = "\033[91m"
+    YELLOW_BOLD = "\033[1;93m"
+    YELLOW = "\033[93m"
     CYAN_BOLD = "\033[1;96m"
     CYAN = "\033[96m"
-    YELLOW = "\033[93m"
+    MAGENTA_BOLD = "\033[1;95m"
+    MAGENTA = "\033[95m"
     GRAY = "\033[90m"
+    BOLD = "\033[1m"
     RESET = "\033[0m"
+
+
+# Define SUCCESS level (between INFO and WARNING)
+SUCCESS_LEVEL_NUM = 25
+logging.addLevelName(SUCCESS_LEVEL_NUM, "SUCCESS")
+
+
+class ServiceLogger(logging.Logger):
+    def success(self, message, *args, **kws):
+        if self.isEnabledFor(SUCCESS_LEVEL_NUM):
+            self._log(SUCCESS_LEVEL_NUM, message, args, **kws)
+
+
+logging.setLoggerClass(ServiceLogger)
+
+
+class ColoredFormatter(logging.Formatter):
+    """
+    Service-wide log formatter:
+    - SUCCESS & INFO: Bright Green
+    - ERROR & CRITICAL: Bright Red
+    - WARNING: Bright Yellow
+    - DEBUG: Cyan
+    """
+
+    FORMATS = {
+        logging.DEBUG: f"{AnsiColors.CYAN_BOLD}[DEBUG]{AnsiColors.RESET} {AnsiColors.GRAY}[%(asctime)s.%(msecs)03d]{AnsiColors.RESET} {AnsiColors.CYAN}[%(name)s]{AnsiColors.RESET} %(message)s",
+        logging.INFO: f"{AnsiColors.GREEN_BOLD}[INFO]{AnsiColors.RESET}  {AnsiColors.GRAY}[%(asctime)s.%(msecs)03d]{AnsiColors.RESET} {AnsiColors.CYAN}[%(name)s]{AnsiColors.RESET} {AnsiColors.GREEN}%(message)s{AnsiColors.RESET}",
+        SUCCESS_LEVEL_NUM: f"{AnsiColors.GREEN_BOLD}[SUCCESS]{AnsiColors.RESET} {AnsiColors.GRAY}[%(asctime)s.%(msecs)03d]{AnsiColors.RESET} {AnsiColors.CYAN}[%(name)s]{AnsiColors.RESET} {AnsiColors.GREEN_BOLD}%(message)s{AnsiColors.RESET}",
+        logging.WARNING: f"{AnsiColors.YELLOW_BOLD}[WARN]{AnsiColors.RESET}  {AnsiColors.GRAY}[%(asctime)s.%(msecs)03d]{AnsiColors.RESET} {AnsiColors.CYAN}[%(name)s]{AnsiColors.RESET} {AnsiColors.YELLOW}%(message)s{AnsiColors.RESET}",
+        logging.ERROR: f"{AnsiColors.RED_BOLD}[ERROR]{AnsiColors.RESET} {AnsiColors.GRAY}[%(asctime)s.%(msecs)03d]{AnsiColors.RESET} {AnsiColors.CYAN}[%(name)s]{AnsiColors.RESET} {AnsiColors.RED_BOLD}%(message)s{AnsiColors.RESET}",
+        logging.CRITICAL: f"{AnsiColors.RED_BOLD}[FATAL]{AnsiColors.RESET} {AnsiColors.GRAY}[%(asctime)s.%(msecs)03d]{AnsiColors.RESET} {AnsiColors.CYAN}[%(name)s]{AnsiColors.RESET} {AnsiColors.RED_BOLD}%(message)s{AnsiColors.RESET}",
+    }
+
+    def format(self, record: logging.LogRecord) -> str:
+        log_fmt = self.FORMATS.get(record.levelno, self.FORMATS[logging.INFO])
+        formatter = logging.Formatter(log_fmt, datefmt="%Y-%m-%d %H:%M:%S")
+        return formatter.format(record)
+
+
+# Root Logger Configuration
+_root_configured = False
+
+
+def configure_global_logging(level: int = logging.INFO) -> None:
+    global _root_configured
+    if _root_configured:
+        return
+
+    handler = logging.StreamHandler(sys.stdout)
+    handler.setFormatter(ColoredFormatter())
+
+    root_logger = logging.getLogger()
+    root_logger.setLevel(level)
+
+    # Remove existing handlers to avoid duplicates
+    for h in root_logger.handlers[:]:
+        root_logger.removeHandler(h)
+
+    root_logger.addHandler(handler)
+    _root_configured = True
+
+
+def get_logger(name: str = "patient-service") -> ServiceLogger:
+    """
+    Get a pre-configured colored logger for any service component.
+    """
+    configure_global_logging()
+    return logging.getLogger(name)  # type: ignore[return-value]
+
+
+# Global service logger instance
+app_logger = get_logger("patient-service")
 
 
 class MongoQueryLogger(CommandListener):
@@ -52,6 +128,9 @@ class MongoQueryLogger(CommandListener):
         """
         Extract collection name and relevant query filter/payload details from the PyMongo command doc.
         """
+        if not isinstance(command_doc, dict):
+            return "", ""
+
         collection = command_doc.get(command_name)
         if not isinstance(collection, str):
             collection = command_doc.get("collection", "")

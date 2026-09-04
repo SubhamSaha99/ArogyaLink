@@ -24,6 +24,8 @@ import {
   PatientRegistrationRes,
   CompensatePatientRegistrationReq,
   CompensatePatientRegistrationRes,
+  PatientLoginReq,
+  PatientLoginRes,
 } from '../proto/generated/auth';
 import {
   AuditAction,
@@ -48,6 +50,7 @@ import {
   healthInstituteQueryInterface,
   doctorQueryInterface,
   patientQueryInterface,
+  patientLoginQueryInterface,
 } from '../common/interfaces/auth.interface';
 import { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { UserSession } from '../db/entities/user-session.entity';
@@ -463,6 +466,11 @@ export class AuthService {
     };
   }
 
+  /**
+   * @description Compensate Patient Registration
+   * @param request
+   * @returns CompensatePatientRegistrationRes
+   */
   async compensatePatientRegistration(
     request: CompensatePatientRegistrationReq,
   ): Promise<CompensatePatientRegistrationRes> {
@@ -487,6 +495,115 @@ export class AuthService {
     }
     return {
       success: true,
+    };
+  }
+
+  async patientLogin(request: PatientLoginReq): Promise<PatientLoginRes> {
+    // TODO: Implement rate limiting for patient login attempts
+    const identifier = request.mobile ?? request.email ?? '';
+
+    const rateLimitOptions: rateLimitOptionsInterface = {
+      key: buildRateLimitKey(
+        'login',
+        UserRole.PATIENT,
+        identifier,
+        request.requestIp,
+      ),
+      maxAttempts: LOGIN_RATE_LIMIT.MAX_ATTEMPTS,
+      blockDuration: LOGIN_RATE_LIMIT.BLOCK_TIME_SECONDS,
+      message:
+        'Too many failed login attempts. Please try again after 15 minutes.',
+    };
+
+    await this.rateLimiterService.throwIfBlocked(rateLimitOptions);
+
+    // TODO: Call the stored procedure to validate the doctor login credentials
+    const result = await this.dataSource.query<patientLoginQueryInterface[]>(
+      `SELECT * FROM login_patient($1, $2)`,
+      [request.email, request.mobile],
+    );
+
+    console.log(result);
+    const procedureResult = result?.[0];
+    if (!procedureResult) {
+      throwRpcException(status.INTERNAL, 'Invalid response from procedure');
+    }
+
+    switch (procedureResult.status) {
+      case Errors.invalidCredentialError:
+        await this.rateLimiterService.recordFailure(rateLimitOptions);
+        throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+        break;
+      case Errors.dbError:
+        throwRpcException(status.INTERNAL, 'Database error');
+        break;
+    }
+
+    const isPasswordValid = await bcrypt.compare(
+      request.password,
+      procedureResult.password,
+    );
+
+    if (!isPasswordValid) {
+      await this.rateLimiterService.recordFailure(rateLimitOptions);
+
+      throwRpcException(status.UNAUTHENTICATED, 'Invalid Login Credentials');
+    }
+
+    //   TODO: Generate Session & JWT
+
+    const sessionId = randomUUID();
+
+    const jwtPayload: JwtPayload = {
+      sessionId,
+      userPrimaryKey: procedureResult.patientPrimaryKey,
+      userBusinessId: procedureResult.patientId,
+      role: UserRole.PATIENT,
+    };
+
+    const [accessToken, refreshToken] = await Promise.all([
+      this.jwtUtil.generateAccessToken(jwtPayload),
+      this.jwtUtil.generateRefreshToken(jwtPayload),
+    ]);
+
+    const refreshTokenHash = await this.hashUtil.hash(refreshToken);
+
+    //   TODO: Store Session & Audit
+    const refreshExpiry = new Date(Date.now() + 24 * 60 * 60 * 1000);
+
+    await Promise.all([
+      this.sessionService.createSession({
+        sessionId,
+        userPrimaryKey: procedureResult.patientPrimaryKey,
+        userBusinessId: procedureResult.patientId,
+        role: UserRole.PATIENT,
+        refreshTokenHash,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+        deviceName: request.deviceName,
+        expiresAt: refreshExpiry,
+      }),
+
+      this.auditService.log({
+        userPrimaryKey: procedureResult.patientPrimaryKey,
+        userBusinessId: procedureResult.patientId,
+        role: UserRole.DOCTOR,
+        sessionId,
+        action: AuditAction.LOGIN_SUCCESS,
+        status: AuditStatus.SUCCESS,
+        ipAddress: request.requestIp,
+        userAgent: request.userAgent,
+      }),
+
+      this.rateLimiterService.clear(rateLimitOptions.key),
+    ]);
+
+    return {
+      patientId: procedureResult.patientId,
+      email: procedureResult.email,
+      mobile: procedureResult.mobile,
+      accessToken,
+      refreshToken,
     };
   }
 

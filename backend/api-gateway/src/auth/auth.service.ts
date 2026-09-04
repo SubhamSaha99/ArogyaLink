@@ -6,6 +6,7 @@ import {
   DoctorRegDto,
   HealthInstituteLoginDto,
   HealthInstituteRegDto,
+  PatientLoginDto,
   PatientRegDto,
   RefreshTokenDto,
 } from './auth.dto';
@@ -19,6 +20,8 @@ import {
   HealthInstituteLoginRes,
   HealthInstituteRegRes,
   LogoutRes,
+  PatientLoginReq,
+  PatientLoginRes,
   PatientRegistrationRes,
   RefreshTokenReq,
   RefreshTokenRes,
@@ -224,7 +227,7 @@ export class AuthService implements OnModuleInit {
 
   /**
    * @description Patient Registration
-   * @param request 
+   * @param request
    * @returns PatientProfileRes
    */
   async patientRegistration(
@@ -273,6 +276,30 @@ export class AuthService implements OnModuleInit {
       }
       throw error;
     }
+  }
+
+  /**
+   * @description Patient login
+   * @param request
+   * @param requestIp
+   * @returns PatientLoginRes
+   */
+  async patientLogin(
+    request: PatientLoginDto,
+    requestIp: string,
+    userAgent: string,
+    deviceName?: string,
+  ): Promise<PatientLoginRes> {
+    const loginRequest: PatientLoginReq = {
+      email: request.email || '',
+      mobile: request.mobile || '',
+      password: request.password,
+      requestIp,
+      userAgent,
+      deviceName: deviceName || '',
+    };
+
+    return firstValueFrom(this.authGrpcService.patientLogin(loginRequest));
   }
 
   /**

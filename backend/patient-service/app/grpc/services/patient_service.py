@@ -3,7 +3,7 @@ from app.proto.generated import patient_pb2
 from app.proto.generated import patient_pb2_grpc
 from app.db.models.patient_entity import PatientProfile
 from app.services.patient_service import PatientService as PatientProfileService
-from app.grpc.error_handler import grpc_error_handler
+from app.common.decorators.grpc_error_handler import grpc_error_handler
 
 
 class PatientService(patient_pb2_grpc.PatientServiceServicer):

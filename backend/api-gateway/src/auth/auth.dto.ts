@@ -131,6 +131,28 @@ export class PatientRegDto {
 }
 
 /**
+ * @description Patient login Dto
+ */
+export class PatientLoginDto {
+  @Transform(({ value }: { value: unknown }) =>
+    typeof value === 'string' ? value.trim() : value,
+  )
+  @IsOptional()
+  @IsEmail()
+  email?: string;
+
+  @IsOptional()
+  @Matches(/^\+[1-9]{1}[0-9]{3,14}$/, {
+    message: 'Invalid Mobile Number',
+  })
+  mobile?: string;
+
+  @IsString()
+  @MinLength(6)
+  password!: string;
+}
+
+/**
  * @description Refresh Token Dto
  */
 export class RefreshTokenDto {

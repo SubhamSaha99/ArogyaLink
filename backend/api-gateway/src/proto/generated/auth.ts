@@ -99,6 +99,23 @@ export interface CompensatePatientRegistrationRes {
   success: boolean;
 }
 
+export interface PatientLoginReq {
+  email?: string | undefined;
+  mobile?: string | undefined;
+  password: string;
+  requestIp: string;
+  userAgent: string;
+  deviceName?: string | undefined;
+}
+
+export interface PatientLoginRes {
+  patientId: string;
+  email: string;
+  mobile: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface RefreshTokenReq {
   refreshToken: string;
 }
@@ -147,6 +164,8 @@ export interface AuthServiceClient {
     request: CompensatePatientRegistrationReq,
   ): Observable<CompensatePatientRegistrationRes>;
 
+  patientLogin(request: PatientLoginReq): Observable<PatientLoginRes>;
+
   refreshToken(request: RefreshTokenReq): Observable<RefreshTokenRes>;
 
   logout(request: LogoutReq): Observable<LogoutRes>;
@@ -194,6 +213,8 @@ export interface AuthServiceController {
     | Observable<CompensatePatientRegistrationRes>
     | CompensatePatientRegistrationRes;
 
+  patientLogin(request: PatientLoginReq): Promise<PatientLoginRes> | Observable<PatientLoginRes> | PatientLoginRes;
+
   refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> | Observable<RefreshTokenRes> | RefreshTokenRes;
 
   logout(request: LogoutReq): Promise<LogoutRes> | Observable<LogoutRes> | LogoutRes;
@@ -214,6 +235,7 @@ export function AuthServiceControllerMethods() {
       "doctorLogin",
       "patientRegistration",
       "compensatePatientRegistration",
+      "patientLogin",
       "refreshToken",
       "logout",
       "validateAccessToken",

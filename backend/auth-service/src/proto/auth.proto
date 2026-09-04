@@ -19,6 +19,8 @@ service AuthService {
 
   rpc CompensatePatientRegistration(CompensatePatientRegistrationReq) returns (CompensatePatientRegistrationRes);
 
+  rpc PatientLogin(PatientLoginReq) returns (PatientLoginRes);
+
   rpc RefreshToken(RefreshTokenReq) returns (RefreshTokenRes);
 
   rpc Logout(LogoutReq) returns (LogoutRes);
@@ -113,6 +115,23 @@ message CompensatePatientRegistrationReq {
 
 message CompensatePatientRegistrationRes {
   bool success = 1;
+}
+
+message PatientLoginReq {
+  optional string email      = 1;
+  optional string mobile     = 2;
+  string          password   = 3;
+  string          requestIp  = 4;
+  string          userAgent  = 5;
+  optional string deviceName = 6;
+}
+
+message PatientLoginRes {
+  string patientId    = 1;
+  string email        = 2;
+  string mobile       = 3;
+  string accessToken  = 4;
+  string refreshToken = 5;
 }
 
 message RefreshTokenReq {

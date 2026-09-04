@@ -2,6 +2,9 @@
 
 from app.db.db_service import get_database
 from app.db.models.patient_entity import PatientProfile
+from app.common.logger import get_logger
+
+logger = get_logger("patient_repository")
 
 
 class PatientRepository:

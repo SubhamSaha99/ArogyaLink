@@ -18,6 +18,7 @@ import {
   DoctorLoginDto,
   RefreshTokenDto,
   PatientRegDto,
+  PatientLoginDto,
 } from './auth.dto';
 import { UAParser } from 'ua-parser-js';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
@@ -144,6 +145,36 @@ export class AuthController {
     return {
       success: true,
       message: 'Patient registered successfully',
+      data: result,
+    };
+  }
+
+  @Post('patientLogin')
+  @HttpCode(HttpStatus.OK)
+  async patientLogin(
+    @Body() request: PatientLoginDto,
+    @Req() httpRequest: Request,
+    @Ip() requestIp: string,
+  ) {
+    const userAgent = httpRequest.headers['user-agent'] ?? '';
+
+    const parser = new UAParser(userAgent);
+    const deviceDetails = parser.getResult();
+
+    const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+      .filter(Boolean)
+      .join(' on ');
+
+    const result = await this.authService.patientLogin(
+      request,
+      requestIp,
+      userAgent,
+      deviceName,
+    );
+
+    return {
+      success: true,
+      message: 'patient logged in successfully',
       data: result,
     };
   }

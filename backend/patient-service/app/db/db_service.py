@@ -1,27 +1,28 @@
-# app/database/database.py
-
 from app.db.mongodb import mongo_client, mongo_db
+from app.common.logger import get_logger
+
+logger = get_logger("database")
 
 
-# TODO: Connect Database
+# Connect Database
 async def connect_database() -> None:
     try:
         await mongo_client.admin.command("ping")
-        print("MongoDB connected successfully")
+        logger.info("MongoDB connected successfully")
     except Exception as error:
-        print(f"MongoDB connection failed: {error}")
+        logger.error(f"MongoDB connection failed: {error}")
         raise
 
 
-# TODO: Get Database
+# Get Database
 def get_database():
     return mongo_db
 
 
-# TODO: Close Database
+# Close Database
 async def close_database() -> None:
     try:
         await mongo_client.close()
-        print("MongoDB connection closed")
+        logger.info("MongoDB connection closed")
     except Exception as error:
-        print(f"Error while closing MongoDB: {error}")
+        logger.error(f"Error while closing MongoDB: {error}")
