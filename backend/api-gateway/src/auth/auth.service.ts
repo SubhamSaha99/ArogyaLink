@@ -32,6 +32,7 @@ import {
 import { GrpcServiceName } from '../common/utils/constant';
 import {
   HEALTH_INSTITUTE_SERVICE_NAME,
+  HealthInstituteProfileRes,
   HealthInstituteServiceClient,
 } from '../proto/generated/health-institute';
 import {
@@ -76,7 +77,7 @@ export class AuthService implements OnModuleInit {
    */
   async healthInstituteRegistration(
     request: HealthInstituteRegDto,
-  ): Promise<{ healthInstituteId: string }> {
+  ): Promise<HealthInstituteProfileRes> {
     let healthInstitutePrimaryKey: number | null = null;
     let healthInstituteId: string | null = null;
     try {
@@ -221,6 +222,11 @@ export class AuthService implements OnModuleInit {
     return firstValueFrom(this.authGrpcService.doctorLogin(loginRequest));
   }
 
+  /**
+   * @description Patient Registration
+   * @param request 
+   * @returns PatientProfileRes
+   */
   async patientRegistration(
     request: PatientRegDto,
   ): Promise<PatientProfileRes> {

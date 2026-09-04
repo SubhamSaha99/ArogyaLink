@@ -70,7 +70,7 @@ export class RegisterPatient1788375341800 implements MigrationInterface {
                     p_password,
                     NOW()
                 )
-                RETURNING patient_primary_key INTO v_id;
+                RETURNING id INTO v_id;
 
                 v_patient_id :=
                     'AGL-' || 'PAT' || LPAD(v_id::TEXT, 6, '0');
@@ -79,7 +79,7 @@ export class RegisterPatient1788375341800 implements MigrationInterface {
                 SET
                     patient_id = v_patient_id,
                     updated_at = NOW()
-                WHERE patient_primary_key = v_id;
+                WHERE id = v_id;
 
 
                 RETURN QUERY

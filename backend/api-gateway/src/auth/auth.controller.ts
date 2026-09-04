@@ -132,9 +132,20 @@ export class AuthController {
     };
   }
 
+  /**
+   * @description Patient Registration
+   * @param request
+   * @returns json
+   */
   @Post('patientRegistration')
   async patientRegistration(@Body() request: PatientRegDto) {
-    
+    const result = await this.authService.patientRegistration(request);
+
+    return {
+      success: true,
+      message: 'Patient registered successfully',
+      data: result,
+    };
   }
 
   /**

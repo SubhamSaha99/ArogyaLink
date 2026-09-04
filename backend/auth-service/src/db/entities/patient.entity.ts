@@ -20,6 +20,7 @@ export class Patient {
     type: 'varchar',
     length: 50,
     unique: true,
+    nullable: true
   })
   patientId!: string;
 
