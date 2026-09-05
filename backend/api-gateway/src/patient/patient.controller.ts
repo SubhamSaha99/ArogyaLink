@@ -1,6 +1,7 @@
 import {
   Body,
   Controller,
+  Get,
   HttpCode,
   HttpStatus,
   Post,
@@ -52,6 +53,22 @@ export class PatientController {
     return {
       success: true,
       message: 'Patient Profile Details Updated Successfully.',
+      data: result,
+    };
+  }
+
+  @Get('getPatientDetails')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.PATIENT)
+  async getPatientDetails(@CurrentUser() user: JwtPayload) {
+    const result = await this.patientService.getPatientDetails(
+      user.userPrimaryKey,
+      user.userBusinessId,
+    );
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
       data: result,
     };
   }

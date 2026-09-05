@@ -62,4 +62,8 @@ export class PatientService implements OnModuleInit {
       throw error;
     }
   }
+
+  async getPatientDetails(patientPrimaryKey: number, patientId: string) {
+    
+  }
 }
