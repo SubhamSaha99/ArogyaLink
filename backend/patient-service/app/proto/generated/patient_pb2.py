@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rpatient.proto\x12\x07patient\"\xad\x01\n\x11PatientProfileReq\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x0e\n\x06mobile\x18\x04 \x01(\t\x12\x11\n\tfirstName\x18\x05 \x01(\t\x12\x17\n\nmiddleName\x18\x06 \x01(\tH\x00\x88\x01\x01\x12\x10\n\x08lastName\x18\x07 \x01(\tB\r\n\x0b_middleName\"&\n\x11PatientProfileRes\x12\x11\n\tpatientId\x18\x01 \x01(\t2Y\n\x0ePatientService\x12G\n\rCreatePatient\x12\x1a.patient.PatientProfileReq\x1a\x1a.patient.PatientProfileResb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rpatient.proto\x12\x07patient\"\xad\x01\n\x11PatientProfileReq\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x0e\n\x06mobile\x18\x04 \x01(\t\x12\x11\n\tfirstName\x18\x05 \x01(\t\x12\x17\n\nmiddleName\x18\x06 \x01(\tH\x00\x88\x01\x01\x12\x10\n\x08lastName\x18\x07 \x01(\tB\r\n\x0b_middleName\"&\n\x11PatientProfileRes\x12\x11\n\tpatientId\x18\x01 \x01(\t\"\xbb\x03\n\x1eUpdatePatientProfileDetailsReq\x12\x18\n\x10patientProfileId\x18\x01 \x01(\t\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\x16\n\tfirstName\x18\x03 \x01(\tH\x00\x88\x01\x01\x12\x17\n\nmiddleName\x18\x04 \x01(\tH\x01\x88\x01\x01\x12\x15\n\x08lastName\x18\x05 \x01(\tH\x02\x88\x01\x01\x12\x18\n\x0b\x64\x61teOfBirth\x18\x06 \x01(\tH\x03\x88\x01\x01\x12\x10\n\x03\x61ge\x18\x07 \x01(\rH\x04\x88\x01\x01\x12\x13\n\x06gender\x18\x08 \x01(\rH\x05\x88\x01\x01\x12\x19\n\x0cprofileImage\x18\t \x01(\tH\x06\x88\x01\x01\x12\x14\n\x07\x61\x64\x64ress\x18\n \x01(\tH\x07\x88\x01\x01\x12\x14\n\x07stateId\x18\x0b \x01(\rH\x08\x88\x01\x01\x12\x17\n\ndistrictId\x18\x0c \x01(\rH\t\x88\x01\x01\x42\x0c\n\n_firstNameB\r\n\x0b_middleNameB\x0b\n\t_lastNameB\x0e\n\x0c_dateOfBirthB\x06\n\x04_ageB\t\n\x07_genderB\x0f\n\r_profileImageB\n\n\x08_addressB\n\n\x08_stateIdB\r\n\x0b_districtId\"3\n\x1eUpdatePatientProfileDetailsRes\x12\x11\n\tpatientId\x18\x01 \x01(\t2\xc3\x01\n\x0ePatientService\x12G\n\rCreatePatient\x12\x1a.patient.PatientProfileReq\x1a\x1a.patient.PatientProfileRes\x12h\n\x14UpdatePatientProfile\x12\'.patient.UpdatePatientProfileDetailsReq\x1a\'.patient.UpdatePatientProfileDetailsResb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -35,6 +35,10 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PATIENTPROFILEREQ']._serialized_end=200
   _globals['_PATIENTPROFILERES']._serialized_start=202
   _globals['_PATIENTPROFILERES']._serialized_end=240
-  _globals['_PATIENTSERVICE']._serialized_start=242
-  _globals['_PATIENTSERVICE']._serialized_end=331
+  _globals['_UPDATEPATIENTPROFILEDETAILSREQ']._serialized_start=243
+  _globals['_UPDATEPATIENTPROFILEDETAILSREQ']._serialized_end=686
+  _globals['_UPDATEPATIENTPROFILEDETAILSRES']._serialized_start=688
+  _globals['_UPDATEPATIENTPROFILEDETAILSRES']._serialized_end=739
+  _globals['_PATIENTSERVICE']._serialized_start=742
+  _globals['_PATIENTSERVICE']._serialized_end=937
 # @@protoc_insertion_point(module_scope)

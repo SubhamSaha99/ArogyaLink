@@ -11,6 +11,7 @@ class PatientProfile(BaseModel):
     middle_name: Optional[str] = Field(default=None, max_length=255)
     last_name: str = Field(..., max_length=255)
     date_of_birth: Optional[date] = None
+    age: Optional[int] = None
     gender: Optional[int] = None
     profile_image: Optional[str] = Field(default=None, max_length=255)
     address: Optional[str] = Field(default=None, max_length=300)

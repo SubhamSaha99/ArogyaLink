@@ -7,6 +7,7 @@ import { APP_GUARD } from '@nestjs/core';
 import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { HealthInstituteModule } from './health-institute/health-institute.module';
+import { PatientModule } from './patient/patient.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { HealthInstituteModule } from './health-institute/health-institute.modul
     AuthModule,
     DoctorModule,
     HealthInstituteModule,
+    PatientModule,
   ],
   providers: [{ provide: APP_GUARD, useClass: ThrottlerGuard }],
 })

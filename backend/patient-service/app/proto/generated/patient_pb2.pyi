@@ -73,3 +73,113 @@ class PatientProfileRes(_message.Message):
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
 Global___PatientProfileRes: _TypeAlias = PatientProfileRes  # noqa: Y015
+
+@_typing.final
+class UpdatePatientProfileDetailsReq(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTPROFILEID_FIELD_NUMBER: _builtins.int
+    PATIENTID_FIELD_NUMBER: _builtins.int
+    FIRSTNAME_FIELD_NUMBER: _builtins.int
+    MIDDLENAME_FIELD_NUMBER: _builtins.int
+    LASTNAME_FIELD_NUMBER: _builtins.int
+    DATEOFBIRTH_FIELD_NUMBER: _builtins.int
+    AGE_FIELD_NUMBER: _builtins.int
+    GENDER_FIELD_NUMBER: _builtins.int
+    PROFILEIMAGE_FIELD_NUMBER: _builtins.int
+    ADDRESS_FIELD_NUMBER: _builtins.int
+    STATEID_FIELD_NUMBER: _builtins.int
+    DISTRICTID_FIELD_NUMBER: _builtins.int
+    patientProfileId: _builtins.str
+    patientId: _builtins.str
+    firstName: _builtins.str
+    middleName: _builtins.str
+    lastName: _builtins.str
+    dateOfBirth: _builtins.str
+    age: _builtins.int
+    gender: _builtins.int
+    profileImage: _builtins.str
+    address: _builtins.str
+    stateId: _builtins.int
+    districtId: _builtins.int
+    def __init__(
+        self,
+        *,
+        patientProfileId: _builtins.str = ...,
+        patientId: _builtins.str = ...,
+        firstName: _builtins.str | None = ...,
+        middleName: _builtins.str | None = ...,
+        lastName: _builtins.str | None = ...,
+        dateOfBirth: _builtins.str | None = ...,
+        age: _builtins.int | None = ...,
+        gender: _builtins.int | None = ...,
+        profileImage: _builtins.str | None = ...,
+        address: _builtins.str | None = ...,
+        stateId: _builtins.int | None = ...,
+        districtId: _builtins.int | None = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _typing.Literal["_address", b"_address", "_age", b"_age", "_dateOfBirth", b"_dateOfBirth", "_districtId", b"_districtId", "_firstName", b"_firstName", "_gender", b"_gender", "_lastName", b"_lastName", "_middleName", b"_middleName", "_profileImage", b"_profileImage", "_stateId", b"_stateId", "address", b"address", "age", b"age", "dateOfBirth", b"dateOfBirth", "districtId", b"districtId", "firstName", b"firstName", "gender", b"gender", "lastName", b"lastName", "middleName", b"middleName", "profileImage", b"profileImage", "stateId", b"stateId"]  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_address", b"_address", "_age", b"_age", "_dateOfBirth", b"_dateOfBirth", "_districtId", b"_districtId", "_firstName", b"_firstName", "_gender", b"_gender", "_lastName", b"_lastName", "_middleName", b"_middleName", "_profileImage", b"_profileImage", "_stateId", b"_stateId", "address", b"address", "age", b"age", "dateOfBirth", b"dateOfBirth", "districtId", b"districtId", "firstName", b"firstName", "gender", b"gender", "lastName", b"lastName", "middleName", b"middleName", "patientId", b"patientId", "patientProfileId", b"patientProfileId", "profileImage", b"profileImage", "stateId", b"stateId"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    _WhichOneofReturnType__address: _TypeAlias = _typing.Literal["address"]  # noqa: Y015
+    _WhichOneofArgType__address: _TypeAlias = _typing.Literal["_address", b"_address"]  # noqa: Y015
+    _WhichOneofReturnType__age: _TypeAlias = _typing.Literal["age"]  # noqa: Y015
+    _WhichOneofArgType__age: _TypeAlias = _typing.Literal["_age", b"_age"]  # noqa: Y015
+    _WhichOneofReturnType__dateOfBirth: _TypeAlias = _typing.Literal["dateOfBirth"]  # noqa: Y015
+    _WhichOneofArgType__dateOfBirth: _TypeAlias = _typing.Literal["_dateOfBirth", b"_dateOfBirth"]  # noqa: Y015
+    _WhichOneofReturnType__districtId: _TypeAlias = _typing.Literal["districtId"]  # noqa: Y015
+    _WhichOneofArgType__districtId: _TypeAlias = _typing.Literal["_districtId", b"_districtId"]  # noqa: Y015
+    _WhichOneofReturnType__firstName: _TypeAlias = _typing.Literal["firstName"]  # noqa: Y015
+    _WhichOneofArgType__firstName: _TypeAlias = _typing.Literal["_firstName", b"_firstName"]  # noqa: Y015
+    _WhichOneofReturnType__gender: _TypeAlias = _typing.Literal["gender"]  # noqa: Y015
+    _WhichOneofArgType__gender: _TypeAlias = _typing.Literal["_gender", b"_gender"]  # noqa: Y015
+    _WhichOneofReturnType__lastName: _TypeAlias = _typing.Literal["lastName"]  # noqa: Y015
+    _WhichOneofArgType__lastName: _TypeAlias = _typing.Literal["_lastName", b"_lastName"]  # noqa: Y015
+    _WhichOneofReturnType__middleName: _TypeAlias = _typing.Literal["middleName"]  # noqa: Y015
+    _WhichOneofArgType__middleName: _TypeAlias = _typing.Literal["_middleName", b"_middleName"]  # noqa: Y015
+    _WhichOneofReturnType__profileImage: _TypeAlias = _typing.Literal["profileImage"]  # noqa: Y015
+    _WhichOneofArgType__profileImage: _TypeAlias = _typing.Literal["_profileImage", b"_profileImage"]  # noqa: Y015
+    _WhichOneofReturnType__stateId: _TypeAlias = _typing.Literal["stateId"]  # noqa: Y015
+    _WhichOneofArgType__stateId: _TypeAlias = _typing.Literal["_stateId", b"_stateId"]  # noqa: Y015
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__address) -> _WhichOneofReturnType__address | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__age) -> _WhichOneofReturnType__age | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__dateOfBirth) -> _WhichOneofReturnType__dateOfBirth | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__districtId) -> _WhichOneofReturnType__districtId | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__firstName) -> _WhichOneofReturnType__firstName | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__gender) -> _WhichOneofReturnType__gender | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__lastName) -> _WhichOneofReturnType__lastName | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__middleName) -> _WhichOneofReturnType__middleName | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__profileImage) -> _WhichOneofReturnType__profileImage | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__stateId) -> _WhichOneofReturnType__stateId | None: ...
+
+Global___UpdatePatientProfileDetailsReq: _TypeAlias = UpdatePatientProfileDetailsReq  # noqa: Y015
+
+@_typing.final
+class UpdatePatientProfileDetailsRes(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTID_FIELD_NUMBER: _builtins.int
+    patientId: _builtins.str
+    def __init__(
+        self,
+        *,
+        patientId: _builtins.str = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["patientId", b"patientId"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___UpdatePatientProfileDetailsRes: _TypeAlias = UpdatePatientProfileDetailsRes  # noqa: Y015

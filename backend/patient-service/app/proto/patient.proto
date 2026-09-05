@@ -4,6 +4,9 @@ package patient;
 
 service PatientService {
   rpc CreatePatient(PatientProfileReq) returns (PatientProfileRes);
+
+  rpc UpdatePatientProfile(UpdatePatientProfileDetailsReq)
+  returns (UpdatePatientProfileDetailsRes);
 }
 
 message PatientProfileReq {
@@ -17,5 +20,24 @@ message PatientProfileReq {
 }
 
 message PatientProfileRes {
+  string patientId = 1;
+}
+
+message UpdatePatientProfileDetailsReq {
+  string          patientProfileId = 1;
+  string          patientId        = 2;
+  optional string firstName        = 3;
+  optional string middleName       = 4;
+  optional string lastName         = 5;
+  optional string dateOfBirth      = 6;
+  optional uint32 age              = 7;
+  optional uint32 gender           = 8;
+  optional string profileImage     = 9;
+  optional string address          = 10;
+  optional uint32 stateId          = 11;
+  optional uint32 districtId       = 12;
+}
+
+message UpdatePatientProfileDetailsRes {
   string patientId = 1;
 }

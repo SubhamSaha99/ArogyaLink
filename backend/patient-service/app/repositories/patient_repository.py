@@ -1,14 +1,21 @@
 # app/repositories/patient_repository.py
 
+from datetime import datetime, timezone
+from typing import Any
+
+from bson import ObjectId
+from bson.errors import InvalidId
+from pymongo import ReturnDocument
+
+from app.common.interfaces.patient_interface import PatientProfileUpdateInterface
+from app.common.logger import get_logger
 from app.db.db_service import get_database
 from app.db.models.patient_entity import PatientProfile
-from app.common.logger import get_logger
 
 logger = get_logger("patient_repository")
 
 
 class PatientRepository:
-
     def __init__(self):
         self.db = get_database()
         self.collection = self.db["patient_profiles"]
@@ -42,22 +49,62 @@ class PatientRepository:
 
         return PatientProfile(**document)
 
-    # * Update Patient
-    async def update(
+    # * Get Patient by _id
+    async def get_patient_by_id(
         self,
-        patient_primary_key: int,
-        update_data: dict,
+        patient_profile_id: str,
     ) -> PatientProfile | None:
+        try:
+            profile_object_id = ObjectId(patient_profile_id)
+        except InvalidId:
+            raise ValueError("Invalid patient profile ID")
+
+        document = await self.collection.find_one(
+            {"_id": profile_object_id}, {"patient_id": 1}
+        )
+
+        if not document:
+            return None
+
+        document.pop("_id", None)
+
+        return PatientProfile(**document)
+
+    # * Update Patient
+    async def update_patient_profile(
+        self,
+        patient_profile_id: str,
+        update_data: PatientProfileUpdateInterface,
+    ) -> str | None:
+
+        try:
+            profile_object_id = ObjectId(patient_profile_id)
+        except InvalidId:
+            raise ValueError("Invalid patient profile ID")
+
+        if not update_data:
+            raise ValueError("No fields provided for update")
+
+        update_query = {
+            "$set": {
+                **update_data,
+                "updated_at": datetime.now(timezone.utc),
+            }
+        }
 
         result = await self.collection.find_one_and_update(
-            {"patient_primary_key": patient_primary_key},
-            {"$set": update_data},
-            return_document=True,
+            {
+                "_id": profile_object_id,
+            },
+            update_query,
+            projection={
+                "_id": 0,
+                "patient_id": 1,
+            },
+            return_document=ReturnDocument.AFTER,
         )
 
         if not result:
             return None
 
-        result.pop("_id", None)
-
-        return PatientProfile(**result)
+        return result["patient_id"]

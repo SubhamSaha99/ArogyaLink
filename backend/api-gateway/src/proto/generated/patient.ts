@@ -24,21 +24,49 @@ export interface PatientProfileRes {
   patientId: string;
 }
 
+export interface UpdatePatientProfileDetailsReq {
+  patientProfileId: string;
+  patientId: string;
+  firstName?: string | undefined;
+  middleName?: string | undefined;
+  lastName?: string | undefined;
+  dateOfBirth?: string | undefined;
+  age?: number | undefined;
+  gender?: number | undefined;
+  profileImage?: string | undefined;
+  address?: string | undefined;
+  stateId?: number | undefined;
+  districtId?: number | undefined;
+}
+
+export interface UpdatePatientProfileDetailsRes {
+  patientId: string;
+}
+
 export const PATIENT_PACKAGE_NAME = "patient";
 
 export interface PatientServiceClient {
   createPatient(request: PatientProfileReq): Observable<PatientProfileRes>;
+
+  updatePatientProfile(request: UpdatePatientProfileDetailsReq): Observable<UpdatePatientProfileDetailsRes>;
 }
 
 export interface PatientServiceController {
   createPatient(
     request: PatientProfileReq,
   ): Promise<PatientProfileRes> | Observable<PatientProfileRes> | PatientProfileRes;
+
+  updatePatientProfile(
+    request: UpdatePatientProfileDetailsReq,
+  ):
+    | Promise<UpdatePatientProfileDetailsRes>
+    | Observable<UpdatePatientProfileDetailsRes>
+    | UpdatePatientProfileDetailsRes;
 }
 
 export function PatientServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createPatient"];
+    const grpcMethods: string[] = ["createPatient", "updatePatientProfile"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("PatientService", method)(constructor.prototype[method], method, descriptor);
