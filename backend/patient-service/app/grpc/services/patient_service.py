@@ -1,5 +1,6 @@
 from typing import cast
 import grpc
+
 from app.proto.generated import patient_pb2
 from app.proto.generated import patient_pb2_grpc
 from app.db.models.patient_entity import PatientProfile
@@ -67,9 +68,51 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
 
         result = await self.patient_service.update_patient_profile(
             request.patientProfileId,
+            request.patientId,
             patient_profile,
         )
 
         return patient_pb2.UpdatePatientProfileDetailsRes(
             patientId=result,
+        )
+
+    # * get patient details
+    @grpc_error_handler
+    async def GetPatientDetails(
+        self,
+        request: patient_pb2.GetPatientDetailsReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.GetPatientDetailsRes:
+
+        patient_details = await self.patient_service.get_patient_details(
+            request.patientPrimaryKey,
+            request.patientId,
+        )
+
+        profile_data = {
+            "patientProfileId": patient_details["patient_profile_id"],
+            "firstName": patient_details["first_name"],
+            "lastName": patient_details["last_name"],
+            "middleName": patient_details["middle_name"],
+            "dateOfBirth": patient_details["date_of_birth"],
+            "age": patient_details["age"],
+            "gender": patient_details["gender"],
+            "profileImage": patient_details["profile_image"],
+            "address": patient_details["address"],
+            "stateId": patient_details["state_id"],
+            "districtId": patient_details["district_id"],
+        }
+
+        patient_profile = patient_pb2.PatientDetails(
+            **{
+                key: value
+                for key, value in profile_data.items()
+                if value is not None
+            }
+        )
+
+        return patient_pb2.GetPatientDetailsRes(
+            patientPrimaryKey=patient_details["patient_primary_key"],
+            patientId=patient_details["patient_id"],
+            patientProfile=patient_profile,
         )

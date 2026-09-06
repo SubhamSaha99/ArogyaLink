@@ -57,6 +57,11 @@ export class PatientController {
     };
   }
 
+  /**
+   * @description get Patient Profile Details
+   * @param user 
+   * @returns json
+   */
   @Get('getPatientDetails')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.PATIENT)

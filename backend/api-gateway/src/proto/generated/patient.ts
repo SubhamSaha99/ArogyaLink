@@ -43,12 +43,39 @@ export interface UpdatePatientProfileDetailsRes {
   patientId: string;
 }
 
+export interface GetPatientDetailsReq {
+  patientPrimaryKey: number;
+  patientId: string;
+}
+
+export interface PatientDetails {
+  patientProfileId: string;
+  firstName: string;
+  middleName?: string | undefined;
+  lastName: string;
+  dateOfBirth?: string | undefined;
+  age?: number | undefined;
+  gender?: number | undefined;
+  profileImage?: string | undefined;
+  address?: string | undefined;
+  stateId?: number | undefined;
+  districtId?: number | undefined;
+}
+
+export interface GetPatientDetailsRes {
+  patientPrimaryKey: number;
+  patientId: string;
+  patientProfile: PatientDetails | undefined;
+}
+
 export const PATIENT_PACKAGE_NAME = "patient";
 
 export interface PatientServiceClient {
   createPatient(request: PatientProfileReq): Observable<PatientProfileRes>;
 
   updatePatientProfile(request: UpdatePatientProfileDetailsReq): Observable<UpdatePatientProfileDetailsRes>;
+
+  getPatientDetails(request: GetPatientDetailsReq): Observable<GetPatientDetailsRes>;
 }
 
 export interface PatientServiceController {
@@ -62,11 +89,15 @@ export interface PatientServiceController {
     | Promise<UpdatePatientProfileDetailsRes>
     | Observable<UpdatePatientProfileDetailsRes>
     | UpdatePatientProfileDetailsRes;
+
+  getPatientDetails(
+    request: GetPatientDetailsReq,
+  ): Promise<GetPatientDetailsRes> | Observable<GetPatientDetailsRes> | GetPatientDetailsRes;
 }
 
 export function PatientServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createPatient", "updatePatientProfile"];
+    const grpcMethods: string[] = ["createPatient", "updatePatientProfile", "getPatientDetails"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("PatientService", method)(constructor.prototype[method], method, descriptor);

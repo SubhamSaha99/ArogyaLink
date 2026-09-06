@@ -1,5 +1,7 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
+  GetPatientDetailsReq,
+  GetPatientDetailsRes,
   PATIENT_SERVICE_NAME,
   PatientServiceClient,
   UpdatePatientProfileDetailsReq,
@@ -40,7 +42,7 @@ export class PatientService implements OnModuleInit {
     try {
       const patientProfileDetails: UpdatePatientProfileDetailsReq = {
         ...request,
-        patientId
+        patientId,
       };
 
       if (profileImage) {
@@ -51,7 +53,7 @@ export class PatientService implements OnModuleInit {
 
         patientProfileDetails.profileImage = uploadedImagePath;
       }
-      
+
       return await firstValueFrom(
         this.patientGrpcService.updatePatientProfile(patientProfileDetails),
       );
@@ -63,7 +65,23 @@ export class PatientService implements OnModuleInit {
     }
   }
 
-  async getPatientDetails(patientPrimaryKey: number, patientId: string) {
-    
+  /**
+   * @description get Patient Profile Details
+   * @param patientPrimaryKey 
+   * @param patientId 
+   * @returns GetPatientDetailsRes
+   */
+  async getPatientDetails(
+    patientPrimaryKey: number,
+    patientId: string,
+  ): Promise<GetPatientDetailsRes> {
+    const patientProfileReq: GetPatientDetailsReq = {
+      patientPrimaryKey,
+      patientId,
+    };
+
+    return await firstValueFrom(
+      this.patientGrpcService.getPatientDetails(patientProfileReq),
+    );
   }
 }

@@ -44,6 +44,11 @@ class PatientServiceStub:
                 request_serializer=patient__pb2.UpdatePatientProfileDetailsReq.SerializeToString,
                 response_deserializer=patient__pb2.UpdatePatientProfileDetailsRes.FromString,
                 _registered_method=True)
+        self.GetPatientDetails = channel.unary_unary(
+                '/patient.PatientService/GetPatientDetails',
+                request_serializer=patient__pb2.GetPatientDetailsReq.SerializeToString,
+                response_deserializer=patient__pb2.GetPatientDetailsRes.FromString,
+                _registered_method=True)
 
 
 class PatientServiceServicer:
@@ -61,6 +66,12 @@ class PatientServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetPatientDetails(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_PatientServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -73,6 +84,11 @@ def add_PatientServiceServicer_to_server(servicer, server):
                     servicer.UpdatePatientProfile,
                     request_deserializer=patient__pb2.UpdatePatientProfileDetailsReq.FromString,
                     response_serializer=patient__pb2.UpdatePatientProfileDetailsRes.SerializeToString,
+            ),
+            'GetPatientDetails': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetPatientDetails,
+                    request_deserializer=patient__pb2.GetPatientDetailsReq.FromString,
+                    response_serializer=patient__pb2.GetPatientDetailsRes.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -129,6 +145,33 @@ class PatientService:
             '/patient.PatientService/UpdatePatientProfile',
             patient__pb2.UpdatePatientProfileDetailsReq.SerializeToString,
             patient__pb2.UpdatePatientProfileDetailsRes.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetPatientDetails(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/patient.PatientService/GetPatientDetails',
+            patient__pb2.GetPatientDetailsReq.SerializeToString,
+            patient__pb2.GetPatientDetailsRes.FromString,
             options,
             channel_credentials,
             insecure,

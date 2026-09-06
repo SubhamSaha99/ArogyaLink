@@ -33,12 +33,14 @@ class PatientServiceStub:
     def __new__(cls, channel: _aio.Channel) -> PatientServiceAsyncStub: ...
     CreatePatient: _grpc.UnaryUnaryMultiCallable[_patient_pb2.PatientProfileReq, _patient_pb2.PatientProfileRes]
     UpdatePatientProfile: _grpc.UnaryUnaryMultiCallable[_patient_pb2.UpdatePatientProfileDetailsReq, _patient_pb2.UpdatePatientProfileDetailsRes]
+    GetPatientDetails: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetPatientDetailsReq, _patient_pb2.GetPatientDetailsRes]
 
 @_typing.type_check_only
 class PatientServiceAsyncStub(PatientServiceStub):
     def __init__(self, channel: _aio.Channel) -> None: ...
     CreatePatient: _aio.UnaryUnaryMultiCallable[_patient_pb2.PatientProfileReq, _patient_pb2.PatientProfileRes]  # type: ignore[assignment]
     UpdatePatientProfile: _aio.UnaryUnaryMultiCallable[_patient_pb2.UpdatePatientProfileDetailsReq, _patient_pb2.UpdatePatientProfileDetailsRes]  # type: ignore[assignment]
+    GetPatientDetails: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetPatientDetailsReq, _patient_pb2.GetPatientDetailsRes]  # type: ignore[assignment]
 
 class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
     @_abc_1.abstractmethod
@@ -54,5 +56,12 @@ class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
         request: _patient_pb2.UpdatePatientProfileDetailsReq,
         context: _ServicerContext,
     ) -> _typing.Union[_patient_pb2.UpdatePatientProfileDetailsRes, _abc.Awaitable[_patient_pb2.UpdatePatientProfileDetailsRes]]: ...
+
+    @_abc_1.abstractmethod
+    def GetPatientDetails(
+        self,
+        request: _patient_pb2.GetPatientDetailsReq,
+        context: _ServicerContext,
+    ) -> _typing.Union[_patient_pb2.GetPatientDetailsRes, _abc.Awaitable[_patient_pb2.GetPatientDetailsRes]]: ...
 
 def add_PatientServiceServicer_to_server(servicer: PatientServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...

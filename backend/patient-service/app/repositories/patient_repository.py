@@ -1,16 +1,15 @@
 # app/repositories/patient_repository.py
 
 from datetime import datetime, timezone
-from typing import Any
-
 from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo import ReturnDocument
 
-from app.common.interfaces.patient_interface import PatientProfileUpdateInterface
+from app.common.interfaces.patient_interface import PatientProfileUpdateInterface, PatientDetailsInterface
 from app.common.logger import get_logger
 from app.db.db_service import get_database
 from app.db.models.patient_entity import PatientProfile
+
 
 logger = get_logger("patient_repository")
 
@@ -36,18 +35,35 @@ class PatientRepository:
     async def get_by_patient_primary_key(
         self,
         patient_primary_key: int,
-    ) -> PatientProfile | None:
+    ) -> PatientDetailsInterface | None:
 
         document = await self.collection.find_one(
             {"patient_primary_key": patient_primary_key}
         )
 
+
+        print(document);
         if not document:
             return None
+        
+        patient_details: PatientDetailsInterface = {
+            "patient_profile_id": str(document.pop("_id")),
+            "patient_primary_key": document["patient_primary_key"],
+            "patient_id": document["patient_id"],
+            "first_name": document["first_name"],
+            "middle_name": document.get("middle_name"),
+            "last_name": document["last_name"],
+            "date_of_birth": document.get("date_of_birth"),
+            "age": document.get("age"),
+            "gender": document.get("gender"),
+            "profile_image": document.get("profile_image"),
+            "address": document.get("address"),
+            "state_id": document.get("state_id"),
+            "district_id": document.get("district_id"),
+        }
+        return patient_details
 
-        document.pop("_id", None)
-
-        return PatientProfile(**document)
+        
 
     # * Get Patient by _id
     async def get_patient_by_id(
@@ -61,6 +77,23 @@ class PatientRepository:
 
         document = await self.collection.find_one(
             {"_id": profile_object_id}, {"patient_id": 1}
+        )
+
+        if not document:
+            return None
+
+        document.pop("_id", None)
+
+        return PatientProfile(**document)
+    
+    # * Get patient by primary key
+    async def get_patient_by_primary_key(
+        self,
+        patient_primary_key: int
+    ) -> PatientProfile | None:
+
+        document = await self.collection.find_one(
+            {"patient_primary_key": patient_primary_key}, {"patient_id": 1}
         )
 
         if not document:
