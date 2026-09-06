@@ -522,8 +522,7 @@ export class AuthService {
       `SELECT * FROM login_patient($1, $2)`,
       [request.email, request.mobile],
     );
-
-    console.log(result);
+    
     const procedureResult = result?.[0];
     if (!procedureResult) {
       throwRpcException(status.INTERNAL, 'Invalid response from procedure');
