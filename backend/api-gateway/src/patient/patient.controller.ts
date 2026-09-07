@@ -6,16 +6,21 @@ import {
   HttpStatus,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { PatientService } from './patient.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, AnyFilesInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../common/utils/multer.config';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { PatientProfileDetailsDto } from './patient.dto';
+import {
+  CreateMedicalRecordDto,
+  PatientProfileDetailsDto,
+} from './patient.dto';
 import { Auth } from '../common/decorators/auth.decorator';
 import { UserRole } from '../common/utils/constant';
+import { MultipartNestedInterceptor } from '../auth/interceptor/multipart-nested.interceptor';
 
 @Controller('patient')
 export class PatientController {
@@ -59,7 +64,7 @@ export class PatientController {
 
   /**
    * @description get Patient Profile Details
-   * @param user 
+   * @param user
    * @returns json
    */
   @Get('getPatientDetails')
@@ -74,6 +79,64 @@ export class PatientController {
     return {
       success: true,
       message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Create Patient Medical Record
+   * @param user
+   * @param request
+   * @param documents
+   * @returns json
+   */
+  @Post('createPatientMedicalRecord')
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  @UseInterceptors(
+    AnyFilesInterceptor(
+      multerConfig({
+        maxSize: 5 * 1024 * 1024,
+      }),
+    ),
+    MultipartNestedInterceptor
+  )
+  async createPatientMedicalRecord(
+    @CurrentUser() user: JwtPayload,
+    @Body() request: CreateMedicalRecordDto,
+    @UploadedFiles() documents?: Express.Multer.File[],
+  ) {
+    let doctorPrimaryKey: number | undefined,
+      healthInstitutePrimaryKey: number | undefined,
+      doctorId: string | undefined,
+      healthInstituteId: string | undefined;
+      
+    switch (user.role) {
+      case UserRole.DOCTOR:
+        doctorPrimaryKey = user.userPrimaryKey;
+        doctorId = user.userBusinessId;
+        healthInstitutePrimaryKey = request.healthInstitutePrimaryKey;
+        healthInstituteId = request.healthInstituteId;
+        break;
+      case UserRole.HEALTH_INSTITUTE:
+        healthInstitutePrimaryKey = user.userPrimaryKey;
+        healthInstituteId = user.userBusinessId;
+        doctorPrimaryKey = request.doctorPrimaryKey;
+        doctorId = request.doctorId;
+        break;
+    }
+
+    const result = await this.patientService.createPatientMedicalRecord(
+      doctorPrimaryKey!,
+      doctorId!,
+      healthInstitutePrimaryKey!,
+      healthInstituteId!,
+      request,
+      documents,
+    );
+
+    return {
+      success: true,
+      message: 'Medical Record Created Successfully.',
       data: result,
     };
   }

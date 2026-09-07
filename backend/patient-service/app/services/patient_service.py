@@ -1,21 +1,25 @@
 import json
 
-from app.db.models.patient_entity import PatientProfile
-from app.repositories.patient_repository import PatientRepository
-from app.common.logger import get_logger
 from app.common.interfaces.patient_interface import (
-    PatientProfileUpdateInterface,
     PatientDetailsInterface,
+    PatientProfileUpdateInterface,
 )
+from app.common.logger import get_logger
+from app.db.models.medical_documents_entity import MedicalDocument
+from app.db.models.medical_record_entity import MedicalRecord
+from app.db.models.medication_entity import MedicalMedication
+from app.db.models.patient_entity import PatientProfile
 from app.redis.redis_service import RedisService
+from app.repositories.medical_record_repository import MedicalRecordRepository
+from app.repositories.patient_repository import PatientRepository
 
 logger = get_logger("patient_service")
 
 
 class PatientService:
-
     def __init__(self):
         self.patient_repository = PatientRepository()
+        self.medical_record_repository = MedicalRecordRepository()
         self.redis_service = RedisService()
 
     # * Create Patient Profile
@@ -54,8 +58,7 @@ class PatientService:
             raise ValueError("Patient profile not found!")
 
         logger.success(
-            f"Patient profile updated successfully "
-            f"with profile_id={patient_profile_id}"
+            f"Patient profile updated successfully with profile_id={patient_profile_id}"
         )
 
         await self.redis_service.delete(cache_key)
@@ -88,3 +91,30 @@ class PatientService:
         )
 
         return patient_details
+
+    # * Create Patient Medical Record
+    async def create_patient_medical_record(
+        self,
+        medical_record: MedicalRecord,
+        medical_documents: list[MedicalDocument],
+        medications: list[MedicalMedication],
+    ) -> str:
+        # 1. Verify patient exists
+        patient = await self.patient_repository.get_by_patient_primary_key(
+            medical_record.patient_primary_key
+        )
+        if patient is None:
+            raise ValueError("Patient not found")
+
+        # 2. Create the medical record in repository
+        await self.medical_record_repository.create_medical_record(
+            medical_record=medical_record,
+            medical_documents=medical_documents,
+            medications=medications,
+        )
+
+        logger.success(
+            f"Medical record created successfully for patient_id={medical_record.patient_id}"
+        )
+
+        return medical_record.patient_id

@@ -1,13 +1,12 @@
 from redis.asyncio import Redis
 
-from app.redis.server import redis_client
 from app.common.logger import get_logger
+from app.redis.server import redis_client
 
 logger = get_logger("RedisService")
 
 
 class RedisService:
-
     def __init__(self):
         self.redis: Redis = redis_client
 

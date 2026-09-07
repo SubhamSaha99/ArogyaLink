@@ -1,4 +1,4 @@
-import { Transform } from 'class-transformer';
+import { Transform, Type } from 'class-transformer';
 import {
   IsIn,
   IsInt,
@@ -8,6 +8,9 @@ import {
   Length,
   Min,
   Matches,
+  ValidateNested,
+  IsArray,
+  IsNotEmpty,
 } from 'class-validator';
 
 export class PatientProfileDetailsDto {
@@ -92,4 +95,116 @@ export class PatientProfileDetailsDto {
   )
   @IsInt()
   districtId?: number;
+}
+
+export class MedicalDocumentDto {
+  @Type(() => Number)
+  @IsInt()
+  documentType!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  title!: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
+    message: 'Document date must be in YYYY-MM-DD format',
+  })
+  documentDate?: string;
+}
+
+export class MedicalMedicationDto {
+  @IsString()
+  @IsNotEmpty()
+  medicationName!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  dosage!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
+    message: 'Start date must be in YYYY-MM-DD format',
+  })
+  startDate!: string;
+}
+
+export class CreateMedicalRecordDto {
+  @Type(() => Number)
+  @IsInt()
+  @IsNotEmpty()
+  patientPrimaryKey!: number;
+
+  @IsString()
+  @IsNotEmpty()
+  patientId!: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  healthInstitutePrimaryKey?: number;
+
+  @IsOptional()
+  @IsString()
+  healthInstituteId?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  doctorPrimaryKey?: number;
+
+  @IsOptional()
+  @IsString()
+  doctorId?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  title!: string;
+
+  @IsString()
+  @IsNotEmpty()
+  diagnosis!: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
+    message: 'Started date must be in YYYY-MM-DD format',
+  })
+  startedDate!: string;
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @ValidateNested({ each: true })
+  @Type(() => MedicalDocumentDto)
+  medicalDocuments?: MedicalDocumentDto[];
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @ValidateNested({ each: true })
+  @Type(() => MedicalMedicationDto)
+  medications?: MedicalMedicationDto[];
 }

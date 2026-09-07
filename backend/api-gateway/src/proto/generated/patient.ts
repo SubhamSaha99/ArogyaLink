@@ -68,6 +68,42 @@ export interface GetPatientDetailsRes {
   patientProfile: PatientDetails | undefined;
 }
 
+export interface PatientMedicalRecord {
+  patientPrimaryKey: number;
+  patientId: string;
+  doctorPrimaryKey: number;
+  doctorId: string;
+  healthInstitutePrimaryKey: number;
+  healthInstituteId: string;
+  title: string;
+  diagnosis: string;
+  description?: string | undefined;
+  startedDate: string;
+}
+
+export interface PatientMedicalDocuments {
+  documentType: number;
+  title: string;
+  documentUrl: string;
+  documentDate?: string | undefined;
+}
+
+export interface PatientMedication {
+  medicationName: string;
+  dosage: string;
+  startDate: string;
+}
+
+export interface CreatePatientMedicalRecordReq {
+  medicalRecord: PatientMedicalRecord | undefined;
+  medicalDocuments: PatientMedicalDocuments[];
+  medications: PatientMedication[];
+}
+
+export interface CreatePatientMedicalRecordRes {
+  patientId: string;
+}
+
 export const PATIENT_PACKAGE_NAME = "patient";
 
 export interface PatientServiceClient {
@@ -76,6 +112,8 @@ export interface PatientServiceClient {
   updatePatientProfile(request: UpdatePatientProfileDetailsReq): Observable<UpdatePatientProfileDetailsRes>;
 
   getPatientDetails(request: GetPatientDetailsReq): Observable<GetPatientDetailsRes>;
+
+  createPatientMedicalRecord(request: CreatePatientMedicalRecordReq): Observable<CreatePatientMedicalRecordRes>;
 }
 
 export interface PatientServiceController {
@@ -93,11 +131,20 @@ export interface PatientServiceController {
   getPatientDetails(
     request: GetPatientDetailsReq,
   ): Promise<GetPatientDetailsRes> | Observable<GetPatientDetailsRes> | GetPatientDetailsRes;
+
+  createPatientMedicalRecord(
+    request: CreatePatientMedicalRecordReq,
+  ): Promise<CreatePatientMedicalRecordRes> | Observable<CreatePatientMedicalRecordRes> | CreatePatientMedicalRecordRes;
 }
 
 export function PatientServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createPatient", "updatePatientProfile", "getPatientDetails"];
+    const grpcMethods: string[] = [
+      "createPatient",
+      "updatePatientProfile",
+      "getPatientDetails",
+      "createPatientMedicalRecord",
+    ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("PatientService", method)(constructor.prototype[method], method, descriptor);

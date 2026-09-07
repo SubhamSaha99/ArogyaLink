@@ -1,7 +1,6 @@
-from pymongo import AsyncMongoClient
-
-from app.config.settings import settings
 from app.common.logger import MongoQueryLogger
+from app.config.settings import settings
+from pymongo import AsyncMongoClient
 
 mongo_client = AsyncMongoClient(
     settings.mongodb_url,

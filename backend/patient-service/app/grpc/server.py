@@ -1,9 +1,9 @@
 import grpc
 
-from app.proto.generated import patient_pb2_grpc
-from app.grpc.services.patient_service import PatientService
-from app.config.settings import settings
 from app.common.logger import get_logger
+from app.config.settings import settings
+from app.grpc.services.patient_service import PatientService
+from app.proto.generated import patient_pb2_grpc
 
 logger = get_logger("grpc_server")
 

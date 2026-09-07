@@ -1,15 +1,22 @@
 import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
+  CreatePatientMedicalRecordReq,
+  CreatePatientMedicalRecordRes,
   GetPatientDetailsReq,
   GetPatientDetailsRes,
   PATIENT_SERVICE_NAME,
+  PatientMedicalDocuments,
+  PatientMedication,
   PatientServiceClient,
   UpdatePatientProfileDetailsReq,
   UpdatePatientProfileDetailsRes,
 } from '../proto/generated/patient';
 import { GrpcServiceName } from '../common/utils/constant';
 import type { ClientGrpc } from '@nestjs/microservices';
-import { PatientProfileDetailsDto } from './patient.dto';
+import {
+  CreateMedicalRecordDto,
+  PatientProfileDetailsDto,
+} from './patient.dto';
 import { moveFile } from '../common/utils/upload-file';
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/utils/file-util';
@@ -67,8 +74,8 @@ export class PatientService implements OnModuleInit {
 
   /**
    * @description get Patient Profile Details
-   * @param patientPrimaryKey 
-   * @param patientId 
+   * @param patientPrimaryKey
+   * @param patientId
    * @returns GetPatientDetailsRes
    */
   async getPatientDetails(
@@ -83,5 +90,90 @@ export class PatientService implements OnModuleInit {
     return await firstValueFrom(
       this.patientGrpcService.getPatientDetails(patientProfileReq),
     );
+  }
+
+  /**
+   * @description Create Patient Medical Record
+   * @param doctorPrimaryKey
+   * @param doctorId
+   * @param healthInstitutePrimaryKey
+   * @param healthInstituteId
+   * @param request
+   * @param documents
+   * @returns CreatePatientMedicalRecordRes
+   */
+  async createPatientMedicalRecord(
+    doctorPrimaryKey: number,
+    doctorId: string,
+    healthInstitutePrimaryKey: number,
+    healthInstituteId: string,
+    request: CreateMedicalRecordDto,
+    documents?: Express.Multer.File[],
+  ): Promise<CreatePatientMedicalRecordRes> {
+    const uploadedFilePaths: string[] = [];
+
+    try {
+      let medicalDocuments: PatientMedicalDocuments[] = [];
+
+      if (documents && documents.length > 0) {
+        medicalDocuments = await Promise.all(
+          documents.map(async (file, loopIndex) => {
+            const uploadedPath = await moveFile(
+              file.path,
+              'patient-medical-documents',
+            );
+            uploadedFilePaths.push(uploadedPath);
+
+            const indexMatch = file.fieldname?.match(/medicalDocuments\[(\d+)\]/);
+            const metaIndex = indexMatch ? parseInt(indexMatch[1], 10) : loopIndex;
+            const meta = request.medicalDocuments?.[metaIndex];
+
+            return {
+              documentType: meta?.documentType ?? 1,
+              title: meta?.title ?? file.originalname,
+              documentUrl: uploadedPath,
+              documentDate:
+                meta?.documentDate ?? new Date().toISOString().split('T')[0],
+            };
+          }),
+        );
+      } 
+
+      const medications: PatientMedication[] =
+        request.medications?.map((med) => ({
+          medicationName: med.medicationName,
+          dosage: med.dosage,
+          startDate: med.startDate,
+        })) ?? [];
+
+      const medicalRecordReq: CreatePatientMedicalRecordReq = {
+        medicalRecord: {
+          patientPrimaryKey: request.patientPrimaryKey,
+          patientId: request.patientId,
+          doctorPrimaryKey,
+          doctorId,
+          healthInstitutePrimaryKey,
+          healthInstituteId,
+          title: request.title,
+          diagnosis: request.diagnosis,
+          description: request.description ?? '',
+          startedDate: request.startedDate,
+        },
+        medicalDocuments,
+        medications,
+      };
+      
+      return await firstValueFrom(
+        this.patientGrpcService.createPatientMedicalRecord(medicalRecordReq),
+      );
+    
+    } catch (error) {
+      if (uploadedFilePaths.length > 0) {
+        await Promise.allSettled(
+          uploadedFilePaths.map((filePath) => deleteFile(filePath)),
+        );
+      }
+      throw error;
+    }
   }
 }

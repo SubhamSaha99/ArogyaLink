@@ -1,15 +1,16 @@
-# app/repositories/patient_repository.py
-
 from datetime import datetime, timezone
+
 from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo import ReturnDocument
 
-from app.common.interfaces.patient_interface import PatientProfileUpdateInterface, PatientDetailsInterface
+from app.common.interfaces.patient_interface import (
+    PatientDetailsInterface,
+    PatientProfileUpdateInterface,
+)
 from app.common.logger import get_logger
 from app.db.db_service import get_database
 from app.db.models.patient_entity import PatientProfile
-
 
 logger = get_logger("patient_repository")
 
@@ -41,11 +42,10 @@ class PatientRepository:
             {"patient_primary_key": patient_primary_key}
         )
 
-
-        print(document);
+        print(document)
         if not document:
             return None
-        
+
         patient_details: PatientDetailsInterface = {
             "patient_profile_id": str(document.pop("_id")),
             "patient_primary_key": document["patient_primary_key"],
@@ -62,8 +62,6 @@ class PatientRepository:
             "district_id": document.get("district_id"),
         }
         return patient_details
-
-        
 
     # * Get Patient by _id
     async def get_patient_by_id(
@@ -85,11 +83,10 @@ class PatientRepository:
         document.pop("_id", None)
 
         return PatientProfile(**document)
-    
+
     # * Get patient by primary key
     async def get_patient_by_primary_key(
-        self,
-        patient_primary_key: int
+        self, patient_primary_key: int
     ) -> PatientProfile | None:
 
         document = await self.collection.find_one(

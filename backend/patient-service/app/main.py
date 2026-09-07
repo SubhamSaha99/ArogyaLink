@@ -1,8 +1,9 @@
 import asyncio
 import signal
-from app.db.db_service import connect_database, close_database, create_indexes
-from app.grpc.server import start_grpc_server
+
 from app.common.logger import get_logger
+from app.db.db_service import close_database, connect_database, create_indexes
+from app.grpc.server import start_grpc_server
 from app.redis.redis_service import RedisService
 
 logger = get_logger("main")

@@ -1,9 +1,8 @@
-from motor.motor_asyncio import AsyncIOMotorClient
-from pymongo import ASCENDING
-
+from app.common.logger import get_logger
 from app.config.settings import settings
 from app.db.mongodb import mongo_client, mongo_db
-from app.common.logger import get_logger
+from motor.motor_asyncio import AsyncIOMotorClient
+from pymongo import ASCENDING
 
 logger = get_logger("database")
 

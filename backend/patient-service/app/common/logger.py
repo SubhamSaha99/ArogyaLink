@@ -1,12 +1,13 @@
-import sys
 import logging
+import sys
 from datetime import datetime
 from typing import Any
+
 from pymongo.monitoring import (
+    CommandFailedEvent,
     CommandListener,
     CommandStartedEvent,
     CommandSucceededEvent,
-    CommandFailedEvent,
 )
 
 
@@ -186,7 +187,9 @@ class MongoQueryLogger(CommandListener):
         if self._ignore_internal and cmd_name in self._internal_commands:
             return
 
-        collection, details = self._format_command_details(event.command_name, event.command)
+        collection, details = self._format_command_details(
+            event.command_name, event.command
+        )
 
         # Store command metadata correlated by request_id
         self._active_commands[event.request_id] = {
@@ -265,7 +268,9 @@ class MongoQueryLogger(CommandListener):
 
 
 # Manual query logger helper functions
-def log_db_success(operation: str, collection: str, duration_ms: float, details: str = "") -> None:
+def log_db_success(
+    operation: str, collection: str, duration_ms: float, details: str = ""
+) -> None:
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     print(
         f"{AnsiColors.GREEN_BOLD}[DB SUCCESS]{AnsiColors.RESET} "
@@ -277,7 +282,13 @@ def log_db_success(operation: str, collection: str, duration_ms: float, details:
     )
 
 
-def log_db_error(operation: str, collection: str, error: Exception | str, duration_ms: float = 0.0, details: str = "") -> None:
+def log_db_error(
+    operation: str,
+    collection: str,
+    error: Exception | str,
+    duration_ms: float = 0.0,
+    details: str = "",
+) -> None:
     ts = datetime.now().strftime("%Y-%m-%d %H:%M:%S.%f")[:-3]
     print(
         f"{AnsiColors.RED_BOLD}[DB ERROR]{AnsiColors.RESET} "

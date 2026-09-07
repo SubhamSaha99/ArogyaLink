@@ -1,7 +1,9 @@
 import functools
 import time
 import traceback
+
 import grpc
+
 from app.common.logger import get_logger
 
 logger = get_logger("grpc_handler")
@@ -13,8 +15,11 @@ def grpc_error_handler(func):
     - Catches Python exceptions and converts them into standardized gRPC status code aborts.
     - Logs successful RPC executions in GREEN and errors in RED with timing.
     """
+
     @functools.wraps(func)
-    async def wrapper(self, request, context: grpc.aio.ServicerContext, *args, **kwargs):
+    async def wrapper(
+        self, request, context: grpc.aio.ServicerContext, *args, **kwargs
+    ):
         start_time = time.perf_counter()
         rpc_name = func.__name__
 
@@ -27,13 +32,15 @@ def grpc_error_handler(func):
         except grpc.RpcError:
             # If already an active gRPC error/abort, let it pass through
             duration_ms = (time.perf_counter() - start_time) * 1000.0
-            logger.error(f"RPC {rpc_name} failed with gRPC RpcError ({duration_ms:.2f}ms)")
+            logger.error(
+                f"RPC {rpc_name} failed with gRPC RpcError ({duration_ms:.2f}ms)"
+            )
             raise
 
         except ValueError as val_err:
             duration_ms = (time.perf_counter() - start_time) * 1000.0
             err_msg = str(val_err)
-            
+
             status_code = (
                 grpc.StatusCode.ALREADY_EXISTS
                 if "already exists" in err_msg.lower() or "duplicate" in err_msg.lower()

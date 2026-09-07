@@ -34,6 +34,7 @@ class PatientServiceStub:
     CreatePatient: _grpc.UnaryUnaryMultiCallable[_patient_pb2.PatientProfileReq, _patient_pb2.PatientProfileRes]
     UpdatePatientProfile: _grpc.UnaryUnaryMultiCallable[_patient_pb2.UpdatePatientProfileDetailsReq, _patient_pb2.UpdatePatientProfileDetailsRes]
     GetPatientDetails: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetPatientDetailsReq, _patient_pb2.GetPatientDetailsRes]
+    CreatePatientMedicalRecord: _grpc.UnaryUnaryMultiCallable[_patient_pb2.CreatePatientMedicalRecordReq, _patient_pb2.CreatePatientMedicalRecordRes]
 
 @_typing.type_check_only
 class PatientServiceAsyncStub(PatientServiceStub):
@@ -41,6 +42,7 @@ class PatientServiceAsyncStub(PatientServiceStub):
     CreatePatient: _aio.UnaryUnaryMultiCallable[_patient_pb2.PatientProfileReq, _patient_pb2.PatientProfileRes]  # type: ignore[assignment]
     UpdatePatientProfile: _aio.UnaryUnaryMultiCallable[_patient_pb2.UpdatePatientProfileDetailsReq, _patient_pb2.UpdatePatientProfileDetailsRes]  # type: ignore[assignment]
     GetPatientDetails: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetPatientDetailsReq, _patient_pb2.GetPatientDetailsRes]  # type: ignore[assignment]
+    CreatePatientMedicalRecord: _aio.UnaryUnaryMultiCallable[_patient_pb2.CreatePatientMedicalRecordReq, _patient_pb2.CreatePatientMedicalRecordRes]  # type: ignore[assignment]
 
 class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
     @_abc_1.abstractmethod
@@ -63,5 +65,12 @@ class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
         request: _patient_pb2.GetPatientDetailsReq,
         context: _ServicerContext,
     ) -> _typing.Union[_patient_pb2.GetPatientDetailsRes, _abc.Awaitable[_patient_pb2.GetPatientDetailsRes]]: ...
+
+    @_abc_1.abstractmethod
+    def CreatePatientMedicalRecord(
+        self,
+        request: _patient_pb2.CreatePatientMedicalRecordReq,
+        context: _ServicerContext,
+    ) -> _typing.Union[_patient_pb2.CreatePatientMedicalRecordRes, _abc.Awaitable[_patient_pb2.CreatePatientMedicalRecordRes]]: ...
 
 def add_PatientServiceServicer_to_server(servicer: PatientServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...

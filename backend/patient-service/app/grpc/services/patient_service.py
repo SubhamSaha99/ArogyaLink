@@ -1,16 +1,19 @@
+from datetime import date
 from typing import cast
-import grpc
 
-from app.proto.generated import patient_pb2
-from app.proto.generated import patient_pb2_grpc
-from app.db.models.patient_entity import PatientProfile
-from app.services.patient_service import PatientService as PatientProfileService
+import grpc
 from app.common.decorators.grpc_error_handler import grpc_error_handler
+from app.common.enums.medical_enums import MedicalDocumentType
 from app.common.interfaces.patient_interface import PatientProfileUpdateInterface
+from app.db.models.medical_documents_entity import MedicalDocument
+from app.db.models.medical_record_entity import MedicalRecord
+from app.db.models.medication_entity import MedicalMedication
+from app.db.models.patient_entity import PatientProfile
+from app.proto.generated import patient_pb2, patient_pb2_grpc
+from app.services.patient_service import PatientService as PatientProfileService
 
 
 class PatientService(patient_pb2_grpc.PatientServiceServicer):
-
     def __init__(self):
         self.patient_service = PatientProfileService()
 
@@ -76,7 +79,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             patientId=result,
         )
 
-    # * get patient details
+    # * Get Patient Details
     @grpc_error_handler
     async def GetPatientDetails(
         self,
@@ -104,15 +107,72 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
         }
 
         patient_profile = patient_pb2.PatientDetails(
-            **{
-                key: value
-                for key, value in profile_data.items()
-                if value is not None
-            }
+            **{key: value for key, value in profile_data.items() if value is not None}
         )
 
         return patient_pb2.GetPatientDetailsRes(
             patientPrimaryKey=patient_details["patient_primary_key"],
             patientId=patient_details["patient_id"],
             patientProfile=patient_profile,
+        )
+
+    # * Create Patient Medical Record
+    @grpc_error_handler
+    async def CreatePatientMedicalRecord(
+        self,
+        request: patient_pb2.CreatePatientMedicalRecordReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.CreatePatientMedicalRecordRes:
+
+        if not request.HasField("medicalRecord"):
+            raise ValueError("medicalRecord details are required")
+
+        req_record = request.medicalRecord
+
+        medical_record = MedicalRecord(
+            patient_primary_key=req_record.patientPrimaryKey,
+            patient_id=req_record.patientId,
+            doctor_primary_key=req_record.doctorPrimaryKey,
+            doctor_id=req_record.doctorId,
+            health_institute_primary_key=req_record.healthInstitutePrimaryKey,
+            health_institute_id=req_record.healthInstituteId,
+            title=req_record.title,
+            diagnosis=req_record.diagnosis,
+            description=req_record.description if req_record.description else None,
+            started_date=date.fromisoformat(req_record.startedDate),
+        )
+
+        medical_documents = [
+            MedicalDocument(
+                medical_record_id="",
+                document_type=MedicalDocumentType(doc.documentType),
+                title=doc.title,
+                document_url=doc.documentUrl,
+                document_date=(
+                    date.fromisoformat(doc.documentDate)
+                    if doc.documentDate
+                    else None
+                ),
+            )
+            for doc in request.medicalDocuments
+        ]
+
+        medications = [
+            MedicalMedication(
+                medical_record_id="",
+                medication_name=med.medicationName,
+                dosage=med.dosage,
+                start_date=date.fromisoformat(med.startDate),
+            )
+            for med in request.medications
+        ]
+
+        patient_id = await self.patient_service.create_patient_medical_record(
+            medical_record=medical_record,
+            medical_documents=medical_documents,
+            medications=medications,
+        )
+
+        return patient_pb2.CreatePatientMedicalRecordRes(
+            patientId=patient_id,
         )

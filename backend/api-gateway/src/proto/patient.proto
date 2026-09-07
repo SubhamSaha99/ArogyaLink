@@ -8,6 +8,8 @@ service PatientService {
   rpc UpdatePatientProfile(UpdatePatientProfileDetailsReq) returns (UpdatePatientProfileDetailsRes);
 
   rpc GetPatientDetails(GetPatientDetailsReq) returns (GetPatientDetailsRes);
+
+  rpc CreatePatientMedicalRecord(CreatePatientMedicalRecordReq) returns (CreatePatientMedicalRecordRes);
 }
 
 message PatientProfileReq {
@@ -65,7 +67,44 @@ message PatientDetails {
 }
 
 message GetPatientDetailsRes {
-  uint32                patientPrimaryKey = 1;
-  string                patientId         = 2;
+  uint32         patientPrimaryKey = 1;
+  string         patientId         = 2;
   PatientDetails patientProfile    = 3;
+}
+
+message PatientMedicalRecord {
+
+  uint32          patientPrimaryKey         = 1;
+  string          patientId                 = 2;
+  uint32          doctorPrimaryKey          = 3;
+  string          doctorId                  = 4;
+  uint32          healthInstitutePrimaryKey = 5;
+  string          healthInstituteId         = 6;
+  string          title                     = 7;
+  string          diagnosis                 = 8;
+  optional string description               = 9;
+  string          startedDate               = 10;
+}
+
+message PatientMedicalDocuments {
+  uint32          documentType = 1;
+  string          title        = 2;
+  string          documentUrl  = 3;
+  optional string documentDate = 4;
+}
+
+message PatientMedication {
+  string medicationName = 1;
+  string dosage         = 2;
+  string startDate      = 3;
+}
+
+message CreatePatientMedicalRecordReq {
+  PatientMedicalRecord             medicalRecord    = 3;
+  repeated PatientMedicalDocuments medicalDocuments = 4;
+  repeated PatientMedication       medications      = 5;
+}
+
+message CreatePatientMedicalRecordRes {
+  string patientId = 1;
 }
