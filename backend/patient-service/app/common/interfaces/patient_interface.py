@@ -12,6 +12,7 @@ class PatientProfileUpdateInterface(TypedDict, total=False):
     address: str | None
     state_id: int | None
     district_id: int | None
+    pincode: int | None
 
 
 class PatientDetailsInterface(TypedDict):
@@ -27,4 +28,13 @@ class PatientDetailsInterface(TypedDict):
     profile_image: str | None
     address: str | None
     state_id: int | None
+    state_name: str | None
     district_id: int | None
+    district_name: str | None
+    pincode: int | None
+
+
+class MasterDataItemInterface(TypedDict):
+    id: int
+    name: str
+    code: str

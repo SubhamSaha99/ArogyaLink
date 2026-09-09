@@ -20,6 +20,7 @@ import {
 import { moveFile } from '../common/utils/upload-file';
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/utils/file-util';
+import { GetDistrictsRes, GetStatesRes } from '../proto/generated/health-institute';
 
 @Injectable()
 export class PatientService implements OnModuleInit {
@@ -176,4 +177,25 @@ export class PatientService implements OnModuleInit {
       throw error;
     }
   }
+
+  /**
+     * * Get States
+     * @returns GetStatesRes
+     */
+    async getStates(): Promise<GetStatesRes> {
+      return await firstValueFrom(this.patientGrpcService.getStates({}));
+    }
+  
+    /**
+     * * Get Districts
+     * @param stateId
+     * @returns GetDistrictsRes
+     */
+    async getDistricts(stateId: number): Promise<GetDistrictsRes> {
+      return await firstValueFrom(
+        this.patientGrpcService.getDistricts({
+          stateId,
+        }),
+      );
+    }
 }

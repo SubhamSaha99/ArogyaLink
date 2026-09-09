@@ -3,7 +3,10 @@
 import grpc
 import warnings
 
-import patient_pb2 as patient__pb2
+try:
+    from app.proto.generated import patient_pb2 as patient__pb2
+except ImportError:
+    import patient_pb2 as patient__pb2
 
 GRPC_GENERATED_VERSION = '1.83.1'
 GRPC_VERSION = grpc.__version__
@@ -54,6 +57,16 @@ class PatientServiceStub:
                 request_serializer=patient__pb2.CreatePatientMedicalRecordReq.SerializeToString,
                 response_deserializer=patient__pb2.CreatePatientMedicalRecordRes.FromString,
                 _registered_method=True)
+        self.GetStates = channel.unary_unary(
+                '/patient.PatientService/GetStates',
+                request_serializer=patient__pb2.GetStatesReq.SerializeToString,
+                response_deserializer=patient__pb2.GetStatesRes.FromString,
+                _registered_method=True)
+        self.GetDistricts = channel.unary_unary(
+                '/patient.PatientService/GetDistricts',
+                request_serializer=patient__pb2.GetDistrictsReq.SerializeToString,
+                response_deserializer=patient__pb2.GetDistrictsRes.FromString,
+                _registered_method=True)
 
 
 class PatientServiceServicer:
@@ -83,6 +96,18 @@ class PatientServiceServicer:
         context.set_details('Method not implemented!')
         raise NotImplementedError('Method not implemented!')
 
+    def GetStates(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
+    def GetDistricts(self, request, context):
+        """Missing associated documentation comment in .proto file."""
+        context.set_code(grpc.StatusCode.UNIMPLEMENTED)
+        context.set_details('Method not implemented!')
+        raise NotImplementedError('Method not implemented!')
+
 
 def add_PatientServiceServicer_to_server(servicer, server):
     rpc_method_handlers = {
@@ -105,6 +130,16 @@ def add_PatientServiceServicer_to_server(servicer, server):
                     servicer.CreatePatientMedicalRecord,
                     request_deserializer=patient__pb2.CreatePatientMedicalRecordReq.FromString,
                     response_serializer=patient__pb2.CreatePatientMedicalRecordRes.SerializeToString,
+            ),
+            'GetStates': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetStates,
+                    request_deserializer=patient__pb2.GetStatesReq.FromString,
+                    response_serializer=patient__pb2.GetStatesRes.SerializeToString,
+            ),
+            'GetDistricts': grpc.unary_unary_rpc_method_handler(
+                    servicer.GetDistricts,
+                    request_deserializer=patient__pb2.GetDistrictsReq.FromString,
+                    response_serializer=patient__pb2.GetDistrictsRes.SerializeToString,
             ),
     }
     generic_handler = grpc.method_handlers_generic_handler(
@@ -215,6 +250,60 @@ class PatientService:
             '/patient.PatientService/CreatePatientMedicalRecord',
             patient__pb2.CreatePatientMedicalRecordReq.SerializeToString,
             patient__pb2.CreatePatientMedicalRecordRes.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetStates(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/patient.PatientService/GetStates',
+            patient__pb2.GetStatesReq.SerializeToString,
+            patient__pb2.GetStatesRes.FromString,
+            options,
+            channel_credentials,
+            insecure,
+            call_credentials,
+            compression,
+            wait_for_ready,
+            timeout,
+            metadata,
+            _registered_method=True)
+
+    @staticmethod
+    def GetDistricts(request,
+            target,
+            options=(),
+            channel_credentials=None,
+            call_credentials=None,
+            insecure=False,
+            compression=None,
+            wait_for_ready=None,
+            timeout=None,
+            metadata=None):
+        return grpc.experimental.unary_unary(
+            request,
+            target,
+            '/patient.PatientService/GetDistricts',
+            patient__pb2.GetDistrictsReq.SerializeToString,
+            patient__pb2.GetDistrictsRes.FromString,
             options,
             channel_credentials,
             insecure,

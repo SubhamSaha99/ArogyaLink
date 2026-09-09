@@ -45,6 +45,25 @@ class PatientRepository:
         if not document:
             return None
 
+        state_id = document.get("state_id")
+        district_id = document.get("district_id")
+        state_name = None
+        district_name = None
+
+        if state_id is not None:
+            state_doc = await self.db["states"].find_one(
+                {"state_id": state_id}, {"_id": 0, "state_name": 1}
+            )
+            if state_doc:
+                state_name = state_doc.get("state_name")
+
+        if district_id is not None:
+            district_doc = await self.db["districts"].find_one(
+                {"district_id": district_id}, {"_id": 0, "district_name": 1}
+            )
+            if district_doc:
+                district_name = district_doc.get("district_name")
+
         patient_details: PatientDetailsInterface = {
             "patient_profile_id": str(document.pop("_id")),
             "patient_primary_key": document["patient_primary_key"],
@@ -57,8 +76,11 @@ class PatientRepository:
             "gender": document.get("gender"),
             "profile_image": document.get("profile_image"),
             "address": document.get("address"),
-            "state_id": document.get("state_id"),
-            "district_id": document.get("district_id"),
+            "state_id": state_id,
+            "state_name": state_name,
+            "district_id": district_id,
+            "district_name": district_name,
+            "pincode": document.get("pincode"),
         }
         return patient_details
 

@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UploadedFile,
   UploadedFiles,
@@ -140,4 +141,39 @@ export class PatientController {
       data: result,
     };
   }
+
+  /**
+     * * Get States
+     * @returns json
+     */
+    @Get('states')
+    @HttpCode(HttpStatus.OK)
+    @Auth(UserRole.PATIENT)
+    async getStates() {
+      const result = await this.patientService.getStates();
+  
+      return {
+        success: true,
+        message: 'Details Fetched Successfully.',
+        data: result,
+      };
+    }
+  
+    /**
+     * @description get districts
+     * @param id
+     * @returns json
+     */
+    @Get('districts/:id')
+    @HttpCode(HttpStatus.OK)
+    @Auth(UserRole.PATIENT)
+    async getDistricts(@Param('id') id: string) {
+      const result = await this.patientService.getDistricts(Number(id));
+  
+      return {
+        success: true,
+        message: 'Details Fetched Successfully.',
+        data: result,
+      };
+    }
 }

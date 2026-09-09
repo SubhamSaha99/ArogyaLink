@@ -189,7 +189,7 @@ export class HealthInstituteService {
    * @returns GetStatesRes
    */
   async getStates(): Promise<GetStatesRes> {
-    const cacheKey = `states`;
+    const cacheKey = `states-health-institute-service`;
 
     try {
       const cachedStates = await this.redisService.get(cacheKey);
@@ -230,7 +230,7 @@ export class HealthInstituteService {
    * @returns GetDistrictsRes
    */
   async getDistricts(request: GetDistrictsReq): Promise<GetDistrictsRes> {
-    const cacheKey = `districts:${request.stateId}`;
+    const cacheKey = `districts-health-institute-service:${request.stateId}`;
 
     try {
       const cachedDistricts = await this.redisService.get(cacheKey);

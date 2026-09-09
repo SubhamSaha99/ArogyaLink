@@ -95,6 +95,15 @@ export class PatientProfileDetailsDto {
   )
   @IsInt()
   districtId?: number;
+
+  @IsOptional()
+  @Transform(({ value }: { value: unknown }) =>
+    value === undefined || value === null || value === ''
+      ? value
+      : Number(value),
+  )
+  @IsInt()
+  pincode?: number;
 }
 
 export class MedicalDocumentDto {

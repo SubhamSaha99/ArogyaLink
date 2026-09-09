@@ -24,7 +24,7 @@ _sym_db = _symbol_database.Default()
 
 
 
-DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rpatient.proto\x12\x07patient\"\xad\x01\n\x11PatientProfileReq\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x0e\n\x06mobile\x18\x04 \x01(\t\x12\x11\n\tfirstName\x18\x05 \x01(\t\x12\x17\n\nmiddleName\x18\x06 \x01(\tH\x00\x88\x01\x01\x12\x10\n\x08lastName\x18\x07 \x01(\tB\r\n\x0b_middleName\"&\n\x11PatientProfileRes\x12\x11\n\tpatientId\x18\x01 \x01(\t\"\xbb\x03\n\x1eUpdatePatientProfileDetailsReq\x12\x18\n\x10patientProfileId\x18\x01 \x01(\t\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\x16\n\tfirstName\x18\x03 \x01(\tH\x00\x88\x01\x01\x12\x17\n\nmiddleName\x18\x04 \x01(\tH\x01\x88\x01\x01\x12\x15\n\x08lastName\x18\x05 \x01(\tH\x02\x88\x01\x01\x12\x18\n\x0b\x64\x61teOfBirth\x18\x06 \x01(\tH\x03\x88\x01\x01\x12\x10\n\x03\x61ge\x18\x07 \x01(\rH\x04\x88\x01\x01\x12\x13\n\x06gender\x18\x08 \x01(\rH\x05\x88\x01\x01\x12\x19\n\x0cprofileImage\x18\t \x01(\tH\x06\x88\x01\x01\x12\x14\n\x07\x61\x64\x64ress\x18\n \x01(\tH\x07\x88\x01\x01\x12\x14\n\x07stateId\x18\x0b \x01(\rH\x08\x88\x01\x01\x12\x17\n\ndistrictId\x18\x0c \x01(\rH\t\x88\x01\x01\x42\x0c\n\n_firstNameB\r\n\x0b_middleNameB\x0b\n\t_lastNameB\x0e\n\x0c_dateOfBirthB\x06\n\x04_ageB\t\n\x07_genderB\x0f\n\r_profileImageB\n\n\x08_addressB\n\n\x08_stateIdB\r\n\x0b_districtId\"3\n\x1eUpdatePatientProfileDetailsRes\x12\x11\n\tpatientId\x18\x01 \x01(\t\"D\n\x14GetPatientDetailsReq\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\"\xf3\x02\n\x0ePatientDetails\x12\x18\n\x10patientProfileId\x18\x01 \x01(\t\x12\x11\n\tfirstName\x18\x02 \x01(\t\x12\x17\n\nmiddleName\x18\x03 \x01(\tH\x00\x88\x01\x01\x12\x10\n\x08lastName\x18\x04 \x01(\t\x12\x18\n\x0b\x64\x61teOfBirth\x18\x05 \x01(\tH\x01\x88\x01\x01\x12\x10\n\x03\x61ge\x18\x06 \x01(\rH\x02\x88\x01\x01\x12\x13\n\x06gender\x18\x07 \x01(\rH\x03\x88\x01\x01\x12\x19\n\x0cprofileImage\x18\x08 \x01(\tH\x04\x88\x01\x01\x12\x14\n\x07\x61\x64\x64ress\x18\t \x01(\tH\x05\x88\x01\x01\x12\x14\n\x07stateId\x18\n \x01(\rH\x06\x88\x01\x01\x12\x17\n\ndistrictId\x18\x0b \x01(\rH\x07\x88\x01\x01\x42\r\n\x0b_middleNameB\x0e\n\x0c_dateOfBirthB\x06\n\x04_ageB\t\n\x07_genderB\x0f\n\r_profileImageB\n\n\x08_addressB\n\n\x08_stateIdB\r\n\x0b_districtId\"u\n\x14GetPatientDetailsRes\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12/\n\x0epatientProfile\x18\x03 \x01(\x0b\x32\x17.patient.PatientDetails\"\x8f\x02\n\x14PatientMedicalRecord\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\x18\n\x10\x64octorPrimaryKey\x18\x03 \x01(\r\x12\x10\n\x08\x64octorId\x18\x04 \x01(\t\x12!\n\x19healthInstitutePrimaryKey\x18\x05 \x01(\r\x12\x19\n\x11healthInstituteId\x18\x06 \x01(\t\x12\r\n\x05title\x18\x07 \x01(\t\x12\x11\n\tdiagnosis\x18\x08 \x01(\t\x12\x18\n\x0b\x64\x65scription\x18\t \x01(\tH\x00\x88\x01\x01\x12\x13\n\x0bstartedDate\x18\n \x01(\tB\x0e\n\x0c_description\"\x7f\n\x17PatientMedicalDocuments\x12\x14\n\x0c\x64ocumentType\x18\x01 \x01(\r\x12\r\n\x05title\x18\x02 \x01(\t\x12\x13\n\x0b\x64ocumentUrl\x18\x03 \x01(\t\x12\x19\n\x0c\x64ocumentDate\x18\x04 \x01(\tH\x00\x88\x01\x01\x42\x0f\n\r_documentDate\"N\n\x11PatientMedication\x12\x16\n\x0emedicationName\x18\x01 \x01(\t\x12\x0e\n\x06\x64osage\x18\x02 \x01(\t\x12\x11\n\tstartDate\x18\x03 \x01(\t\"\xc2\x01\n\x1d\x43reatePatientMedicalRecordReq\x12\x34\n\rmedicalRecord\x18\x03 \x01(\x0b\x32\x1d.patient.PatientMedicalRecord\x12:\n\x10medicalDocuments\x18\x04 \x03(\x0b\x32 .patient.PatientMedicalDocuments\x12/\n\x0bmedications\x18\x05 \x03(\x0b\x32\x1a.patient.PatientMedication\"2\n\x1d\x43reatePatientMedicalRecordRes\x12\x11\n\tpatientId\x18\x01 \x01(\t2\x84\x03\n\x0ePatientService\x12G\n\rCreatePatient\x12\x1a.patient.PatientProfileReq\x1a\x1a.patient.PatientProfileRes\x12h\n\x14UpdatePatientProfile\x12\'.patient.UpdatePatientProfileDetailsReq\x1a\'.patient.UpdatePatientProfileDetailsRes\x12Q\n\x11GetPatientDetails\x12\x1d.patient.GetPatientDetailsReq\x1a\x1d.patient.GetPatientDetailsRes\x12l\n\x1a\x43reatePatientMedicalRecord\x12&.patient.CreatePatientMedicalRecordReq\x1a&.patient.CreatePatientMedicalRecordResb\x06proto3')
+DESCRIPTOR = _descriptor_pool.Default().AddSerializedFile(b'\n\rpatient.proto\x12\x07patient\"\xad\x01\n\x11PatientProfileReq\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\r\n\x05\x65mail\x18\x03 \x01(\t\x12\x0e\n\x06mobile\x18\x04 \x01(\t\x12\x11\n\tfirstName\x18\x05 \x01(\t\x12\x17\n\nmiddleName\x18\x06 \x01(\tH\x00\x88\x01\x01\x12\x10\n\x08lastName\x18\x07 \x01(\tB\r\n\x0b_middleName\"&\n\x11PatientProfileRes\x12\x11\n\tpatientId\x18\x01 \x01(\t\"\xdd\x03\n\x1eUpdatePatientProfileDetailsReq\x12\x18\n\x10patientProfileId\x18\x01 \x01(\t\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\x16\n\tfirstName\x18\x03 \x01(\tH\x00\x88\x01\x01\x12\x17\n\nmiddleName\x18\x04 \x01(\tH\x01\x88\x01\x01\x12\x15\n\x08lastName\x18\x05 \x01(\tH\x02\x88\x01\x01\x12\x18\n\x0b\x64\x61teOfBirth\x18\x06 \x01(\tH\x03\x88\x01\x01\x12\x10\n\x03\x61ge\x18\x07 \x01(\rH\x04\x88\x01\x01\x12\x13\n\x06gender\x18\x08 \x01(\rH\x05\x88\x01\x01\x12\x19\n\x0cprofileImage\x18\t \x01(\tH\x06\x88\x01\x01\x12\x14\n\x07\x61\x64\x64ress\x18\n \x01(\tH\x07\x88\x01\x01\x12\x14\n\x07stateId\x18\x0b \x01(\rH\x08\x88\x01\x01\x12\x17\n\ndistrictId\x18\x0c \x01(\rH\t\x88\x01\x01\x12\x14\n\x07pincode\x18\r \x01(\x05H\n\x88\x01\x01\x42\x0c\n\n_firstNameB\r\n\x0b_middleNameB\x0b\n\t_lastNameB\x0e\n\x0c_dateOfBirthB\x06\n\x04_ageB\t\n\x07_genderB\x0f\n\r_profileImageB\n\n\x08_addressB\n\n\x08_stateIdB\r\n\x0b_districtIdB\n\n\x08_pincode\"3\n\x1eUpdatePatientProfileDetailsRes\x12\x11\n\tpatientId\x18\x01 \x01(\t\"D\n\x14GetPatientDetailsReq\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\"\xe7\x03\n\x0ePatientDetails\x12\x18\n\x10patientProfileId\x18\x01 \x01(\t\x12\x11\n\tfirstName\x18\x02 \x01(\t\x12\x17\n\nmiddleName\x18\x03 \x01(\tH\x00\x88\x01\x01\x12\x10\n\x08lastName\x18\x04 \x01(\t\x12\x18\n\x0b\x64\x61teOfBirth\x18\x05 \x01(\tH\x01\x88\x01\x01\x12\x10\n\x03\x61ge\x18\x06 \x01(\rH\x02\x88\x01\x01\x12\x13\n\x06gender\x18\x07 \x01(\rH\x03\x88\x01\x01\x12\x19\n\x0cprofileImage\x18\x08 \x01(\tH\x04\x88\x01\x01\x12\x14\n\x07\x61\x64\x64ress\x18\t \x01(\tH\x05\x88\x01\x01\x12\x14\n\x07stateId\x18\n \x01(\rH\x06\x88\x01\x01\x12\x16\n\tstateName\x18\x0b \x01(\tH\x07\x88\x01\x01\x12\x17\n\ndistrictId\x18\x0c \x01(\rH\x08\x88\x01\x01\x12\x19\n\x0c\x64istrictName\x18\r \x01(\tH\t\x88\x01\x01\x12\x14\n\x07pincode\x18\x0e \x01(\x05H\n\x88\x01\x01\x42\r\n\x0b_middleNameB\x0e\n\x0c_dateOfBirthB\x06\n\x04_ageB\t\n\x07_genderB\x0f\n\r_profileImageB\n\n\x08_addressB\n\n\x08_stateIdB\x0c\n\n_stateNameB\r\n\x0b_districtIdB\x0f\n\r_districtNameB\n\n\x08_pincode\"u\n\x14GetPatientDetailsRes\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12/\n\x0epatientProfile\x18\x03 \x01(\x0b\x32\x17.patient.PatientDetails\"\x8f\x02\n\x14PatientMedicalRecord\x12\x19\n\x11patientPrimaryKey\x18\x01 \x01(\r\x12\x11\n\tpatientId\x18\x02 \x01(\t\x12\x18\n\x10\x64octorPrimaryKey\x18\x03 \x01(\r\x12\x10\n\x08\x64octorId\x18\x04 \x01(\t\x12!\n\x19healthInstitutePrimaryKey\x18\x05 \x01(\r\x12\x19\n\x11healthInstituteId\x18\x06 \x01(\t\x12\r\n\x05title\x18\x07 \x01(\t\x12\x11\n\tdiagnosis\x18\x08 \x01(\t\x12\x18\n\x0b\x64\x65scription\x18\t \x01(\tH\x00\x88\x01\x01\x12\x13\n\x0bstartedDate\x18\n \x01(\tB\x0e\n\x0c_description\"\x7f\n\x17PatientMedicalDocuments\x12\x14\n\x0c\x64ocumentType\x18\x01 \x01(\r\x12\r\n\x05title\x18\x02 \x01(\t\x12\x13\n\x0b\x64ocumentUrl\x18\x03 \x01(\t\x12\x19\n\x0c\x64ocumentDate\x18\x04 \x01(\tH\x00\x88\x01\x01\x42\x0f\n\r_documentDate\"N\n\x11PatientMedication\x12\x16\n\x0emedicationName\x18\x01 \x01(\t\x12\x0e\n\x06\x64osage\x18\x02 \x01(\t\x12\x11\n\tstartDate\x18\x03 \x01(\t\"\xc2\x01\n\x1d\x43reatePatientMedicalRecordReq\x12\x34\n\rmedicalRecord\x18\x03 \x01(\x0b\x32\x1d.patient.PatientMedicalRecord\x12:\n\x10medicalDocuments\x18\x04 \x03(\x0b\x32 .patient.PatientMedicalDocuments\x12/\n\x0bmedications\x18\x05 \x03(\x0b\x32\x1a.patient.PatientMedication\"2\n\x1d\x43reatePatientMedicalRecordRes\x12\x11\n\tpatientId\x18\x01 \x01(\t\"8\n\x0eMasterDataItem\x12\n\n\x02id\x18\x01 \x01(\r\x12\x0c\n\x04name\x18\x02 \x01(\t\x12\x0c\n\x04\x63ode\x18\x03 \x01(\t\"\x0e\n\x0cGetStatesReq\"7\n\x0cGetStatesRes\x12\'\n\x06states\x18\x01 \x03(\x0b\x32\x17.patient.MasterDataItem\"\"\n\x0fGetDistrictsReq\x12\x0f\n\x07stateId\x18\x01 \x01(\r\"=\n\x0fGetDistrictsRes\x12*\n\tdistricts\x18\x01 \x03(\x0b\x32\x17.patient.MasterDataItem2\x83\x04\n\x0ePatientService\x12G\n\rCreatePatient\x12\x1a.patient.PatientProfileReq\x1a\x1a.patient.PatientProfileRes\x12h\n\x14UpdatePatientProfile\x12\'.patient.UpdatePatientProfileDetailsReq\x1a\'.patient.UpdatePatientProfileDetailsRes\x12Q\n\x11GetPatientDetails\x12\x1d.patient.GetPatientDetailsReq\x1a\x1d.patient.GetPatientDetailsRes\x12l\n\x1a\x43reatePatientMedicalRecord\x12&.patient.CreatePatientMedicalRecordReq\x1a&.patient.CreatePatientMedicalRecordRes\x12\x39\n\tGetStates\x12\x15.patient.GetStatesReq\x1a\x15.patient.GetStatesRes\x12\x42\n\x0cGetDistricts\x12\x18.patient.GetDistrictsReq\x1a\x18.patient.GetDistrictsResb\x06proto3')
 
 _globals = globals()
 _builder.BuildMessageAndEnumDescriptors(DESCRIPTOR, _globals)
@@ -36,25 +36,35 @@ if not _descriptor._USE_C_DESCRIPTORS:
   _globals['_PATIENTPROFILERES']._serialized_start=202
   _globals['_PATIENTPROFILERES']._serialized_end=240
   _globals['_UPDATEPATIENTPROFILEDETAILSREQ']._serialized_start=243
-  _globals['_UPDATEPATIENTPROFILEDETAILSREQ']._serialized_end=686
-  _globals['_UPDATEPATIENTPROFILEDETAILSRES']._serialized_start=688
-  _globals['_UPDATEPATIENTPROFILEDETAILSRES']._serialized_end=739
-  _globals['_GETPATIENTDETAILSREQ']._serialized_start=741
-  _globals['_GETPATIENTDETAILSREQ']._serialized_end=809
-  _globals['_PATIENTDETAILS']._serialized_start=812
-  _globals['_PATIENTDETAILS']._serialized_end=1183
-  _globals['_GETPATIENTDETAILSRES']._serialized_start=1185
-  _globals['_GETPATIENTDETAILSRES']._serialized_end=1302
-  _globals['_PATIENTMEDICALRECORD']._serialized_start=1305
-  _globals['_PATIENTMEDICALRECORD']._serialized_end=1576
-  _globals['_PATIENTMEDICALDOCUMENTS']._serialized_start=1578
-  _globals['_PATIENTMEDICALDOCUMENTS']._serialized_end=1705
-  _globals['_PATIENTMEDICATION']._serialized_start=1707
-  _globals['_PATIENTMEDICATION']._serialized_end=1785
-  _globals['_CREATEPATIENTMEDICALRECORDREQ']._serialized_start=1788
-  _globals['_CREATEPATIENTMEDICALRECORDREQ']._serialized_end=1982
-  _globals['_CREATEPATIENTMEDICALRECORDRES']._serialized_start=1984
-  _globals['_CREATEPATIENTMEDICALRECORDRES']._serialized_end=2034
-  _globals['_PATIENTSERVICE']._serialized_start=2037
-  _globals['_PATIENTSERVICE']._serialized_end=2425
+  _globals['_UPDATEPATIENTPROFILEDETAILSREQ']._serialized_end=720
+  _globals['_UPDATEPATIENTPROFILEDETAILSRES']._serialized_start=722
+  _globals['_UPDATEPATIENTPROFILEDETAILSRES']._serialized_end=773
+  _globals['_GETPATIENTDETAILSREQ']._serialized_start=775
+  _globals['_GETPATIENTDETAILSREQ']._serialized_end=843
+  _globals['_PATIENTDETAILS']._serialized_start=846
+  _globals['_PATIENTDETAILS']._serialized_end=1333
+  _globals['_GETPATIENTDETAILSRES']._serialized_start=1335
+  _globals['_GETPATIENTDETAILSRES']._serialized_end=1452
+  _globals['_PATIENTMEDICALRECORD']._serialized_start=1455
+  _globals['_PATIENTMEDICALRECORD']._serialized_end=1726
+  _globals['_PATIENTMEDICALDOCUMENTS']._serialized_start=1728
+  _globals['_PATIENTMEDICALDOCUMENTS']._serialized_end=1855
+  _globals['_PATIENTMEDICATION']._serialized_start=1857
+  _globals['_PATIENTMEDICATION']._serialized_end=1935
+  _globals['_CREATEPATIENTMEDICALRECORDREQ']._serialized_start=1938
+  _globals['_CREATEPATIENTMEDICALRECORDREQ']._serialized_end=2132
+  _globals['_CREATEPATIENTMEDICALRECORDRES']._serialized_start=2134
+  _globals['_CREATEPATIENTMEDICALRECORDRES']._serialized_end=2184
+  _globals['_MASTERDATAITEM']._serialized_start=2186
+  _globals['_MASTERDATAITEM']._serialized_end=2242
+  _globals['_GETSTATESREQ']._serialized_start=2244
+  _globals['_GETSTATESREQ']._serialized_end=2258
+  _globals['_GETSTATESRES']._serialized_start=2260
+  _globals['_GETSTATESRES']._serialized_end=2315
+  _globals['_GETDISTRICTSREQ']._serialized_start=2317
+  _globals['_GETDISTRICTSREQ']._serialized_end=2351
+  _globals['_GETDISTRICTSRES']._serialized_start=2353
+  _globals['_GETDISTRICTSRES']._serialized_end=2414
+  _globals['_PATIENTSERVICE']._serialized_start=2417
+  _globals['_PATIENTSERVICE']._serialized_end=2932
 # @@protoc_insertion_point(module_scope)

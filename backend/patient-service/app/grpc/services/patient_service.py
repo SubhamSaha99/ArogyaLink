@@ -59,6 +59,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             "address": "address",
             "stateId": "state_id",
             "districtId": "district_id",
+            "pincode": "pincode",
         }
 
         patient_profile = cast(
@@ -108,7 +109,10 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             ),
             "address": patient_details["address"],
             "stateId": patient_details["state_id"],
+            "stateName": patient_details.get("state_name"),
             "districtId": patient_details["district_id"],
+            "districtName": patient_details.get("district_name"),
+            "pincode": patient_details.get("pincode"),
         }
 
         patient_profile = patient_pb2.PatientDetails(
@@ -179,3 +183,46 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
         return patient_pb2.CreatePatientMedicalRecordRes(
             patientId=patient_id,
         )
+
+    # * Get States
+    @grpc_error_handler
+    async def GetStates(
+        self,
+        request: patient_pb2.GetStatesReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.GetStatesRes:
+
+        states = await self.patient_service.get_states()
+
+        return patient_pb2.GetStatesRes(
+            states=[
+                patient_pb2.MasterDataItem(
+                    id=item["id"],
+                    name=item["name"],
+                    code=item["code"],
+                )
+                for item in states
+            ]
+        )
+
+    # * Get Districts
+    @grpc_error_handler
+    async def GetDistricts(
+        self,
+        request: patient_pb2.GetDistrictsReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.GetDistrictsRes:
+
+        districts = await self.patient_service.get_districts(request.stateId)
+
+        return patient_pb2.GetDistrictsRes(
+            districts=[
+                patient_pb2.MasterDataItem(
+                    id=item["id"],
+                    name=item["name"],
+                    code=item["code"],
+                )
+                for item in districts
+            ]
+        )
+

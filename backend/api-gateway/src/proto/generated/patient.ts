@@ -37,6 +37,7 @@ export interface UpdatePatientProfileDetailsReq {
   address?: string | undefined;
   stateId?: number | undefined;
   districtId?: number | undefined;
+  pincode?: number | undefined;
 }
 
 export interface UpdatePatientProfileDetailsRes {
@@ -59,7 +60,10 @@ export interface PatientDetails {
   profileImage?: string | undefined;
   address?: string | undefined;
   stateId?: number | undefined;
+  stateName?: string | undefined;
   districtId?: number | undefined;
+  districtName?: string | undefined;
+  pincode?: number | undefined;
 }
 
 export interface GetPatientDetailsRes {
@@ -104,6 +108,27 @@ export interface CreatePatientMedicalRecordRes {
   patientId: string;
 }
 
+export interface MasterDataItem {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface GetStatesReq {
+}
+
+export interface GetStatesRes {
+  states: MasterDataItem[];
+}
+
+export interface GetDistrictsReq {
+  stateId: number;
+}
+
+export interface GetDistrictsRes {
+  districts: MasterDataItem[];
+}
+
 export const PATIENT_PACKAGE_NAME = "patient";
 
 export interface PatientServiceClient {
@@ -114,6 +139,10 @@ export interface PatientServiceClient {
   getPatientDetails(request: GetPatientDetailsReq): Observable<GetPatientDetailsRes>;
 
   createPatientMedicalRecord(request: CreatePatientMedicalRecordReq): Observable<CreatePatientMedicalRecordRes>;
+
+  getStates(request: GetStatesReq): Observable<GetStatesRes>;
+
+  getDistricts(request: GetDistrictsReq): Observable<GetDistrictsRes>;
 }
 
 export interface PatientServiceController {
@@ -135,6 +164,10 @@ export interface PatientServiceController {
   createPatientMedicalRecord(
     request: CreatePatientMedicalRecordReq,
   ): Promise<CreatePatientMedicalRecordRes> | Observable<CreatePatientMedicalRecordRes> | CreatePatientMedicalRecordRes;
+
+  getStates(request: GetStatesReq): Promise<GetStatesRes> | Observable<GetStatesRes> | GetStatesRes;
+
+  getDistricts(request: GetDistrictsReq): Promise<GetDistrictsRes> | Observable<GetDistrictsRes> | GetDistrictsRes;
 }
 
 export function PatientServiceControllerMethods() {
@@ -144,6 +177,8 @@ export function PatientServiceControllerMethods() {
       "updatePatientProfile",
       "getPatientDetails",
       "createPatientMedicalRecord",
+      "getStates",
+      "getDistricts",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

@@ -10,6 +10,10 @@ service PatientService {
   rpc GetPatientDetails(GetPatientDetailsReq) returns (GetPatientDetailsRes);
 
   rpc CreatePatientMedicalRecord(CreatePatientMedicalRecordReq) returns (CreatePatientMedicalRecordRes);
+
+  rpc GetStates(GetStatesReq) returns (GetStatesRes);
+
+  rpc GetDistricts(GetDistrictsReq) returns (GetDistrictsRes);
 }
 
 message PatientProfileReq {
@@ -39,6 +43,7 @@ message UpdatePatientProfileDetailsReq {
   optional string address          = 10;
   optional uint32 stateId          = 11;
   optional uint32 districtId       = 12;
+  optional int32  pincode          = 13;
 }
 
 message UpdatePatientProfileDetailsRes {
@@ -62,8 +67,10 @@ message PatientDetails {
   optional string profileImage     = 8;
   optional string address          = 9;
   optional uint32 stateId          = 10;
-  optional uint32 districtId       = 11;
-
+  optional string stateName        = 11;
+  optional uint32 districtId       = 12;
+  optional string districtName     = 13;
+  optional int32  pincode          = 14;
 }
 
 message GetPatientDetailsRes {
@@ -107,4 +114,24 @@ message CreatePatientMedicalRecordReq {
 
 message CreatePatientMedicalRecordRes {
   string patientId = 1;
+}
+
+message MasterDataItem {
+  uint32 id   = 1;
+  string name = 2;
+  string code = 3;
+}
+
+message GetStatesReq {}
+
+message GetStatesRes{
+  repeated MasterDataItem states = 1;
+}
+
+message GetDistrictsReq {
+  uint32 stateId = 1;
+}
+
+message GetDistrictsRes {
+  repeated MasterDataItem districts = 1;
 }

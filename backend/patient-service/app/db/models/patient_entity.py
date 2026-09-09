@@ -16,5 +16,6 @@ class PatientProfile(BaseModel):
     address: str | None = Field(default=None, max_length=300)
     state_id: int | None = None
     district_id: int | None = None
+    pincode: int | None = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     updated_at: datetime | None = None

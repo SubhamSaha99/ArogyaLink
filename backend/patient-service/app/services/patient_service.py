@@ -1,6 +1,7 @@
 import json
 
 from app.common.interfaces.patient_interface import (
+    MasterDataItemInterface,
     PatientDetailsInterface,
     PatientProfileUpdateInterface,
 )
@@ -10,6 +11,7 @@ from app.db.models.medical_record_entity import MedicalRecord
 from app.db.models.medication_entity import MedicalMedication
 from app.db.models.patient_entity import PatientProfile
 from app.redis.redis_service import RedisService
+from app.repositories.master_data_repository import MasterDataRepository
 from app.repositories.medical_record_repository import MedicalRecordRepository
 from app.repositories.patient_repository import PatientRepository
 
@@ -20,6 +22,7 @@ class PatientService:
     def __init__(self):
         self.patient_repository = PatientRepository()
         self.medical_record_repository = MedicalRecordRepository()
+        self.master_data_repository = MasterDataRepository()
         self.redis_service = RedisService()
 
     # * Create Patient Profile
@@ -118,3 +121,52 @@ class PatientService:
         )
 
         return medical_record.patient_id
+
+    # * Get States
+    async def get_states(self) -> list[MasterDataItemInterface]:
+        cache_key = "states-patient-service"
+
+        try:
+            cached_states = await self.redis_service.get(cache_key)
+            if cached_states:
+                return json.loads(cached_states)
+        except Exception as error:
+            logger.warning(f"Redis get failed for states: {error}")
+
+        states = await self.master_data_repository.get_all_states()
+
+        try:
+            await self.redis_service.set(
+                cache_key,
+                json.dumps(states),
+                ttl=3600,
+            )
+        except Exception as error:
+            logger.warning(f"Redis set failed for states: {error}")
+
+        return states
+
+    # * Get Districts
+    async def get_districts(self, state_id: int) -> list[MasterDataItemInterface]:
+        cache_key = f"districts-patient-service:{state_id}"
+
+        try:
+            cached_districts = await self.redis_service.get(cache_key)
+            if cached_districts:
+                return json.loads(cached_districts)
+        except Exception as error:
+            logger.warning(f"Redis get failed for districts of state {state_id}: {error}")
+
+        districts = await self.master_data_repository.get_districts_by_state_id(state_id)
+
+        try:
+            await self.redis_service.set(
+                cache_key,
+                json.dumps(districts),
+                ttl=3600,
+            )
+        except Exception as error:
+            logger.warning(f"Redis set failed for districts of state {state_id}: {error}")
+
+        return districts
+

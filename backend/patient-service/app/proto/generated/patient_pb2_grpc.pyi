@@ -35,6 +35,8 @@ class PatientServiceStub:
     UpdatePatientProfile: _grpc.UnaryUnaryMultiCallable[_patient_pb2.UpdatePatientProfileDetailsReq, _patient_pb2.UpdatePatientProfileDetailsRes]
     GetPatientDetails: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetPatientDetailsReq, _patient_pb2.GetPatientDetailsRes]
     CreatePatientMedicalRecord: _grpc.UnaryUnaryMultiCallable[_patient_pb2.CreatePatientMedicalRecordReq, _patient_pb2.CreatePatientMedicalRecordRes]
+    GetStates: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetStatesReq, _patient_pb2.GetStatesRes]
+    GetDistricts: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetDistrictsReq, _patient_pb2.GetDistrictsRes]
 
 @_typing.type_check_only
 class PatientServiceAsyncStub(PatientServiceStub):
@@ -43,6 +45,8 @@ class PatientServiceAsyncStub(PatientServiceStub):
     UpdatePatientProfile: _aio.UnaryUnaryMultiCallable[_patient_pb2.UpdatePatientProfileDetailsReq, _patient_pb2.UpdatePatientProfileDetailsRes]  # type: ignore[assignment]
     GetPatientDetails: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetPatientDetailsReq, _patient_pb2.GetPatientDetailsRes]  # type: ignore[assignment]
     CreatePatientMedicalRecord: _aio.UnaryUnaryMultiCallable[_patient_pb2.CreatePatientMedicalRecordReq, _patient_pb2.CreatePatientMedicalRecordRes]  # type: ignore[assignment]
+    GetStates: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetStatesReq, _patient_pb2.GetStatesRes]  # type: ignore[assignment]
+    GetDistricts: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetDistrictsReq, _patient_pb2.GetDistrictsRes]  # type: ignore[assignment]
 
 class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
     @_abc_1.abstractmethod
@@ -72,5 +76,19 @@ class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
         request: _patient_pb2.CreatePatientMedicalRecordReq,
         context: _ServicerContext,
     ) -> _typing.Union[_patient_pb2.CreatePatientMedicalRecordRes, _abc.Awaitable[_patient_pb2.CreatePatientMedicalRecordRes]]: ...
+
+    @_abc_1.abstractmethod
+    def GetStates(
+        self,
+        request: _patient_pb2.GetStatesReq,
+        context: _ServicerContext,
+    ) -> _typing.Union[_patient_pb2.GetStatesRes, _abc.Awaitable[_patient_pb2.GetStatesRes]]: ...
+
+    @_abc_1.abstractmethod
+    def GetDistricts(
+        self,
+        request: _patient_pb2.GetDistrictsReq,
+        context: _ServicerContext,
+    ) -> _typing.Union[_patient_pb2.GetDistrictsRes, _abc.Awaitable[_patient_pb2.GetDistrictsRes]]: ...
 
 def add_PatientServiceServicer_to_server(servicer: PatientServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...
