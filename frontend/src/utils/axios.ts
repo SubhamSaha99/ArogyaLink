@@ -18,9 +18,6 @@ export const getInMemoryToken = () => {
 // Create base Axios instance
 export const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || "",
-  headers: {
-    "Content-Type": "application/json",
-  },
   withCredentials: true,
 });
 
@@ -33,6 +30,11 @@ api.interceptors.request.use(
       localStorage.getItem("arogya_token");
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+    }
+    // If sending FormData, remove Content-Type so browser generates multipart/form-data with dynamic boundary
+    if (config.data instanceof FormData && config.headers) {
+      delete config.headers["Content-Type"];
+      delete config.headers["content-type"];
     }
     return config;
   },
@@ -65,11 +67,18 @@ export const callApi = async <T = any>(
     cleanRoute = cleanRoute.substring(4);
   }
 
+  const customHeaders = { ...(config.headers || {}) };
+  if (data instanceof FormData) {
+    delete (customHeaders as any)["Content-Type"];
+    delete (customHeaders as any)["content-type"];
+  }
+
   const response: AxiosResponse<T> = await api.request<T>({
     url: cleanRoute,
     method: normalizedMethod,
     ...(isQueryParamMethod ? { params: data } : { data }),
     ...config,
+    headers: customHeaders,
   });
 
   return response.data;

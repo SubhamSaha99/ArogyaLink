@@ -20,6 +20,10 @@ import {
   HealthInstituteAppointDoctorPage,
   HealthInstituteAppointedDoctorsPage,
   HealthInstituteDoctorDetailsPage,
+  PatientLoginPage,
+  PatientRegisterPage,
+  PatientLayout,
+  PatientProfilePage,
 } from "@/pages/lazyPages";
 
 function AppLayout() {
@@ -32,7 +36,9 @@ function AppLayout() {
     location.pathname.startsWith("/health-institute/appointed-doctors") ||
     location.pathname.startsWith("/health-institute/appoint-doctor") ||
     location.pathname.startsWith("/health-institute/doctors");
-  const hidePublicNavAndFooter = isDoctorRoute || isHealthInstituteTerminalRoute;
+  const isPatientTerminalRoute = location.pathname.startsWith("/patient/profile");
+  const hidePublicNavAndFooter =
+    isDoctorRoute || isHealthInstituteTerminalRoute || isPatientTerminalRoute;
 
   return (
     <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-teal-500 selection:text-white">
@@ -45,6 +51,8 @@ function AppLayout() {
             <Route path="/register" element={<DoctorRegisterPage />} />
             <Route path="/health-institute/login" element={<HealthInstituteLoginPage />} />
             <Route path="/health-institute/register" element={<HealthInstituteRegisterPage />} />
+            <Route path="/patient/login" element={<PatientLoginPage />} />
+            <Route path="/patient/register" element={<PatientRegisterPage />} />
 
             {/* Redirect /dashboard to /doctor/profile */}
             <Route path="/dashboard" element={<Navigate to="/doctor/profile" replace />} />
@@ -66,6 +74,11 @@ function AppLayout() {
               <Route path="appoint-doctor/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
               <Route path="doctors" element={<HealthInstituteAppointedDoctorsPage />} />
               <Route path="doctors/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
+            </Route>
+
+            {/* Common Patient Side Navbar Layout & Separate Route Views */}
+            <Route path="/patient" element={<PatientLayout />}>
+              <Route path="profile" element={<PatientProfilePage />} />
             </Route>
           </Routes>
         </Suspense>

@@ -7,6 +7,8 @@ export interface User {
   userPrimaryKey?: number;
   doctorPrimaryKey?: number;
   doctorId?: string;
+  patientPrimaryKey?: number;
+  patientId?: string;
   healthInstitutePrimaryKey?: number;
   healthInstituteId?: string;
   healthInstituteName?: string;
@@ -21,6 +23,8 @@ export interface LoginResponseData {
   userPrimaryKey?: number;
   doctorPrimaryKey?: number;
   doctorId?: string;
+  patientPrimaryKey?: number;
+  patientId?: string;
   healthInstitutePrimaryKey?: number;
   healthInstituteId?: string;
   healthInstituteName?: string;
@@ -70,6 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       userPrimaryKey: data.userPrimaryKey,
       doctorPrimaryKey: data.doctorPrimaryKey,
       doctorId: data.doctorId,
+      patientPrimaryKey: data.patientPrimaryKey,
+      patientId: data.patientId,
       healthInstitutePrimaryKey: data.healthInstitutePrimaryKey,
       healthInstituteId: data.healthInstituteId,
       healthInstituteName: data.healthInstituteName,
@@ -123,9 +129,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCookie("refreshToken", data.refreshToken, 7);
           }
 
-          if (data?.doctorId || data?.email || data?.mobile) {
+          if (data?.doctorId || data?.patientId || data?.healthInstituteId || data?.email || data?.mobile) {
             setUser((prev) => ({
-              doctorId: data.doctorId || prev?.doctorId || "",
+              ...prev,
+              doctorId: data.doctorId || prev?.doctorId,
+              patientId: data.patientId || prev?.patientId,
+              healthInstituteId: data.healthInstituteId || prev?.healthInstituteId,
               email: data.email || prev?.email || "",
               mobile: data.mobile || prev?.mobile || "",
             }));

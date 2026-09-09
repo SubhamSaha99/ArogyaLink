@@ -8,6 +8,7 @@ class Settings(BaseSettings):
     patient_service_grpc_url: str = Field(default="0.0.0.0:50054")
     redis_host_dev: str = Field(default="127.0.0.1")
     redis_port: int = Field(default=6379)
+    api_base_url: str = Field(default="http://localhost:8080")
 
     model_config = SettingsConfigDict(
         env_file=".env",

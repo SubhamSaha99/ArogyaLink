@@ -11,6 +11,7 @@ from app.db.models.medication_entity import MedicalMedication
 from app.db.models.patient_entity import PatientProfile
 from app.proto.generated import patient_pb2, patient_pb2_grpc
 from app.services.patient_service import PatientService as PatientProfileService
+from app.config.settings import settings
 
 
 class PatientService(patient_pb2_grpc.PatientServiceServicer):
@@ -100,7 +101,11 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             "dateOfBirth": patient_details["date_of_birth"],
             "age": patient_details["age"],
             "gender": patient_details["gender"],
-            "profileImage": patient_details["profile_image"],
+            "profileImage": (
+                settings.api_base_url + "/uploads/" + patient_details["profile_image"]
+                if patient_details["profile_image"] is not None
+                else None
+            ),
             "address": patient_details["address"],
             "stateId": patient_details["state_id"],
             "districtId": patient_details["district_id"],
@@ -149,9 +154,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                 title=doc.title,
                 document_url=doc.documentUrl,
                 document_date=(
-                    date.fromisoformat(doc.documentDate)
-                    if doc.documentDate
-                    else None
+                    date.fromisoformat(doc.documentDate) if doc.documentDate else None
                 ),
             )
             for doc in request.medicalDocuments

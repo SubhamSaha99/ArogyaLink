@@ -13,6 +13,8 @@ import {
   Zap,
   UserCheck,
   RefreshCw,
+  HeartPulse,
+  Building2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -76,10 +78,10 @@ export const LandingPage: React.FC = () => {
     <div className="flex flex-col min-h-screen bg-slate-50 text-slate-900 overflow-hidden">
       
       {/* HERO SECTION */}
-      <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 overflow-hidden bg-gradient-to-b from-teal-950 via-slate-900 to-slate-900 text-white">
+      <section className="relative pt-12 pb-20 md:pt-20 md:pb-32 overflow-hidden bg-linear-to-b from-teal-950 via-slate-900 to-slate-900 text-white">
         
         {/* Glowing Ambient Background Elements */}
-        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-teal-500/15 rounded-full blur-3xl pointer-events-none"></div>
+        <div className="absolute top-1/4 left-1/2 -translate-x-1/2 -translate-y-1/2 w-150 h-150 bg-teal-500/15 rounded-full blur-3xl pointer-events-none"></div>
         <div className="absolute top-10 right-10 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none"></div>
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
@@ -95,7 +97,7 @@ export const LandingPage: React.FC = () => {
 
               <h1 className="text-4xl sm:text-5xl lg:text-6xl font-black text-white tracking-tight leading-[1.15]">
                 Instant Consolidated <br />
-                <span className="bg-gradient-to-r from-teal-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
+                <span className="bg-linear-to-r from-teal-400 via-cyan-300 to-emerald-400 bg-clip-text text-transparent">
                   Medical History & Allergy Access
                 </span>{" "}
                 in Emergencies
@@ -146,7 +148,7 @@ export const LandingPage: React.FC = () => {
               <div className="relative mx-auto max-w-md lg:max-w-none">
                 
                 {/* Decorative Frame Glow */}
-                <div className="absolute -inset-1 rounded-3xl bg-gradient-to-r from-teal-500 to-cyan-500 opacity-30 blur-xl"></div>
+                <div className="absolute -inset-1 rounded-3xl bg-linear-to-r from-teal-500 to-cyan-500 opacity-30 blur-xl"></div>
                 
                 <Card className="relative bg-slate-900/90 border-slate-800 text-white shadow-2xl backdrop-blur-xl">
                   <CardHeader className="border-b border-slate-800/80 pb-4">
@@ -605,26 +607,32 @@ export const LandingPage: React.FC = () => {
         </div>
       </section>
 
-      {/* FINAL CALL TO ACTION FOR DOCTORS */}
-      <section className="py-16 bg-gradient-to-r from-teal-800 to-cyan-900 text-white">
+      {/* FINAL CALL TO ACTION */}
+      <section className="py-16 bg-linear-to-r from-teal-800 to-cyan-900 text-white">
         <div className="max-w-5xl mx-auto px-4 text-center space-y-6">
           <h2 className="text-3xl sm:text-4xl font-black">
-            Are You a Licensed Medical Professional?
+            Ready to Connect with ArogyaLink?
           </h2>
           <p className="text-teal-100 max-w-2xl mx-auto text-base">
-            Join thousands of doctors across India providing safer emergency and follow-up care with ArogyaLink’s unified health record network.
+            Whether you are a medical practitioner, healthcare facility, or patient managing personal and family health records, ArogyaLink provides unified, secure, and instant health data interoperability.
           </p>
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 pt-2">
+          <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
             <Link to="/register">
               <Button size="lg" variant="emerald" className="py-6 px-8 text-base shadow-lg">
                 <UserCheck className="w-5 h-5 mr-2" />
-                Create Doctor Registration
+                Doctor Portal
               </Button>
             </Link>
-            <Link to="/login">
+            <Link to="/patient/register">
+              <Button size="lg" className="py-6 px-8 text-base bg-white text-teal-900 hover:bg-teal-50 shadow-lg font-bold">
+                <HeartPulse className="w-5 h-5 mr-2 text-teal-700" />
+                Create Patient Vault
+              </Button>
+            </Link>
+            <Link to="/health-institute/register">
               <Button size="lg" variant="outline" className="py-6 px-8 text-base bg-white/10 text-white border-white/30 hover:bg-white/20">
-                <Stethoscope className="w-5 h-5 mr-2" />
-                Sign In to Doctor Portal
+                <Building2 className="w-5 h-5 mr-2" />
+                Hospital / Institute
               </Button>
             </Link>
           </div>

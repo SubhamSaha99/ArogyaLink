@@ -42,7 +42,6 @@ class PatientRepository:
             {"patient_primary_key": patient_primary_key}
         )
 
-        print(document)
         if not document:
             return None
 

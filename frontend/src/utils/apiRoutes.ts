@@ -4,6 +4,8 @@ export const API_ROUTES = {
   healthInstituteLogin: "/api/auth/healthInstituteLogin",
   doctorRegistration: "/api/auth/doctorRegistration",
   doctorLogin: "/api/auth/doctorLogin",
+  patientRegistration: "/api/auth/patientRegistration",
+  patientLogin: "/api/auth/patientLogin",
   refreshToken: "/api/auth/refreshToken",
   logout: "/api/auth/logout",
 
@@ -26,6 +28,11 @@ export const API_ROUTES = {
   appointDoctor: "/api/healthInstitute/appointDoctor",
   getAppointedDoctorsList: "/api/healthInstitute/getAppointedDoctorsList",
   getUnAppointedDoctorsList: "/api/healthInstitute/getUnAppointedDoctorsList",
+
+  // Patient Routes
+  getPatientDetails: "/api/patient/getPatientDetails",
+  updatePatientProfileDetails: "/api/patient/updatePatientProfileDetails",
+  createPatientMedicalRecord: "/api/patient/createPatientMedicalRecord",
 } as const;
 
 export type ApiRoute = (typeof API_ROUTES)[keyof typeof API_ROUTES] | string;

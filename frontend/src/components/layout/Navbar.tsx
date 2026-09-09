@@ -10,6 +10,7 @@ import {
   LogIn,
   UserPlus,
   ShieldCheck,
+  HeartPulse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -196,6 +197,51 @@ export const Navbar: React.FC = () => {
                       </div>
                     </Link>
                   </div>
+
+                  <div className="my-2 border-t border-slate-100" />
+
+                  {/* Patient Portal Section */}
+                  <div className="space-y-1">
+                    <div className="px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-50/80 rounded-lg flex items-center gap-1.5">
+                      <HeartPulse className="w-3.5 h-3.5 text-emerald-600" />
+                      Patient Health Vault
+                    </div>
+                    <Link
+                      to="/patient/login"
+                      onClick={() => setAuthDropdownOpen(false)}
+                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <LogIn className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">
+                          Patient Sign In
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          Access personal health vault
+                        </div>
+                      </div>
+                    </Link>
+
+                    <Link
+                      to="/patient/register"
+                      onClick={() => setAuthDropdownOpen(false)}
+                      className="flex items-start gap-3 p-2.5 rounded-xl hover:bg-slate-50 transition-colors group"
+                    >
+                      <div className="w-8 h-8 rounded-lg bg-emerald-100/70 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition-colors">
+                        <UserPlus className="w-4 h-4" />
+                      </div>
+                      <div>
+                        <div className="text-xs font-bold text-slate-800 group-hover:text-emerald-700">
+                          Register Patient
+                        </div>
+                        <div className="text-[11px] text-slate-500">
+                          Create personal health account
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
                 </div>
               )}
             </div>
@@ -313,6 +359,40 @@ export const Navbar: React.FC = () => {
                     className="w-full text-xs font-semibold"
                   >
                     Register Facility
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
+            {/* Patient Routes */}
+            <div className="space-y-1.5 pl-2 border-l-2 border-emerald-500 pt-1">
+              <div className="text-xs font-bold text-emerald-800 flex items-center gap-1">
+                <HeartPulse className="w-3.5 h-3.5 text-emerald-600" /> Patient
+                Health Vault
+              </div>
+              <div className="grid grid-cols-2 gap-2 pt-1">
+                <Link
+                  to="/patient/login"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full text-xs font-semibold"
+                  >
+                    Patient Login
+                  </Button>
+                </Link>
+                <Link
+                  to="/patient/register"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Button
+                    variant="emerald"
+                    size="sm"
+                    className="w-full text-xs font-semibold"
+                  >
+                    Register Patient
                   </Button>
                 </Link>
               </div>
