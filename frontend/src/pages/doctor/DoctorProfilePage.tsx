@@ -304,8 +304,11 @@ export const DoctorProfilePage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    fetchDoctorDetails();
-    fetchMasterData();
+
+    void (async () => {
+      await fetchDoctorDetails();
+      await fetchMasterData();
+    })();
   }, []);
 
   // Basic Details Formik Handler

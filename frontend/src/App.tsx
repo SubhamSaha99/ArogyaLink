@@ -10,6 +10,7 @@ import {
   DoctorRegisterPage,
   DoctorDashboardPreview,
   DoctorProfilePage,
+  DoctorPatientsPage,
   DoctorAssociatedInstitutesPage,
   DoctorLayout,
   HealthInstituteLoginPage,
@@ -60,6 +61,7 @@ function AppLayout() {
             {/* Common Doctor Side Navbar Layout & Separate Route Views */}
             <Route path="/doctor" element={<DoctorLayout />}>
               <Route path="profile" element={<DoctorProfilePage />} />
+              <Route path="patients" element={<DoctorPatientsPage />} />
               <Route path="associated-institutes" element={<DoctorAssociatedInstitutesPage />} />
               <Route path="institutes" element={<DoctorAssociatedInstitutesPage />} />
               <Route path="dashboard" element={<DoctorDashboardPreview />} />

@@ -269,7 +269,10 @@ export const HealthInstituteDoctorDetailsPage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    fetchDoctorDetails();
+
+    void (async () => {
+      await fetchDoctorDetails();
+    })();
   }, [fetchDoctorDetails]);
 
   // Pre-fetch Master Data for appointment modal

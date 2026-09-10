@@ -4,6 +4,7 @@ from app.common.interfaces.patient_interface import (
     MasterDataItemInterface,
     PatientDetailsInterface,
     PatientProfileUpdateInterface,
+    PatientsListResponseInterface,
 )
 from app.common.logger import get_logger
 from app.db.models.medical_documents_entity import MedicalDocument
@@ -170,3 +171,17 @@ class PatientService:
 
         return districts
 
+    # * Get Patients List
+    async def get_patients_list(
+        self,
+        offset: int = 0,
+        limit: int = 10,
+        search: str | None = None,
+        state_id: int | None = None,
+    ) -> PatientsListResponseInterface:
+        return await self.patient_repository.get_patients_list(
+            offset=offset,
+            limit=limit,
+            search=search,
+            state_id=state_id,
+        )

@@ -129,6 +129,30 @@ export interface GetDistrictsRes {
   districts: MasterDataItem[];
 }
 
+export interface GetPatientsListReq {
+  offset: number;
+  limit: number;
+  search?: string | undefined;
+  stateId?: number | undefined;
+}
+
+export interface PatientsListData {
+  patientPrimaryKey: number;
+  patientId: string;
+  firstName: string;
+  middleName?: string | undefined;
+  lastName: string;
+  age?: number | undefined;
+  gender?: number | undefined;
+}
+
+export interface GetPatientsListRes {
+  patients: PatientsListData[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
 export const PATIENT_PACKAGE_NAME = "patient";
 
 export interface PatientServiceClient {
@@ -143,6 +167,8 @@ export interface PatientServiceClient {
   getStates(request: GetStatesReq): Observable<GetStatesRes>;
 
   getDistricts(request: GetDistrictsReq): Observable<GetDistrictsRes>;
+
+  getPatientsList(request: GetPatientsListReq): Observable<GetPatientsListRes>;
 }
 
 export interface PatientServiceController {
@@ -168,6 +194,10 @@ export interface PatientServiceController {
   getStates(request: GetStatesReq): Promise<GetStatesRes> | Observable<GetStatesRes> | GetStatesRes;
 
   getDistricts(request: GetDistrictsReq): Promise<GetDistrictsRes> | Observable<GetDistrictsRes> | GetDistrictsRes;
+
+  getPatientsList(
+    request: GetPatientsListReq,
+  ): Promise<GetPatientsListRes> | Observable<GetPatientsListRes> | GetPatientsListRes;
 }
 
 export function PatientServiceControllerMethods() {
@@ -179,6 +209,7 @@ export function PatientServiceControllerMethods() {
       "createPatientMedicalRecord",
       "getStates",
       "getDistricts",
+      "getPatientsList",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

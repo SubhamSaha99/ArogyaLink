@@ -38,7 +38,9 @@ export interface AssociatedHealthInstituteItem {
 export const DoctorAssociatedInstitutesPage: React.FC = () => {
   const { user } = useAuth();
 
-  const [institutes, setInstitutes] = useState<AssociatedHealthInstituteItem[]>([]);
+  const [institutes, setInstitutes] = useState<AssociatedHealthInstituteItem[]>(
+    [],
+  );
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -55,13 +57,11 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
       const response = await callApi(
         API_ROUTES.getAssociatedHealthInstitutes,
         null,
-        "GET"
+        "GET",
       );
 
       const data = response?.data || response;
-      const list =
-        data?.healthInstitutes ||
-        (Array.isArray(data) ? data : []);
+      const list = data?.healthInstitutes || (Array.isArray(data) ? data : []);
 
       if (Array.isArray(list)) {
         setInstitutes(list);
@@ -73,7 +73,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
       setError(
         err?.response?.data?.message ||
           err?.message ||
-          "Failed to load affiliated healthcare institutes."
+          "Failed to load affiliated healthcare institutes.",
       );
     } finally {
       setLoading(false);
@@ -81,7 +81,10 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    fetchAssociatedInstitutes();
+    const loadAssociatedInstitutes = async () => {
+      await fetchAssociatedInstitutes();
+    };
+    void loadAssociatedInstitutes();
   }, [fetchAssociatedInstitutes]);
 
   // Extract distinct departments and scopes for filters
@@ -106,13 +109,18 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
     return institutes.filter((inst) => {
       const matchesSearch =
         !searchTerm.trim() ||
-        inst.healthInstituteName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        inst.healthInstituteId?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        inst.healthInstituteName
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
+        inst.healthInstituteId
+          ?.toLowerCase()
+          .includes(searchTerm.toLowerCase()) ||
         inst.departmentName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         inst.designationName?.toLowerCase().includes(searchTerm.toLowerCase());
 
       const matchesDept = !selectedDept || inst.departmentName === selectedDept;
-      const matchesScope = !selectedScope || inst.consultationScopeName === selectedScope;
+      const matchesScope =
+        !selectedScope || inst.consultationScopeName === selectedScope;
 
       return matchesSearch && matchesDept && matchesScope;
     });
@@ -125,7 +133,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
   };
 
   const hasActiveFilters = Boolean(
-    searchTerm.trim() || selectedDept || selectedScope
+    searchTerm.trim() || selectedDept || selectedScope,
   );
 
   return (
@@ -139,17 +147,26 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
             <span className={themeStyles.typography.pillTeal}>
               Clinical Affiliations
             </span>
-            <Badge variant="outline" className="text-[10px] text-slate-500 font-mono">
+            <Badge
+              variant="outline"
+              className="text-[10px] text-slate-500 font-mono"
+            >
               {user?.doctorId || "Doctor Terminal"}
             </Badge>
           </div>
-          <h1 className={themeStyles.combine(themeStyles.typography.h1, "flex items-center gap-2.5")}>
+          <h1
+            className={themeStyles.combine(
+              themeStyles.typography.h1,
+              "flex items-center gap-2.5",
+            )}
+          >
             <Building2 className="w-6 h-6 text-teal-700" />
             Associated Healthcare Institutes
           </h1>
           <p className={themeStyles.typography.subtext}>
-            Review all hospitals, medical centers, and clinics where you are officially
-            appointed as a certified practitioner with active clinical scopes.
+            Review all hospitals, medical centers, and clinics where you are
+            officially appointed as a certified practitioner with active
+            clinical scopes.
           </p>
         </div>
 
@@ -162,7 +179,9 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
             disabled={loading}
             className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3.5 rounded-xl"
           >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`} />
+            <RefreshCw
+              className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin" : ""}`}
+            />
             Refresh
           </Button>
         </div>
@@ -189,9 +208,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
         <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className={themeStyles.form.label}>
-                Specialty Roles
-              </span>
+              <span className={themeStyles.form.label}>Specialty Roles</span>
               <p className="text-2xl font-black text-emerald-600">
                 {uniqueDepartments.length || "1"}
               </p>
@@ -205,9 +222,7 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
         <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
-              <span className={themeStyles.form.label}>
-                Practice Scopes
-              </span>
+              <span className={themeStyles.form.label}>Practice Scopes</span>
               <p className="text-2xl font-black text-cyan-700">
                 {uniqueScopes.length || "1"}
               </p>
@@ -371,17 +386,32 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
             return (
               <Card
                 key={`${inst.healthInstitutePrimaryKey}-${inst.departmentId}-${index}`}
-                className={themeStyles.combine(themeStyles.card.base, "flex flex-col justify-between overflow-hidden group")}
+                className={themeStyles.combine(
+                  themeStyles.card.base,
+                  "flex flex-col justify-between overflow-hidden group",
+                )}
               >
                 <CardContent className="p-5 space-y-4">
                   {/* Top Row: Institute Icon, Name & Verified Badge */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
-                      <Avatar className={themeStyles.combine(themeStyles.avatar.institute, "group-hover:scale-105 transition-transform")}>
-                        <AvatarFallback>{initials || <Building2 className="w-6 h-6" />}</AvatarFallback>
+                      <Avatar
+                        className={themeStyles.combine(
+                          themeStyles.avatar.institute,
+                          "group-hover:scale-105 transition-transform",
+                        )}
+                      >
+                        <AvatarFallback>
+                          {initials || <Building2 className="w-6 h-6" />}
+                        </AvatarFallback>
                       </Avatar>
                       <div className="min-w-0">
-                        <h4 className={themeStyles.combine(themeStyles.typography.h4, "truncate")}>
+                        <h4
+                          className={themeStyles.combine(
+                            themeStyles.typography.h4,
+                            "truncate",
+                          )}
+                        >
                           {inst.healthInstituteName || "Healthcare Institute"}
                         </h4>
                         <span className={themeStyles.typography.monoTeal}>

@@ -4,6 +4,7 @@ import {
   CreatePatientMedicalRecordRes,
   GetPatientDetailsReq,
   GetPatientDetailsRes,
+  GetPatientsListRes,
   PATIENT_SERVICE_NAME,
   PatientMedicalDocuments,
   PatientMedication,
@@ -15,12 +16,16 @@ import { GrpcServiceName } from '../common/utils/constant';
 import type { ClientGrpc } from '@nestjs/microservices';
 import {
   CreateMedicalRecordDto,
+  GetPatientsListDto,
   PatientProfileDetailsDto,
 } from './patient.dto';
 import { moveFile } from '../common/utils/upload-file';
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/utils/file-util';
-import { GetDistrictsRes, GetStatesRes } from '../proto/generated/health-institute';
+import {
+  GetDistrictsRes,
+  GetStatesRes,
+} from '../proto/generated/health-institute';
 
 @Injectable()
 export class PatientService implements OnModuleInit {
@@ -125,8 +130,12 @@ export class PatientService implements OnModuleInit {
             );
             uploadedFilePaths.push(uploadedPath);
 
-            const indexMatch = file.fieldname?.match(/medicalDocuments\[(\d+)\]/);
-            const metaIndex = indexMatch ? parseInt(indexMatch[1], 10) : loopIndex;
+            const indexMatch = file.fieldname?.match(
+              /medicalDocuments\[(\d+)\]/,
+            );
+            const metaIndex = indexMatch
+              ? parseInt(indexMatch[1], 10)
+              : loopIndex;
             const meta = request.medicalDocuments?.[metaIndex];
 
             return {
@@ -138,7 +147,7 @@ export class PatientService implements OnModuleInit {
             };
           }),
         );
-      } 
+      }
 
       const medications: PatientMedication[] =
         request.medications?.map((med) => ({
@@ -163,11 +172,10 @@ export class PatientService implements OnModuleInit {
         medicalDocuments,
         medications,
       };
-      
+
       return await firstValueFrom(
         this.patientGrpcService.createPatientMedicalRecord(medicalRecordReq),
       );
-    
     } catch (error) {
       if (uploadedFilePaths.length > 0) {
         await Promise.allSettled(
@@ -179,23 +187,34 @@ export class PatientService implements OnModuleInit {
   }
 
   /**
-     * * Get States
-     * @returns GetStatesRes
-     */
-    async getStates(): Promise<GetStatesRes> {
-      return await firstValueFrom(this.patientGrpcService.getStates({}));
-    }
-  
-    /**
-     * * Get Districts
-     * @param stateId
-     * @returns GetDistrictsRes
-     */
-    async getDistricts(stateId: number): Promise<GetDistrictsRes> {
-      return await firstValueFrom(
-        this.patientGrpcService.getDistricts({
-          stateId,
-        }),
-      );
-    }
+   * @description Get Patient List
+   * @param request GetPatientsListRes
+   * @returns
+   */
+  async getPatientsList(
+    request: GetPatientsListDto,
+  ): Promise<GetPatientsListRes> {
+    return firstValueFrom(this.patientGrpcService.getPatientsList(request));
+  }
+
+  /**
+   * * Get States
+   * @returns GetStatesRes
+   */
+  async getStates(): Promise<GetStatesRes> {
+    return await firstValueFrom(this.patientGrpcService.getStates({}));
+  }
+
+  /**
+   * * Get Districts
+   * @param stateId
+   * @returns GetDistrictsRes
+   */
+  async getDistricts(stateId: number): Promise<GetDistrictsRes> {
+    return await firstValueFrom(
+      this.patientGrpcService.getDistricts({
+        stateId,
+      }),
+    );
+  }
 }

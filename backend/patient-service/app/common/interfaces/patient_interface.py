@@ -38,3 +38,20 @@ class MasterDataItemInterface(TypedDict):
     id: int
     name: str
     code: str
+
+
+class PatientsListItemInterface(TypedDict):
+    patient_primary_key: int
+    patient_id: str
+    first_name: str
+    middle_name: str | None
+    last_name: str
+    age: int | None
+    gender: int | None
+
+
+class PatientsListResponseInterface(TypedDict):
+    patients: list[PatientsListItemInterface]
+    total: int
+    offset: int
+    limit: int

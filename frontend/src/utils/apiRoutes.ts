@@ -31,6 +31,7 @@ export const API_ROUTES = {
 
   // Patient Routes
   getPatientDetails: "/api/patient/getPatientDetails",
+  getPatientsList: "/api/patient/getPatientsList",
   updatePatientProfileDetails: "/api/patient/updatePatientProfileDetails",
   createPatientMedicalRecord: "/api/patient/createPatientMedicalRecord",
   getPatientStates: "/api/patient/states",

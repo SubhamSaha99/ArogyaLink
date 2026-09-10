@@ -11,6 +11,7 @@ import {
   ValidateNested,
   IsArray,
   IsNotEmpty,
+  Max,
 } from 'class-validator';
 
 export class PatientProfileDetailsDto {
@@ -216,4 +217,31 @@ export class CreateMedicalRecordDto {
   @ValidateNested({ each: true })
   @Type(() => MedicalMedicationDto)
   medications?: MedicalMedicationDto[];
+}
+
+/**
+ * * Get Doctor List DTO.
+ */
+
+export class GetPatientsListDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset: number = 0;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 10;
+
+  @IsOptional()
+  @IsString()
+  search?: string;
+
+  @IsInt()
+  @IsOptional()
+  stateId?: number;
 }

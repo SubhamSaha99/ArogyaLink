@@ -127,7 +127,10 @@ export const HealthInstituteDashboardPage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    fetchDetails();
+
+    void (async () => {
+      await fetchDetails();
+    })();
   }, [fetchDetails]);
 
   // Handle State Selector change or on-demand loading

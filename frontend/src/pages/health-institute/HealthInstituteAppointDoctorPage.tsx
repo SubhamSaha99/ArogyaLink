@@ -176,14 +176,18 @@ export const HealthInstituteAppointDoctorPage: React.FC = () => {
   );
 
   useEffect(() => {
-    fetchDoctors();
+    void (async () => {
+      await fetchDoctors();
+    })();
   }, [fetchDoctors]);
 
   useEffect(() => {
-    if (!hasFetchedOnceRef.current) {
-      hasFetchedOnceRef.current = true;
-      fetchMasterData();
-    }
+    if (hasFetchedOnceRef.current) return;
+    hasFetchedOnceRef.current = true;
+
+    void (async () => {
+      await fetchMasterData();
+    })();
   }, [fetchMasterData]);
 
   const handleClearFilters = () => {

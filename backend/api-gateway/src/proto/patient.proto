@@ -14,6 +14,8 @@ service PatientService {
   rpc GetStates(GetStatesReq) returns (GetStatesRes);
 
   rpc GetDistricts(GetDistrictsReq) returns (GetDistrictsRes);
+
+  rpc GetPatientsList(GetPatientsListReq) returns (GetPatientsListRes);
 }
 
 message PatientProfileReq {
@@ -134,4 +136,28 @@ message GetDistrictsReq {
 
 message GetDistrictsRes {
   repeated MasterDataItem districts = 1;
+}
+
+message GetPatientsListReq {
+  uint32          offset  = 1;
+  uint32          limit   = 2;
+  optional string search  = 3;
+  optional uint32 stateId = 4;
+}
+
+message PatientsListData {
+  uint32          patientPrimaryKey = 1;
+  string          patientId         = 2;
+  string          firstName         = 3;
+  optional string middleName        = 4;
+  string          lastName          = 5;
+  optional uint32 age               = 6;
+  optional uint32 gender            = 7;
+}
+
+message GetPatientsListRes {
+  repeated PatientsListData patients = 1;
+  uint32                    total    = 2;
+  uint32                    offset   = 3;
+  uint32                    limit    = 4;
 }

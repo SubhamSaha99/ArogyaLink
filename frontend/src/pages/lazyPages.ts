@@ -13,6 +13,7 @@ export const DoctorLoginPage = lazyLoad(() => import("@/pages/doctor/DoctorLogin
 export const DoctorRegisterPage = lazyLoad(() => import("@/pages/doctor/DoctorRegisterPage"));
 export const DoctorDashboardPreview = lazyLoad(() => import("@/pages/doctor/DoctorDashboardPreview"));
 export const DoctorProfilePage = lazyLoad(() => import("@/pages/doctor/DoctorProfilePage"));
+export const DoctorPatientsPage = lazyLoad(() => import("@/pages/doctor/DoctorPatientsPage"));
 export const DoctorAssociatedInstitutesPage = lazyLoad(() => import("@/pages/doctor/DoctorAssociatedInstitutesPage"));
 export const DoctorLayout = lazyLoad(() => import("@/components/layout/DoctorLayout"));
 export const HealthInstituteLoginPage = lazyLoad(() => import("@/pages/health-institute/HealthInstituteLoginPage"));

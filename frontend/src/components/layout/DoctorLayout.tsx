@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { User, LogOut, Activity, Search, Building2 } from "lucide-react";
+import { User, LogOut, Activity, Search, Building2, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -58,6 +58,20 @@ export const DoctorLayout: React.FC = () => {
             >
               <User className="w-5 h-5 shrink-0" />
               <span>Doctor Profile Details</span>
+            </NavLink>
+
+            <NavLink
+              to="/doctor/patients"
+              className={({ isActive }) =>
+                `w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  isActive
+                    ? "bg-teal-600 text-white shadow-lg shadow-teal-600/30 font-bold"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`
+              }
+            >
+              <Users className="w-5 h-5 shrink-0" />
+              <span>Patients</span>
             </NavLink>
 
             <NavLink

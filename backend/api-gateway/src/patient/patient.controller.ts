@@ -17,6 +17,7 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import {
   CreateMedicalRecordDto,
+  GetPatientsListDto,
   PatientProfileDetailsDto,
 } from './patient.dto';
 import { Auth } from '../common/decorators/auth.decorator';
@@ -99,7 +100,7 @@ export class PatientController {
         maxSize: 5 * 1024 * 1024,
       }),
     ),
-    MultipartNestedInterceptor
+    MultipartNestedInterceptor,
   )
   async createPatientMedicalRecord(
     @CurrentUser() user: JwtPayload,
@@ -110,7 +111,7 @@ export class PatientController {
       healthInstitutePrimaryKey: number | undefined,
       doctorId: string | undefined,
       healthInstituteId: string | undefined;
-      
+
     switch (user.role) {
       case UserRole.DOCTOR:
         doctorPrimaryKey = user.userPrimaryKey;
@@ -143,37 +144,55 @@ export class PatientController {
   }
 
   /**
-     * * Get States
-     * @returns json
-     */
-    @Get('states')
-    @HttpCode(HttpStatus.OK)
-    @Auth(UserRole.PATIENT)
-    async getStates() {
-      const result = await this.patientService.getStates();
-  
-      return {
-        success: true,
-        message: 'Details Fetched Successfully.',
-        data: result,
-      };
-    }
-  
-    /**
-     * @description get districts
-     * @param id
-     * @returns json
-     */
-    @Get('districts/:id')
-    @HttpCode(HttpStatus.OK)
-    @Auth(UserRole.PATIENT)
-    async getDistricts(@Param('id') id: string) {
-      const result = await this.patientService.getDistricts(Number(id));
-  
-      return {
-        success: true,
-        message: 'Details Fetched Successfully.',
-        data: result,
-      };
-    }
+   * @description Get Patient List
+   * @param request
+   * @returns json
+   */
+  @Post('getPatientsList')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  async getPatientsList(@Body() request: GetPatientsListDto) {
+    const result = await this.patientService.getPatientsList(request);
+
+    return {
+      success: true,
+      message: 'Patients List Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * * Get States
+   * @returns json
+   */
+  @Get('states')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  async getStates() {
+    const result = await this.patientService.getStates();
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description get districts
+   * @param id
+   * @returns json
+   */
+  @Get('districts/:id')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  async getDistricts(@Param('id') id: string) {
+    const result = await this.patientService.getDistricts(Number(id));
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
 }

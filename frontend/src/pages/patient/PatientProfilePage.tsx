@@ -188,8 +188,11 @@ export const PatientProfilePage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    fetchPatientDetails();
-  }, []);
+
+    void (async () => {
+      await fetchPatientDetails();
+    })();
+  }, [fetchPatientDetails]);
 
   // Fetch States API
   const fetchStates = async () => {

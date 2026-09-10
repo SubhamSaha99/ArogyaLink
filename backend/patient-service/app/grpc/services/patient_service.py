@@ -5,13 +5,13 @@ import grpc
 from app.common.decorators.grpc_error_handler import grpc_error_handler
 from app.common.enums.medical_enums import MedicalDocumentType
 from app.common.interfaces.patient_interface import PatientProfileUpdateInterface
+from app.config.settings import settings
 from app.db.models.medical_documents_entity import MedicalDocument
 from app.db.models.medical_record_entity import MedicalRecord
 from app.db.models.medication_entity import MedicalMedication
 from app.db.models.patient_entity import PatientProfile
 from app.proto.generated import patient_pb2, patient_pb2_grpc
 from app.services.patient_service import PatientService as PatientProfileService
-from app.config.settings import settings
 
 
 class PatientService(patient_pb2_grpc.PatientServiceServicer):
@@ -226,3 +226,56 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             ]
         )
 
+    # * Get Patients List
+    @grpc_error_handler
+    async def GetPatientsList(
+        self,
+        request: patient_pb2.GetPatientsListReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.GetPatientsListRes:
+
+        search = (
+            request.search
+            if request.HasField("search") and request.search.strip()
+            else None
+        )
+        state_id = (
+            request.stateId
+            if request.HasField("stateId") and request.stateId > 0
+            else None
+        )
+        offset = request.offset or 0
+        limit = request.limit if request.limit > 0 else 10
+
+        result = await self.patient_service.get_patients_list(
+            offset=offset,
+            limit=limit,
+            search=search,
+            state_id=state_id,
+        )
+
+        patients_data = [
+            patient_pb2.PatientsListData(
+                **{
+                    key: value
+                    for key, value in {
+                        "patientPrimaryKey": patient["patient_primary_key"],
+                        "patientId": patient["patient_id"],
+                        "firstName": patient["first_name"],
+                        "middleName": patient.get("middle_name"),
+                        "lastName": patient["last_name"],
+                        "age": patient.get("age"),
+                        "gender": patient.get("gender"),
+                    }.items()
+                    if value is not None
+                }
+            )
+            for patient in result["patients"]
+        ]
+
+        return patient_pb2.GetPatientsListRes(
+            patients=patients_data,
+            total=result["total"],
+            offset=result["offset"],
+            limit=result["limit"],
+        )

@@ -1,12 +1,15 @@
+import re
 from datetime import datetime, timezone
 
 from bson import ObjectId
 from bson.errors import InvalidId
-from pymongo import ReturnDocument
+from pymongo import DESCENDING, ReturnDocument
 
 from app.common.interfaces.patient_interface import (
     PatientDetailsInterface,
     PatientProfileUpdateInterface,
+    PatientsListItemInterface,
+    PatientsListResponseInterface,
 )
 from app.common.logger import get_logger
 from app.db.db_service import get_database
@@ -121,7 +124,7 @@ class PatientRepository:
 
         return PatientProfile(**document)
 
-    # * Update Patient
+    # @ Update Patient
     async def update_patient_profile(
         self,
         patient_profile_id: str,
@@ -159,3 +162,56 @@ class PatientRepository:
             return None
 
         return result["patient_id"]
+
+    # * Get Patients List with pagination and filters
+    async def get_patients_list(
+        self,
+        offset: int = 0,
+        limit: int = 10,
+        search: str | None = None,
+        state_id: int | None = None,
+    ) -> PatientsListResponseInterface:
+        filter_query: dict = {}
+
+        if state_id is not None and state_id > 0:
+            filter_query["state_id"] = state_id
+
+        if search and search.strip():
+            escaped_search = re.escape(search.strip())
+            regex_search = {"$regex": escaped_search, "$options": "i"}
+            filter_query["$or"] = [
+                {"first_name": regex_search},
+                {"middle_name": regex_search},
+                {"last_name": regex_search},
+                {"patient_id": regex_search},
+            ]
+
+        total = await self.collection.count_documents(filter_query)
+
+        cursor = (
+            self.collection.find(filter_query)
+            .sort([("created_at", DESCENDING), ("_id", DESCENDING)])
+            .skip(offset)
+            .limit(limit)
+        )
+
+        patients: list[PatientsListItemInterface] = []
+        async for doc in cursor:
+            patients.append(
+                {
+                    "patient_primary_key": doc["patient_primary_key"],
+                    "patient_id": doc["patient_id"],
+                    "first_name": doc["first_name"],
+                    "middle_name": doc.get("middle_name"),
+                    "last_name": doc["last_name"],
+                    "age": doc.get("age"),
+                    "gender": doc.get("gender"),
+                }
+            )
+
+        return {
+            "patients": patients,
+            "total": total,
+            "offset": offset,
+            "limit": limit,
+        }

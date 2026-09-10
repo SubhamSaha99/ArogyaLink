@@ -195,8 +195,11 @@ export const HealthInstituteProfilePage: React.FC = () => {
   useEffect(() => {
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
-    fetchInstituteDetails();
-  }, []);
+
+    void (async () => {
+      await fetchInstituteDetails();
+    })();
+  }, [fetchInstituteDetails]);
 
   const profile = details?.profileDetails;
   const healthInstituteId = details?.healthInstituteId || user?.healthInstituteId || "HND000001";

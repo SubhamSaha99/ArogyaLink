@@ -1,128 +1,82 @@
 import React, { useState, useEffect, useCallback, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
-  UserCheck,
+  Users,
   Search,
   RefreshCw,
-  Plus,
   ShieldCheck,
-  Calendar,
   ChevronLeft,
   ChevronRight,
-  Eye,
-  AlertCircle,
-  Layers,
   FilterX,
   Sparkles,
+  AlertCircle,
+  FileText,
+  Activity,
+  HeartPulse,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 import { themeStyles } from "@/styles/themeStyles";
 
-export interface AppointedDoctorItem {
-  mappingId?: number;
-  doctorPrimaryKey: number;
-  doctorId: string;
-  departmentId: number;
-  departmentName: string;
-  designationId: number;
-  designationName: string;
-  joiningDate: string;
-  consultationScopeId: number;
-  consultationScopeName: string;
-  status: boolean;
+export interface PatientListItem {
+  patientPrimaryKey: number;
+  patientId: string;
   firstName: string;
   middleName?: string;
   lastName: string;
-  medicalRegistration: string;
-  licenseStatus: number;
+  age?: number;
+  gender?: number; // 1: Male, 2: Female, 3: Other
 }
 
-export interface MasterDataItem {
+export interface StateItem {
   id: number;
   name: string;
-  code?: string;
+  code: string;
 }
 
-export interface AppointMasterData {
-  departments: MasterDataItem[];
-  designations: MasterDataItem[];
-  consultationScopes: MasterDataItem[];
-}
-
-let cachedMasterData: AppointMasterData | null = null;
-let masterDataInFlightPromise: Promise<AppointMasterData> | null = null;
-
-const getCachedAppointMasterData = async (): Promise<AppointMasterData> => {
-  if (cachedMasterData) {
-    return cachedMasterData;
+const getGenderLabel = (gender?: number): { text: string; variant: "teal" | "emerald" | "secondary" | "outline" } => {
+  switch (gender) {
+    case 1:
+      return { text: "Male", variant: "teal" };
+    case 2:
+      return { text: "Female", variant: "secondary" };
+    case 3:
+      return { text: "Other", variant: "outline" };
+    default:
+      return { text: "Not Specified", variant: "outline" };
   }
-  if (masterDataInFlightPromise) {
-    return masterDataInFlightPromise;
-  }
-
-  masterDataInFlightPromise = (async () => {
-    try {
-      const resp = await callApi(
-        API_ROUTES.getAppointDoctorMasterData,
-        null,
-        "GET"
-      );
-      const data = resp?.data || resp;
-      cachedMasterData = {
-        departments: Array.isArray(data?.departments) ? data.departments : [],
-        designations: Array.isArray(data?.designations) ? data.designations : [],
-        consultationScopes: Array.isArray(data?.consultationScopes)
-          ? data.consultationScopes
-          : [],
-      };
-      return cachedMasterData;
-    } finally {
-      masterDataInFlightPromise = null;
-    }
-  })();
-
-  return masterDataInFlightPromise;
 };
 
-export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
+export const DoctorPatientsPage: React.FC = () => {
   const { user } = useAuth();
 
-  // Appointed Doctors State
-  const [appointedDoctors, setAppointedDoctors] = useState<
-    AppointedDoctorItem[]
-  >([]);
+  // Patients list & pagination state
+  const [patients, setPatients] = useState<PatientListItem[]>([]);
   const [totalCount, setTotalCount] = useState<number>(0);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Filters and Pagination State
+  // Search & Filter state
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
-  const [selectedDeptId, setSelectedDeptId] = useState<number | null>(null);
-  const [selectedDesignationId, setSelectedDesignationId] = useState<
-    number | null
-  >(null);
-  const [selectedScopeId, setSelectedScopeId] = useState<number | null>(null);
+  const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
+  const [selectedGender, setSelectedGender] = useState<string>("");
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [limit] = useState<number>(9);
 
-  // Master Filter Options
-  const [masterData, setMasterData] = useState<AppointMasterData>({
-    departments: [],
-    designations: [],
-    consultationScopes: [],
-  });
-  const [loadingMasterData, setLoadingMasterData] = useState<boolean>(false);
+  // States dropdown master data
+  const [statesList, setStatesList] = useState<StateItem[]>([]);
+  const [loadingStates, setLoadingStates] = useState<boolean>(false);
 
   const lastQueryKeyRef = useRef<string>("");
 
-  // Debounce search input by 400ms
+  // Debounce search term by 400ms
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm);
@@ -131,24 +85,25 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  // Load master data once for filter dropdowns
+  // Fetch states master data once
   useEffect(() => {
-    const loadMasterData = async () => {
-      setLoadingMasterData(true);
+    void (async () => {
+      setLoadingStates(true);
       try {
-        const data = await getCachedAppointMasterData();
-        setMasterData(data);
+        const resp = await callApi(API_ROUTES.getPatientStates, null, "GET");
+        const data = resp?.data || resp;
+        const list = data?.states || (Array.isArray(data) ? data : []);
+        setStatesList(list);
       } catch (err) {
-        console.error("Failed to load appoint doctor master data:", err);
+        console.warn("Could not load states list for patient filtering:", err);
       } finally {
-        setLoadingMasterData(false);
+        setLoadingStates(false);
       }
-    };
-    loadMasterData();
+    })();
   }, []);
 
-  // Fetch Appointed Doctors from POST /api/healthInstitute/getAppointedDoctorsList
-  const fetchAppointedDoctors = useCallback(
+  // Fetch patients list from POST /api/patient/getPatientsList
+  const fetchPatientsList = useCallback(
     async (force = false) => {
       const offset = (currentPage - 1) * limit;
 
@@ -156,13 +111,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
         offset,
         limit,
         search: debouncedSearch.trim() || undefined,
-        departmentId: selectedDeptId ? Number(selectedDeptId) : undefined,
-        designationId: selectedDesignationId
-          ? Number(selectedDesignationId)
-          : undefined,
-        consultationScopeId: selectedScopeId
-          ? Number(selectedScopeId)
-          : undefined,
+        stateId: selectedStateId ? Number(selectedStateId) : undefined,
       };
 
       const queryKey = JSON.stringify(payload);
@@ -176,123 +125,102 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
 
       try {
         const response = await callApi(
-          API_ROUTES.getAppointedDoctorsList,
+          API_ROUTES.getPatientsList,
           payload,
           "POST"
         );
 
         const data = response?.data || response;
-        if (data && Array.isArray(data.doctors)) {
-          setAppointedDoctors(data.doctors);
-          setTotalCount(Number(data.total ?? data.doctors.length));
+        if (data && Array.isArray(data.patients)) {
+          setPatients(data.patients);
+          setTotalCount(Number(data.total ?? data.patients.length));
         } else if (Array.isArray(data)) {
-          setAppointedDoctors(data);
+          setPatients(data);
           setTotalCount(data.length);
         } else {
-          setAppointedDoctors([]);
+          setPatients([]);
           setTotalCount(0);
         }
       } catch (err: any) {
-        console.error("Failed to fetch appointed doctors list:", err);
+        console.error("Failed to fetch patients list:", err);
         setError(
           err?.response?.data?.message ||
             err?.message ||
-            "Failed to load appointed doctors roster."
+            "Failed to load patient records from directory."
         );
         lastQueryKeyRef.current = "";
       } finally {
         setLoading(false);
       }
     },
-    [
-      currentPage,
-      limit,
-      debouncedSearch,
-      selectedDeptId,
-      selectedDesignationId,
-      selectedScopeId,
-    ]
+    [currentPage, limit, debouncedSearch, selectedStateId]
   );
 
   useEffect(() => {
     void (async () => {
-      await fetchAppointedDoctors();
+      await fetchPatientsList();
     })();
-  }, [fetchAppointedDoctors]);
+  }, [fetchPatientsList]);
+
+  // Client-side gender filtering if selected
+  const displayedPatients = selectedGender
+    ? patients.filter((p) => String(p.gender) === selectedGender)
+    : patients;
 
   const handleClearFilters = () => {
     setSearchTerm("");
     setDebouncedSearch("");
-    setSelectedDeptId(null);
-    setSelectedDesignationId(null);
-    setSelectedScopeId(null);
+    setSelectedStateId(null);
+    setSelectedGender("");
     setCurrentPage(1);
   };
 
   const totalPages = Math.ceil(totalCount / limit) || 1;
   const hasActiveFilters = Boolean(
-    searchTerm.trim() ||
-      selectedDeptId !== null ||
-      selectedDesignationId !== null ||
-      selectedScopeId !== null
+    searchTerm.trim() || selectedStateId !== null || selectedGender !== ""
   );
 
-  // Derived Summary Counts
-  const uniqueDepartmentsCount = new Set(
-    appointedDoctors.map((d) => d.departmentId).filter(Boolean)
-  ).size;
-
-  const activePractitionersCount = appointedDoctors.filter(
-    (d) => d.status !== false
-  ).length;
+  // Quick stats derived
+  const maleCount = patients.filter((p) => p.gender === 1).length;
+  const femaleCount = patients.filter((p) => p.gender === 2).length;
 
   return (
     <div className={themeStyles.layout.pageContainer}>
       {/* Header Banner */}
       <div className={themeStyles.layout.headerBannerLight}>
-        <div className="absolute top-0 right-0 w-80 h-full bg-linear-to-l from-teal-50/60 to-transparent pointer-events-none" />
+        <div className="absolute top-0 right-0 w-80 h-full bg-linear-to-l from-teal-500/10 via-cyan-500/5 to-transparent pointer-events-none" />
 
         <div className="space-y-1 relative z-10">
           <div className="flex items-center gap-2">
             <span className={themeStyles.typography.pillTeal}>
-              Healthcare Facility Roster
+              National Health Registry
             </span>
             <Badge variant="outline" className="text-[10px] text-slate-500 font-mono">
-              {user?.healthInstituteId || "Hospital Terminal"}
+              {user?.doctorId || "Doctor Terminal"}
             </Badge>
           </div>
           <h1 className={themeStyles.combine(themeStyles.typography.h1, "flex items-center gap-2.5")}>
-            <UserCheck className="w-6 h-6 text-teal-700" />
-            Appointed Medical Staff
+            <Users className="w-6 h-6 text-teal-700" />
+            Registered Patients
           </h1>
           <p className={themeStyles.typography.subtext}>
-            View, filter, and oversee all certified medical practitioners appointed
-            to your healthcare institute across specialized clinical departments.
+            Browse, search, and access clinical profiles of registered patients across
+            connected healthcare facilities and national digital health records.
           </p>
         </div>
 
-        {/* Primary Appoint CTA Button */}
+        {/* Action Button */}
         <div className="flex items-center gap-3 relative z-10 shrink-0">
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchAppointedDoctors(true)}
+            onClick={() => fetchPatientsList(true)}
             disabled={loading}
-            className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3 rounded-xl"
+            className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3.5 rounded-xl"
           >
             <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-teal-600" : ""}`} />
             Refresh
           </Button>
-
-          <Link to="/health-institute/appoint-doctor">
-            <Button
-              variant="emerald"
-              className="text-xs font-bold px-4 h-9 shadow-xs cursor-pointer flex items-center gap-1.5 rounded-xl"
-            >
-              <Plus className="w-4 h-4" />
-              Appoint New Doctor
-            </Button>
-          </Link>
         </div>
       </div>
 
@@ -302,14 +230,14 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className={themeStyles.form.label}>
-                Total Appointed
+                Total Registered Patients
               </span>
               <p className="text-2xl font-black text-slate-900">
                 {totalCount}
               </p>
             </div>
             <div className={themeStyles.iconBadge.teal}>
-              <UserCheck className="w-5 h-5" />
+              <Users className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -318,14 +246,14 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className={themeStyles.form.label}>
-                Active Staff on Duty
+                Current Page Count
               </span>
               <p className="text-2xl font-black text-emerald-600">
-                {activePractitionersCount || totalCount}
+                {displayedPatients.length}
               </p>
             </div>
             <div className={themeStyles.iconBadge.emerald}>
-              <ShieldCheck className="w-5 h-5" />
+              <Activity className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -334,14 +262,14 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className={themeStyles.form.label}>
-                Clinical Specialties
+                Demographics (M / F)
               </span>
               <p className="text-2xl font-black text-cyan-700">
-                {uniqueDepartmentsCount || masterData.departments.length || "Active"}
+                {maleCount} <span className="text-slate-400 text-lg font-normal">/</span> {femaleCount}
               </p>
             </div>
             <div className={themeStyles.iconBadge.cyan}>
-              <Layers className="w-5 h-5" />
+              <HeartPulse className="w-5 h-5" />
             </div>
           </CardContent>
         </Card>
@@ -350,11 +278,11 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className={themeStyles.form.label}>
-                Roster Status
+                EHR Synchronized
               </span>
               <p className="text-xs font-bold text-slate-800 flex items-center gap-1.5 mt-1.5">
                 <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                ABDM Verified
+                ABDM Compatible
               </p>
             </div>
             <div className="w-10 h-10 rounded-xl bg-slate-50 text-slate-700 flex items-center justify-center border border-slate-200">
@@ -369,83 +297,53 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
         <CardContent className="p-4 space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {/* Search Input */}
-            <div className="relative">
+            <div className="relative lg:col-span-2">
               <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
               <Input
                 type="text"
-                placeholder="Search ID, name, registration..."
+                placeholder="Search patient name or Patient ID (e.g. PAT...)..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9 text-xs rounded-xl h-9"
               />
             </div>
 
-            {/* Department Filter */}
+            {/* Gender Filter */}
             <div>
               <select
-                value={selectedDeptId ?? ""}
-                onChange={(e) => {
-                  setSelectedDeptId(e.target.value ? Number(e.target.value) : null);
-                  setCurrentPage(1);
-                }}
-                disabled={loadingMasterData}
-                className="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
+                value={selectedGender}
+                onChange={(e) => setSelectedGender(e.target.value)}
+                className="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
               >
-                <option value="">All Departments</option>
-                {masterData.departments.map((dept) => (
-                  <option key={dept.id} value={dept.id}>
-                    {dept.name}
-                  </option>
-                ))}
+                <option value="">All Genders</option>
+                <option value="1">Male</option>
+                <option value="2">Female</option>
+                <option value="3">Other</option>
               </select>
             </div>
 
-            {/* Designation Filter */}
+            {/* State Filter */}
             <div>
               <select
-                value={selectedDesignationId ?? ""}
+                value={selectedStateId ?? ""}
                 onChange={(e) => {
-                  setSelectedDesignationId(
-                    e.target.value ? Number(e.target.value) : null
-                  );
+                  setSelectedStateId(e.target.value ? Number(e.target.value) : null);
                   setCurrentPage(1);
                 }}
-                disabled={loadingMasterData}
+                disabled={loadingStates}
                 className="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
               >
-                <option value="">All Designations</option>
-                {masterData.designations.map((desig) => (
-                  <option key={desig.id} value={desig.id}>
-                    {desig.name}
-                  </option>
-                ))}
-              </select>
-            </div>
-
-            {/* Consultation Scope Filter */}
-            <div>
-              <select
-                value={selectedScopeId ?? ""}
-                onChange={(e) => {
-                  setSelectedScopeId(
-                    e.target.value ? Number(e.target.value) : null
-                  );
-                  setCurrentPage(1);
-                }}
-                disabled={loadingMasterData}
-                className="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
-              >
-                <option value="">All Consultation Scopes</option>
-                {masterData.consultationScopes.map((scope) => (
-                  <option key={scope.id} value={scope.id}>
-                    {scope.name}
+                <option value="">All States</option>
+                {statesList.map((state) => (
+                  <option key={state.id} value={state.id}>
+                    {state.name}
                   </option>
                 ))}
               </select>
             </div>
           </div>
 
-          {/* Active Filter Clear Helper */}
+          {/* Active Filter Helper */}
           {hasActiveFilters && (
             <div className="flex items-center justify-between pt-1 border-t border-slate-100 text-xs">
               <span className="text-slate-500">
@@ -464,44 +362,45 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
         </CardContent>
       </Card>
 
-      {/* Main Content Area */}
+      {/* Error Alert */}
       {error && (
-        <div className="p-4 bg-red-50 border border-red-200 rounded-2xl flex items-center gap-3 text-red-700 text-xs">
-          <AlertCircle className="w-4 h-4 shrink-0 text-red-600" />
-          <span>{error}</span>
-        </div>
+        <Alert variant="destructive" className="p-4">
+          <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
+          <AlertDescription className="text-xs">{error}</AlertDescription>
+        </Alert>
       )}
 
+      {/* Main Content Area */}
       {loading ? (
         <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">
-            Loading appointed doctors...
+            Loading registered patients...
           </p>
           <p className={themeStyles.typography.subtext}>
-            Retrieving clinical affiliation records from hospital registry.
+            Querying patient index and digital health identifiers from registry.
           </p>
         </div>
-      ) : appointedDoctors.length === 0 ? (
+      ) : displayedPatients.length === 0 ? (
         <div className={themeStyles.state.empty}>
           <div className="w-16 h-16 rounded-2xl bg-teal-50 text-teal-700 mx-auto flex items-center justify-center border border-teal-100">
-            <UserCheck className="w-8 h-8 text-teal-600" />
+            <Users className="w-8 h-8 text-teal-600" />
           </div>
           <div className="space-y-1 max-w-md mx-auto">
             <h3 className="text-base font-bold text-slate-900">
               {hasActiveFilters
-                ? "No matching appointed doctors"
-                : "No doctors appointed yet"}
+                ? "No matching patients found"
+                : "No registered patients found"}
             </h3>
             <p className={themeStyles.typography.subtext}>
               {hasActiveFilters
-                ? "Try adjusting your search query, department, or scope filters to find appointed practitioners."
-                : "Your hospital roster is currently empty. Explore verified practitioners in the national registry to appoint them."}
+                ? "Try adjusting your search term, gender, or state filters to locate patient records."
+                : "No patient records have been registered in the system yet."}
             </p>
           </div>
 
-          <div className="pt-2 flex items-center justify-center gap-3">
-            {hasActiveFilters ? (
+          {hasActiveFilters && (
+            <div className="pt-2">
               <Button
                 variant="outline"
                 size="sm"
@@ -511,140 +410,110 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
                 <FilterX className="w-3.5 h-3.5 mr-1" />
                 Reset Filters
               </Button>
-            ) : null}
-
-            <Link to="/health-institute/appoint-doctor">
-              <Button
-                variant="emerald"
-                size="sm"
-                className="text-xs font-bold px-4 cursor-pointer flex items-center gap-1.5 rounded-xl"
-              >
-                <Plus className="w-4 h-4" />
-                Appoint Doctor Now
-              </Button>
-            </Link>
-          </div>
+            </div>
+          )}
         </div>
       ) : (
         <div className="space-y-6">
-          {/* Doctors Grid */}
+          {/* Patients Grid */}
           <div className={themeStyles.layout.grid3}>
-            {appointedDoctors.map((doc) => {
-              const fullName = [doc.firstName, doc.middleName, doc.lastName]
+            {displayedPatients.map((patient) => {
+              const fullName = [patient.firstName, patient.middleName, patient.lastName]
                 .filter(Boolean)
                 .join(" ");
 
               const initials = [
-                doc.firstName?.charAt(0) || "D",
-                doc.lastName?.charAt(0) || "R",
+                patient.firstName?.charAt(0) || "P",
+                patient.lastName?.charAt(0) || "T",
               ]
                 .join("")
                 .toUpperCase();
 
+              const genderInfo = getGenderLabel(patient.gender);
+
               return (
                 <Card
-                  key={doc.mappingId || `${doc.doctorId}-${doc.departmentId}`}
-                  className={themeStyles.combine(themeStyles.card.base, "flex flex-col justify-between overflow-hidden group")}
+                  key={`${patient.patientPrimaryKey}-${patient.patientId}`}
+                  className={themeStyles.combine(
+                    themeStyles.card.base,
+                    "flex flex-col justify-between overflow-hidden group"
+                  )}
                 >
                   <CardContent className="p-5 space-y-4">
-                    {/* Top Doctor Profile Row */}
+                    {/* Top Patient Profile Row */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className={themeStyles.combine(themeStyles.avatar.doctor, "group-hover:scale-105 transition-transform")}>
+                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-700 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                           {initials}
                         </div>
                         <div className="min-w-0">
                           <h4 className={themeStyles.combine(themeStyles.typography.h4, "truncate")}>
-                            Dr. {fullName || doc.doctorId}
+                            {fullName || "Registered Patient"}
                           </h4>
                           <span className={themeStyles.typography.monoTeal}>
-                            {doc.doctorId}
+                            {patient.patientId}
                           </span>
                         </div>
                       </div>
 
                       <Badge
-                        variant="teal"
-                        className="bg-emerald-50 text-emerald-700 border-emerald-200 text-[10px] shrink-0"
+                        variant="verified"
+                        className="text-[10px] shrink-0 font-bold"
                       >
-                        {doc.status !== false ? "Active Staff" : "Inactive"}
+                        Registered
                       </Badge>
                     </div>
 
-                    {/* Specialty & Role Badges */}
-                    <div className="space-y-2 pt-1 border-t border-slate-100">
+                    {/* Patient Attributes */}
+                    <div className="space-y-2 pt-2 border-t border-slate-100">
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                          Specialty
+                          Gender
                         </span>
                         <Badge
-                          variant="outline"
-                          className="text-[11px] font-bold text-teal-800 bg-teal-50 border-teal-200"
+                          variant={genderInfo.variant}
+                          className="text-[11px] font-semibold"
                         >
-                          {doc.departmentName || "General Medicine"}
+                          {genderInfo.text}
                         </Badge>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                          Designation
+                          Age
                         </span>
-                        <span className="text-xs font-semibold text-slate-800 truncate max-w-45">
-                          {doc.designationName || "Practitioner"}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center justify-between text-xs">
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                          Scope
-                        </span>
-                        <span className="text-xs font-semibold text-cyan-700 truncate max-w-45">
-                          {doc.consultationScopeName || "Full Consultation"}
+                        <span className="text-xs font-semibold text-slate-800">
+                          {patient.age ? `${patient.age} Years` : "Not Specified"}
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs">
                         <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                          Joining Date
+                          Record ID
                         </span>
-                        <span className="text-xs font-medium text-slate-600 flex items-center gap-1">
-                          <Calendar className="w-3 h-3 text-slate-400" />
-                          {doc.joiningDate || "Affiliated"}
+                        <span className="text-xs font-mono font-medium text-slate-600">
+                          #{patient.patientPrimaryKey}
                         </span>
                       </div>
-
-                      {doc.medicalRegistration && (
-                        <div className="flex items-center justify-between text-xs">
-                          <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
-                            Reg. No.
-                          </span>
-                          <span className="text-[11px] font-mono font-medium text-slate-600 truncate max-w-45">
-                            {doc.medicalRegistration}
-                          </span>
-                        </div>
-                      )}
                     </div>
                   </CardContent>
 
                   {/* Card Action Footer */}
                   <div className="px-5 py-3 bg-slate-50/80 border-t border-slate-100 flex items-center justify-between">
-                    <span className="text-[10px] font-medium text-slate-500">
-                      Roster ID: #{doc.mappingId || doc.doctorPrimaryKey}
+                    <span className="flex items-center gap-1 text-[11px] font-medium text-teal-700">
+                      <ShieldCheck className="w-3.5 h-3.5 text-teal-600" />
+                      ABDM Linked
                     </span>
                     <Link
-                      to={`/health-institute/doctors/${doc.doctorPrimaryKey || doc.doctorId}`}
-                      state={{
-                        doctorPrimaryKey: doc.doctorPrimaryKey,
-                        doctorId: doc.doctorId,
-                      }}
+                      to={`/doctor/dashboard?patientId=${patient.patientId}`}
                     >
                       <Button
                         variant="ghost"
                         size="sm"
                         className="text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 h-8 px-2.5 cursor-pointer font-bold flex items-center gap-1"
                       >
-                        <Eye className="w-3.5 h-3.5" />
-                        Full Profile →
+                        <FileText className="w-3.5 h-3.5" />
+                        Clinical History &rarr;
                       </Button>
                     </Link>
                   </div>
@@ -665,7 +534,7 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
                 <strong className="text-slate-800">
                   {Math.min(currentPage * limit, totalCount)}
                 </strong>{" "}
-                of <strong className="text-slate-800">{totalCount}</strong> appointed doctors
+                of <strong className="text-slate-800">{totalCount}</strong> registered patients
               </p>
 
               <div className="flex items-center gap-2">
@@ -727,4 +596,4 @@ export const HealthInstituteAppointedDoctorsPage: React.FC = () => {
   );
 };
 
-export default HealthInstituteAppointedDoctorsPage;
+export default DoctorPatientsPage;
