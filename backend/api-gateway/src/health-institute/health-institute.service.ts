@@ -16,7 +16,7 @@ import {
   UpdateHealthInstituteProfileReq,
   UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
-import { GrpcServiceName } from '../common/utils/constant';
+import { GrpcServiceName } from '../common/utils/constants';
 import type { ClientGrpc } from '@nestjs/microservices';
 import {
   AppointDoctorDto,

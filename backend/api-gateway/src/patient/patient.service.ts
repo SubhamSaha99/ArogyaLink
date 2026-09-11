@@ -12,7 +12,7 @@ import {
   UpdatePatientProfileDetailsReq,
   UpdatePatientProfileDetailsRes,
 } from '../proto/generated/patient';
-import { GrpcServiceName } from '../common/utils/constant';
+import { GrpcServiceName } from '../common/utils/constants';
 import type { ClientGrpc } from '@nestjs/microservices';
 import {
   CreateMedicalRecordDto,

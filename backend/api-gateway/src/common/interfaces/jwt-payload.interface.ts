@@ -1,4 +1,4 @@
-import { UserRole } from '../utils/constant';
+import { UserRole } from '../utils/constants';
 
 export interface JwtPayload {
   sessionId: string;

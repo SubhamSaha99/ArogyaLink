@@ -20,7 +20,7 @@ import { FileInterceptor } from '@nestjs/platform-express';
 import { multerConfig } from '../common/utils/multer.config';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
-import { UserRole } from '../common/utils/constant';
+import { UserRole } from '../common/utils/constants';
 import { Auth } from '../common/decorators/auth.decorator';
 
 @Controller('doctor')

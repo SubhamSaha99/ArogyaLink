@@ -1,4 +1,5 @@
 import json
+import random
 
 from app.common.interfaces.patient_interface import (
     MasterDataItemInterface,
@@ -11,10 +12,11 @@ from app.db.models.medical_documents_entity import MedicalDocument
 from app.db.models.medical_record_entity import MedicalRecord
 from app.db.models.medication_entity import MedicalMedication
 from app.db.models.patient_entity import PatientProfile
-from app.redis.redis_service import RedisService
 from app.repositories.master_data_repository import MasterDataRepository
 from app.repositories.medical_record_repository import MedicalRecordRepository
 from app.repositories.patient_repository import PatientRepository
+from app.redis.redis_service import RedisService
+from app.redis.redis_cache_service import RedisCacheService
 
 logger = get_logger("patient_service")
 
@@ -25,6 +27,7 @@ class PatientService:
         self.medical_record_repository = MedicalRecordRepository()
         self.master_data_repository = MasterDataRepository()
         self.redis_service = RedisService()
+        self.redis_cache_service = RedisCacheService()
 
     # * Create Patient Profile
     async def create_patient_profile(
@@ -71,15 +74,26 @@ class PatientService:
 
     # * Get Patient Details
     async def get_patient_details(
-        self, patient_primary_key: int, patient_id: str
+        self,
+        patient_primary_key: int,
+        patient_id: str,
     ) -> PatientDetailsInterface:
 
         cache_key = f"patient:profile:{patient_id}"
 
-        cached_patient = await self.redis_service.get(cache_key)
+        return await self.redis_cache_service.get_or_set(
+            key=cache_key,
+            fetcher=lambda: self._fetch_patient_details(patient_primary_key),
+            ttl=3600,
+            lock_ttl=10,
+            jitter=random.randrange(300),
+        )
 
-        if cached_patient:
-            return json.loads(cached_patient)
+    # * Fetch Patient Details
+    async def _fetch_patient_details(
+        self,
+        patient_primary_key: int,
+    ) -> PatientDetailsInterface:
 
         patient_details = await self.patient_repository.get_by_patient_primary_key(
             patient_primary_key
@@ -87,12 +101,6 @@ class PatientService:
 
         if patient_details is None:
             raise ValueError("Patient Details not found!")
-
-        await self.redis_service.set(
-            cache_key,
-            json.dumps(patient_details),
-            ttl=3600,
-        )
 
         return patient_details
 
@@ -127,48 +135,36 @@ class PatientService:
     async def get_states(self) -> list[MasterDataItemInterface]:
         cache_key = "states-patient-service"
 
-        try:
-            cached_states = await self.redis_service.get(cache_key)
-            if cached_states:
-                return json.loads(cached_states)
-        except Exception as error:
-            logger.warning(f"Redis get failed for states: {error}")
+        return await self.redis_cache_service.get_or_set(
+            key=cache_key,
+            fetcher=lambda: self._fetch_states(),
+            ttl=3600,
+            lock_ttl=10,
+            jitter=random.randrange(300),
+        )
 
+    # * Fetch States
+    async def _fetch_states(self) -> list[MasterDataItemInterface]:
         states = await self.master_data_repository.get_all_states()
-
-        try:
-            await self.redis_service.set(
-                cache_key,
-                json.dumps(states),
-                ttl=3600,
-            )
-        except Exception as error:
-            logger.warning(f"Redis set failed for states: {error}")
-
         return states
 
     # * Get Districts
     async def get_districts(self, state_id: int) -> list[MasterDataItemInterface]:
         cache_key = f"districts-patient-service:{state_id}"
 
-        try:
-            cached_districts = await self.redis_service.get(cache_key)
-            if cached_districts:
-                return json.loads(cached_districts)
-        except Exception as error:
-            logger.warning(f"Redis get failed for districts of state {state_id}: {error}")
+        return await self.redis_cache_service.get_or_set(
+            key=cache_key,
+            fetcher=lambda: self._fetch_districts(state_id),
+            ttl=3600,
+            lock_ttl=10,
+            jitter=random.randrange(300),
+        )
 
-        districts = await self.master_data_repository.get_districts_by_state_id(state_id)
-
-        try:
-            await self.redis_service.set(
-                cache_key,
-                json.dumps(districts),
-                ttl=3600,
-            )
-        except Exception as error:
-            logger.warning(f"Redis set failed for districts of state {state_id}: {error}")
-
+    # * Fetch Districts
+    async def _fetch_districts(self, state_id: int) -> list[MasterDataItemInterface]:
+        districts = await self.master_data_repository.get_districts_by_state_id(
+            state_id
+        )
         return districts
 
     # * Get Patients List

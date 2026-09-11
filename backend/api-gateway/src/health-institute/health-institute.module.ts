@@ -5,7 +5,7 @@ import { ClientsModule, Transport } from '@nestjs/microservices';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { join } from 'path';
 import { RolesGuard } from '../common/guards/roles.guard';
-import { GrpcServiceName } from '../common/utils/constant';
+import { GrpcServiceName } from '../common/utils/constants';
 import { HEALTH_INSTITUTE_PACKAGE_NAME } from '../proto/generated/health-institute';
 import { DOCTOR_PACKAGE_NAME } from '../proto/generated/doctor';
 

@@ -1,5 +1,6 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
+import { status } from '@grpc/grpc-js';
 import {
   AppointDoctorReq,
   AppointDoctorRes,
@@ -30,10 +31,10 @@ import {
   MasterDataItemResposne,
   UpdateHealthInstituteResponse,
 } from '../common/interfaces/health-institute.interface';
-import { status } from '@grpc/grpc-js';
 import { throwRpcException } from '../common/utils/rpc-exception';
-import { Errors } from '../common/utils/constant';
+import { Errors } from '../common/utils/constants';
 import { RedisService } from '../redis/redis.service';
+import { RedisCacheService } from '../redis/redis-cache.service';
 
 @Injectable()
 export class HealthInstituteService {
@@ -42,6 +43,7 @@ export class HealthInstituteService {
   constructor(
     private readonly dataSource: DataSource,
     private readonly redisService: RedisService,
+    private readonly redisCacheService: RedisCacheService,
   ) {}
 
   /**
@@ -134,41 +136,46 @@ export class HealthInstituteService {
     const cacheKey = `healthInstitute:profile:${request.healthInstituteId}`;
 
     try {
-      const cachedDoctor = await this.redisService.get(cacheKey);
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
 
-      if (cachedDoctor) {
-        return JSON.parse(cachedDoctor) as GetHealthInstituteDetailsRes;
-      }
+        async () => {
+          const result = await this.dataSource.query<
+            GetHealthInstituteDetailsResponse[]
+          >(`SELECT * FROM get_health_institute_details($1)`, [
+            request.healthInstitutePrimaryId,
+          ]);
 
-      const result = await this.dataSource.query<
-        GetHealthInstituteDetailsResponse[]
-      >(`SELECT * FROM get_health_institute_details($1)`, [
-        request.healthInstitutePrimaryId,
-      ]);
+          const queryResult = result[0];
 
-      const queryResult = result[0];
+          if (!queryResult) {
+            throwRpcException(
+              status.INTERNAL,
+              'Invalid response from procedure',
+            );
+          }
 
-      if (!queryResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-      }
+          switch (queryResult.status) {
+            case Errors.invalidIdError:
+              throwRpcException(status.NOT_FOUND, 'Health institute not found');
+              break;
 
-      switch (queryResult.status) {
-        case Errors.invalidIdError:
-          throwRpcException(status.NOT_FOUND, 'Health institute not found');
-          break;
+            case Errors.dbError:
+              throwRpcException(status.INTERNAL, 'Database error');
+              break;
+          }
 
-        case Errors.dbError:
-          throwRpcException(status.INTERNAL, 'Database error');
-          break;
-      }
+          return queryResult;
+        },
 
-      const response: GetHealthInstituteDetailsRes = {
-        ...queryResult,
-      };
-
-      await this.redisService.set(cacheKey, JSON.stringify(response), 300);
-
-      return response;
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
+      );
     } catch (error) {
       if (
         error instanceof Error &&
@@ -192,27 +199,36 @@ export class HealthInstituteService {
     const cacheKey = `states-health-institute-service`;
 
     try {
-      const cachedStates = await this.redisService.get(cacheKey);
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
 
-      if (cachedStates) {
-        return JSON.parse(cachedStates) as GetStatesRes;
-      }
+        async () => {
+          const result = await this.dataSource.query<MasterDataItemResposne[]>(
+            `SELECT * FROM get_states()`,
+          );
 
-      const result = await this.dataSource.query<MasterDataItemResposne[]>(
-        `SELECT * FROM get_states()`,
+          if (result.length === 0) {
+            throwRpcException(
+              status.INTERNAL,
+              'Invalid response from procedure',
+            );
+          }
+
+          const response: GetStatesRes = {
+            states: result,
+          };
+
+          return response;
+        },
+
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
       );
-
-      if (result.length === 0) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-      }
-
-      const response: GetStatesRes = {
-        states: result,
-      };
-
-      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
-
-      return response;
     } catch (error) {
       if (
         error instanceof Error &&
@@ -233,27 +249,36 @@ export class HealthInstituteService {
     const cacheKey = `districts-health-institute-service:${request.stateId}`;
 
     try {
-      const cachedDistricts = await this.redisService.get(cacheKey);
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
 
-      if (cachedDistricts) {
-        return JSON.parse(cachedDistricts) as GetDistrictsRes;
-      }
+        async () => {
+          const result = await this.dataSource.query<MasterDataItemResposne[]>(
+            `SELECT * FROM get_districts($1)`,
+            [request.stateId],
+          );
+          if (result.length === 0) {
+            throwRpcException(
+              status.INTERNAL,
+              'Invalid response from procedure',
+            );
+          }
 
-      const result = await this.dataSource.query<MasterDataItemResposne[]>(
-        `SELECT * FROM get_districts($1)`,
-        [request.stateId],
+          const response: GetDistrictsRes = {
+            districts: result,
+          };
+
+          return response;
+        },
+
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
       );
-      if (result.length === 0) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-      }
-
-      const response: GetDistrictsRes = {
-        districts: result,
-      };
-
-      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
-
-      return response;
     } catch (error) {
       if (
         error instanceof Error &&
@@ -277,27 +302,36 @@ export class HealthInstituteService {
     const cacheKey = `registrationCouncils`;
 
     try {
-      const cachedDistricts = await this.redisService.get(cacheKey);
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
 
-      if (cachedDistricts) {
-        return JSON.parse(cachedDistricts) as GetRegistrationCouncilRes;
-      }
+        async () => {
+          const result = await this.dataSource.query<MasterDataItemResposne[]>(
+            `SELECT * FROM get_registration_councils()`,
+          );
 
-      const result = await this.dataSource.query<MasterDataItemResposne[]>(
-        `SELECT * FROM get_registration_councils()`,
+          if (result.length === 0) {
+            throwRpcException(
+              status.INTERNAL,
+              'Invalid response from procedure',
+            );
+          }
+
+          const response: GetRegistrationCouncilRes = {
+            registrationCouncils: result,
+          };
+
+          return response;
+        },
+
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
       );
-
-      if (result.length === 0) {
-        throwRpcException(status.INTERNAL, 'Invalid response from procedure');
-      }
-
-      const response: GetRegistrationCouncilRes = {
-        registrationCouncils: result,
-      };
-
-      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
-
-      return response;
     } catch (error) {
       if (
         error instanceof Error &&
@@ -318,35 +352,46 @@ export class HealthInstituteService {
    * @returns GetAppointDoctorMasterDataRes
    */
   async getAppointDoctorMasterData(): Promise<GetAppointDoctorMasterDataRes> {
+    const cacheKey = 'apoint-doctor:master-data';
     try {
-      const cacheKey = 'apoint-doctor:master-data';
-      const cachedData = await this.redisService.get(cacheKey);
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
 
-      if (cachedData) {
-        return JSON.parse(cachedData) as GetAppointDoctorMasterDataRes;
-      }
+        async () => {
+          const result = await this.dataSource.query<
+            GetDoctorMasterDataResponse[]
+          >(`SELECT * FROM get_appoint_doctor_master_data()`);
 
-      const result = await this.dataSource.query<GetDoctorMasterDataResponse[]>(
-        `SELECT * FROM get_appoint_doctor_master_data()`,
+          const masterDataResult = result?.[0];
+
+          if (!masterDataResult) {
+            throwRpcException(
+              status.INTERNAL,
+              'Invalid response from database',
+            );
+          }
+
+          if (masterDataResult.status === Errors.dbError) {
+            throwRpcException(status.INTERNAL, 'Database error');
+          }
+
+          const response: GetAppointDoctorMasterDataRes = {
+            departments: masterDataResult.departments ?? [],
+            designations: masterDataResult.designations ?? [],
+            consultationScopes: masterDataResult.consultationScopes ?? [],
+          };
+          await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
+          return response;
+        },
+
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
       );
-
-      const masterDataResult = result?.[0];
-
-      if (!masterDataResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from database');
-      }
-
-      if (masterDataResult.status === Errors.dbError) {
-        throwRpcException(status.INTERNAL, 'Database error');
-      }
-
-      const response: GetAppointDoctorMasterDataRes = {
-        departments: masterDataResult.departments ?? [],
-        designations: masterDataResult.designations ?? [],
-        consultationScopes: masterDataResult.consultationScopes ?? [],
-      };
-      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
-      return response;
     } catch (error) {
       if (
         error instanceof Error &&

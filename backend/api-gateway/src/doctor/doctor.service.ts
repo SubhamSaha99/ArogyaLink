@@ -23,7 +23,7 @@ import {
 import { firstValueFrom } from 'rxjs';
 import { deleteFile } from '../common/utils/file-util';
 import { moveFile } from '../common/utils/upload-file';
-import { GrpcServiceName } from '../common/utils/constant';
+import { GrpcServiceName } from '../common/utils/constants';
 import {
   GetAssociatedHealthInstitutesRes,
   HEALTH_INSTITUTE_SERVICE_NAME,

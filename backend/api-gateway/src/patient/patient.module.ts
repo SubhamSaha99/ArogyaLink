@@ -2,7 +2,7 @@ import { Module } from '@nestjs/common';
 import { PatientController } from './patient.controller';
 import { PatientService } from './patient.service';
 import { ClientsModule, Transport } from '@nestjs/microservices';
-import { GrpcServiceName } from '../common/utils/constant';
+import { GrpcServiceName } from '../common/utils/constants';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PATIENT_PACKAGE_NAME } from '../proto/generated/patient';
 import { join } from 'path';

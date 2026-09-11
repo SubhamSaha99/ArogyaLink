@@ -31,6 +31,7 @@ import {
   GetDoctorListResponse,
   GetAppointedDoctorDetailsResponse,
 } from '../common/interfaces/doctor.interface';
+import { RedisCacheService } from '../redis/redis-cache.service';
 
 @Injectable()
 export class DoctorService {
@@ -39,6 +40,7 @@ export class DoctorService {
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
+    private readonly redisCacheService: RedisCacheService,
   ) {}
 
   /**
@@ -238,60 +240,68 @@ export class DoctorService {
     const cacheKey = `doctor:profile:${request.doctorId}`;
 
     try {
-      const cachedDoctor = await this.redisService.get(cacheKey);
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
 
-      if (cachedDoctor) {
-        return JSON.parse(cachedDoctor) as GetDoctorDetailsRes;
-      }
+        async () => {
+          const result = await this.dataSource.query<
+            GetDoctorDetailsResponse[]
+          >(`SELECT * FROM get_doctor_details($1)`, [request.doctorPrimaryKey]);
 
-      const result = await this.dataSource.query<GetDoctorDetailsResponse[]>(
-        `SELECT * FROM get_doctor_details($1)`,
-        [request.doctorPrimaryKey],
-      );
+          const procedureResult = result?.[0];
+          if (!procedureResult) {
+            throwRpcException(
+              status.INTERNAL,
+              'Invalid response from database',
+            );
+          }
 
-      const procedureResult = result?.[0];
-      if (!procedureResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from database');
-      }
+          switch (procedureResult.status) {
+            case Errors.invalidIdError:
+              throwRpcException(status.NOT_FOUND, 'Doctor not found');
+              break;
 
-      switch (procedureResult.status) {
-        case Errors.invalidIdError:
-          throwRpcException(status.NOT_FOUND, 'Doctor not found');
-          break;
+            case Errors.dbError:
+              throwRpcException(status.INTERNAL, 'Database error');
+              break;
+          }
 
-        case Errors.dbError:
-          throwRpcException(status.INTERNAL, 'Database error');
-          break;
-      }
+          const {
+            doctorPrimaryKey,
+            doctorId,
+            profileDetails,
+            professionalDetails,
+            qualificationDetails = [],
+          } = procedureResult;
 
-      const {
-        doctorPrimaryKey,
-        doctorId,
-        profileDetails,
-        professionalDetails,
-        qualificationDetails = [],
-      } = procedureResult;
+          const profileImage = profileDetails.profileImage
+            ? `${this.configService.get<string>(
+                'API_BASE_URL',
+              )}/uploads/${profileDetails.profileImage}`
+            : '';
 
-      const profileImage = profileDetails.profileImage
-        ? `${this.configService.get<string>(
-            'API_BASE_URL',
-          )}/uploads/${profileDetails.profileImage}`
-        : '';
+          const response: GetDoctorDetailsRes = {
+            doctorPrimaryKey,
+            doctorId,
+            profileDetails: {
+              ...profileDetails,
+              profileImage,
+            },
+            professionalDetails,
+            qualificationDetails,
+          };
 
-      const response: GetDoctorDetailsRes = {
-        doctorPrimaryKey,
-        doctorId,
-        profileDetails: {
-          ...profileDetails,
-          profileImage,
+          return response;
         },
-        professionalDetails,
-        qualificationDetails,
-      };
 
-      await this.redisService.set(cacheKey, JSON.stringify(response), 300);
-
-      return response;
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
+      );
     } catch (error) {
       if (
         error instanceof Error &&
@@ -312,36 +322,47 @@ export class DoctorService {
    * @returns GetDoctorMasterDataRes
    */
   async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
+    const cacheKey = 'doctor:master-data';
     try {
-      const cacheKey = 'doctor:master-data';
-      const cachedData = await this.redisService.get(cacheKey);
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
 
-      if (cachedData) {
-        return JSON.parse(cachedData) as GetDoctorMasterDataRes;
-      }
+        async () => {
+          const result = await this.dataSource.query<
+            GetDoctorMasterDataResponse[]
+          >(`SELECT * FROM get_doctor_master_data()`);
 
-      const result = await this.dataSource.query<GetDoctorMasterDataResponse[]>(
-        `SELECT * FROM get_doctor_master_data()`,
+          const masterDataResult = result?.[0];
+
+          if (!masterDataResult) {
+            throwRpcException(
+              status.INTERNAL,
+              'Invalid response from database',
+            );
+          }
+
+          if (masterDataResult.status === Errors.dbError) {
+            throwRpcException(status.INTERNAL, 'Database error');
+          }
+
+          const response: GetDoctorMasterDataRes = {
+            registrationCouncils: masterDataResult.registrationCouncils ?? [],
+            states: masterDataResult.states ?? [],
+            qualifications: masterDataResult.qualifications ?? [],
+            specializations: masterDataResult.specializations ?? [],
+          };
+
+          return response;
+        },
+
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
       );
-
-      const masterDataResult = result?.[0];
-
-      if (!masterDataResult) {
-        throwRpcException(status.INTERNAL, 'Invalid response from database');
-      }
-
-      if (masterDataResult.status === Errors.dbError) {
-        throwRpcException(status.INTERNAL, 'Database error');
-      }
-
-      const response: GetDoctorMasterDataRes = {
-        registrationCouncils: masterDataResult.registrationCouncils ?? [],
-        states: masterDataResult.states ?? [],
-        qualifications: masterDataResult.qualifications ?? [],
-        specializations: masterDataResult.specializations ?? [],
-      };
-      await this.redisService.set(cacheKey, JSON.stringify(response), 3600);
-      return response;
     } catch (error) {
       if (
         error instanceof Error &&

@@ -21,7 +21,7 @@ import {
   PatientProfileDetailsDto,
 } from './patient.dto';
 import { Auth } from '../common/decorators/auth.decorator';
-import { UserRole } from '../common/utils/constant';
+import { UserRole } from '../common/utils/constants';
 import { MultipartNestedInterceptor } from '../auth/interceptor/multipart-nested.interceptor';
 
 @Controller('patient')

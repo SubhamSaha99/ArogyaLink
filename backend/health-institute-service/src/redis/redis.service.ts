@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import Redis from 'ioredis';
 
-import { REDIS_CLIENT } from '../common/utils/constant';
+import { REDIS_CLIENT } from '../common/utils/constants';
 
 @Injectable()
 export class RedisService implements OnModuleInit, OnModuleDestroy {
@@ -92,6 +92,30 @@ export class RedisService implements OnModuleInit, OnModuleDestroy {
 
   async setWithTTL(key: string, value: string, ttl: number): Promise<void> {
     await this.redis.set(key, value, 'EX', ttl);
+  }
+
+  async acquireLock(key: string, token: string, ttl: number): Promise<boolean> {
+    const result = await this.redis.set(key, token, 'EX', ttl, 'NX');
+
+    return result === 'OK';
+  }
+
+  async releaseLock(key: string, token: string): Promise<boolean> {
+    const script = `
+      if redis.call("GET", KEYS[1]) == ARGV[1] then
+        return redis.call("DEL", KEYS[1])
+      else
+        return 0
+      end
+    `;
+
+    const result = await this.redis.eval(script, 1, key, token);
+
+    return result === 1;
+  }
+
+  async sleep(ms: number): Promise<void> {
+    await new Promise((resolve) => setTimeout(resolve, ms));
   }
 
   async onModuleDestroy() {

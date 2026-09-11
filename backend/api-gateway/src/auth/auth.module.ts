@@ -8,7 +8,7 @@ import { join } from 'node:path';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtStrategy } from './jwt.strategy';
-import { GrpcServiceName } from '../common/utils/constant';
+import { GrpcServiceName } from '../common/utils/constants';
 import { HEALTH_INSTITUTE_PACKAGE_NAME } from '../proto/generated/health-institute';
 import { DOCTOR_PACKAGE_NAME } from '../proto/generated/doctor';
 import { AUTH_PACKAGE_NAME } from '../proto/generated/auth';

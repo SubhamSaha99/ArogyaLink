@@ -32,7 +32,7 @@ import {
   DoctorProfileRes,
   DoctorServiceClient,
 } from '../proto/generated/doctor';
-import { GrpcServiceName } from '../common/utils/constant';
+import { GrpcServiceName } from '../common/utils/constants';
 import {
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteProfileRes,

@@ -15,7 +15,7 @@ import {
 } from './health-institute.dto';
 import { HealthInstituteService } from './health-institute.service';
 import { Auth } from '../common/decorators/auth.decorator';
-import { UserRole } from '../common/utils/constant';
+import { UserRole } from '../common/utils/constants';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
