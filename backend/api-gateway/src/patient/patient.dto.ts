@@ -9,11 +9,13 @@ import {
   Min,
   Matches,
   ValidateNested,
-  IsArray,
   IsNotEmpty,
   Max,
 } from 'class-validator';
 
+/**
+ * @description patient profile dto
+ */
 export class PatientProfileDetailsDto {
   @IsMongoId()
   patientProfileId!: string;
@@ -107,6 +109,23 @@ export class PatientProfileDetailsDto {
   pincode?: number;
 }
 
+/**
+ * @description Get Patient Details DTO.
+ */
+export class GetPatientDetailsDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  patientPrimaryKey?: number;
+
+  @IsOptional()
+  @IsString()
+  patientId?: string;
+}
+
+/**
+ * @description medical document dto
+ */
 export class MedicalDocumentDto {
   @Type(() => Number)
   @IsInt()
@@ -141,6 +160,9 @@ export class MedicalMedicationDto {
   startDate!: string;
 }
 
+/**
+ * @description Create medical record dto
+ */
 export class CreateMedicalRecordDto {
   @Type(() => Number)
   @IsInt()
@@ -220,9 +242,36 @@ export class CreateMedicalRecordDto {
 }
 
 /**
- * * Get Doctor List DTO.
+ * @description Get Patient Medical Records DTO.
  */
+export class GetPatientMedicalRecordsDto {
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  patientPrimaryKey?: number;
 
+  @IsOptional()
+  @IsString()
+  patientId?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(0)
+  offset: number = 0;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100)
+  limit: number = 10;
+}
+
+
+/**
+ * @description Get Patient List DTO.
+ */
 export class GetPatientsListDto {
   @IsOptional()
   @Type(() => Number)

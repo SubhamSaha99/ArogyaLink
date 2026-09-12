@@ -153,6 +153,68 @@ export interface GetPatientsListRes {
   limit: number;
 }
 
+export interface GetPatientMedicalRecordsReq {
+  patientPrimaryKey: number;
+  patientId: string;
+  offset: number;
+  limit: number;
+}
+
+export interface PatientMedicalRecordsList {
+  patientMedicalRecordId: string;
+  doctorPrimaryKey: number;
+  doctorId: string;
+  healthInstitutePrimaryKey: number;
+  healthInstituteId: string;
+  title: string;
+  diagnosis: string;
+  status: number;
+}
+
+export interface GetPatientMedicalRecordsRes {
+  medicalRecords: PatientMedicalRecordsList[];
+  total: number;
+  offset: number;
+  limit: number;
+}
+
+export interface GetPatientMedicalHistoryRes {
+  patientMedicalId: string;
+}
+
+export interface GetPatientMedicalRecordDetailsReq {
+  medicalRecordId: string;
+}
+
+export interface GetPateintMedicalDocuments {
+  patientMedicalDocumentId: string;
+  documentType: number;
+  documentTypeName: string;
+  title: string;
+  documentUrl: string;
+  documentDate: string;
+}
+
+export interface GetPatientMedications {
+  patientMedicationId: string;
+  medicationName: string;
+  dosage: string;
+  startDate: string;
+  endDate?: string | undefined;
+  status: number;
+}
+
+export interface GetPatientMedicalRecordDetailsRes {
+  patientMedicalRecordId: string;
+  title: string;
+  diagnosis: string;
+  status: number;
+  startedDate: string;
+  resolvedDate?: string | undefined;
+  medicalDocuments: GetPateintMedicalDocuments[];
+  medications: GetPatientMedications[];
+}
+
 export const PATIENT_PACKAGE_NAME = "patient";
 
 export interface PatientServiceClient {
@@ -169,6 +231,12 @@ export interface PatientServiceClient {
   getDistricts(request: GetDistrictsReq): Observable<GetDistrictsRes>;
 
   getPatientsList(request: GetPatientsListReq): Observable<GetPatientsListRes>;
+
+  getPatientMedicalRecords(request: GetPatientMedicalRecordsReq): Observable<GetPatientMedicalRecordsRes>;
+
+  getPatientMedicalRecordDetails(
+    request: GetPatientMedicalRecordDetailsReq,
+  ): Observable<GetPatientMedicalRecordDetailsRes>;
 }
 
 export interface PatientServiceController {
@@ -198,6 +266,17 @@ export interface PatientServiceController {
   getPatientsList(
     request: GetPatientsListReq,
   ): Promise<GetPatientsListRes> | Observable<GetPatientsListRes> | GetPatientsListRes;
+
+  getPatientMedicalRecords(
+    request: GetPatientMedicalRecordsReq,
+  ): Promise<GetPatientMedicalRecordsRes> | Observable<GetPatientMedicalRecordsRes> | GetPatientMedicalRecordsRes;
+
+  getPatientMedicalRecordDetails(
+    request: GetPatientMedicalRecordDetailsReq,
+  ):
+    | Promise<GetPatientMedicalRecordDetailsRes>
+    | Observable<GetPatientMedicalRecordDetailsRes>
+    | GetPatientMedicalRecordDetailsRes;
 }
 
 export function PatientServiceControllerMethods() {
@@ -210,6 +289,8 @@ export function PatientServiceControllerMethods() {
       "getStates",
       "getDistricts",
       "getPatientsList",
+      "getPatientMedicalRecords",
+      "getPatientMedicalRecordDetails",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

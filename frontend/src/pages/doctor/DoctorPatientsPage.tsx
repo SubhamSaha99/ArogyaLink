@@ -443,7 +443,7 @@ export const DoctorPatientsPage: React.FC = () => {
                     {/* Top Patient Profile Row */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-teal-500 to-cyan-700 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
+                        <div className="w-12 h-12 rounded-2xl bg-linear-to-br from-teal-500 to-cyan-700 text-white font-black text-sm flex items-center justify-center shrink-0 shadow-xs group-hover:scale-105 transition-transform">
                           {initials}
                         </div>
                         <div className="min-w-0">

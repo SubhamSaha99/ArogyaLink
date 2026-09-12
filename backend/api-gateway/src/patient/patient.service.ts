@@ -4,6 +4,8 @@ import {
   CreatePatientMedicalRecordRes,
   GetPatientDetailsReq,
   GetPatientDetailsRes,
+  GetPatientMedicalRecordDetailsRes,
+  GetPatientMedicalRecordsRes,
   GetPatientsListRes,
   PATIENT_SERVICE_NAME,
   PatientMedicalDocuments,
@@ -184,6 +186,45 @@ export class PatientService implements OnModuleInit {
       }
       throw error;
     }
+  }
+
+  /**
+   * @description Get Patient Medical Records
+   * @param patientPrimaryKey
+   * @param patientId
+   * @param offset
+   * @param limit
+   * @returns GetPatientMedicalRecordsRes
+   */
+  async getPatientMedicalRecords(
+    patientPrimaryKey: number,
+    patientId: string,
+    offset: number,
+    limit: number,
+  ): Promise<GetPatientMedicalRecordsRes> {
+    return firstValueFrom(
+      this.patientGrpcService.getPatientMedicalRecords({
+        patientPrimaryKey,
+        patientId,
+        offset,
+        limit,
+      }),
+    );
+  }
+
+  /**
+   * @description Get Patient Medical Record Details
+   * @param medicalRecordId 
+   * @returns GetPatientMedicalRecordDetailsRes
+   */
+  async getPatientMedicalRecordDetails(
+    medicalRecordId: string,
+  ): Promise<GetPatientMedicalRecordDetailsRes> {
+    return firstValueFrom(
+      this.patientGrpcService.getPatientMedicalRecordDetails({
+        medicalRecordId,
+      }),
+    );
   }
 
   /**

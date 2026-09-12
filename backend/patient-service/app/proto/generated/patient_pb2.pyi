@@ -702,3 +702,252 @@ class GetPatientsListRes(_message.Message):
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
 Global___GetPatientsListRes: _TypeAlias = GetPatientsListRes  # noqa: Y015
+
+@_typing.final
+class GetPatientMedicalRecordsReq(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTPRIMARYKEY_FIELD_NUMBER: _builtins.int
+    PATIENTID_FIELD_NUMBER: _builtins.int
+    OFFSET_FIELD_NUMBER: _builtins.int
+    LIMIT_FIELD_NUMBER: _builtins.int
+    patientPrimaryKey: _builtins.int
+    patientId: _builtins.str
+    offset: _builtins.int
+    limit: _builtins.int
+    def __init__(
+        self,
+        *,
+        patientPrimaryKey: _builtins.int = ...,
+        patientId: _builtins.str = ...,
+        offset: _builtins.int = ...,
+        limit: _builtins.int = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["limit", b"limit", "offset", b"offset", "patientId", b"patientId", "patientPrimaryKey", b"patientPrimaryKey"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___GetPatientMedicalRecordsReq: _TypeAlias = GetPatientMedicalRecordsReq  # noqa: Y015
+
+@_typing.final
+class PatientMedicalRecordsList(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTMEDICALRECORDID_FIELD_NUMBER: _builtins.int
+    DOCTORPRIMARYKEY_FIELD_NUMBER: _builtins.int
+    DOCTORID_FIELD_NUMBER: _builtins.int
+    HEALTHINSTITUTEPRIMARYKEY_FIELD_NUMBER: _builtins.int
+    HEALTHINSTITUTEID_FIELD_NUMBER: _builtins.int
+    TITLE_FIELD_NUMBER: _builtins.int
+    DIAGNOSIS_FIELD_NUMBER: _builtins.int
+    STATUS_FIELD_NUMBER: _builtins.int
+    patientMedicalRecordId: _builtins.str
+    doctorPrimaryKey: _builtins.int
+    doctorId: _builtins.str
+    healthInstitutePrimaryKey: _builtins.int
+    healthInstituteId: _builtins.str
+    title: _builtins.str
+    diagnosis: _builtins.str
+    status: _builtins.int
+    def __init__(
+        self,
+        *,
+        patientMedicalRecordId: _builtins.str = ...,
+        doctorPrimaryKey: _builtins.int = ...,
+        doctorId: _builtins.str = ...,
+        healthInstitutePrimaryKey: _builtins.int = ...,
+        healthInstituteId: _builtins.str = ...,
+        title: _builtins.str = ...,
+        diagnosis: _builtins.str = ...,
+        status: _builtins.int = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["diagnosis", b"diagnosis", "doctorId", b"doctorId", "doctorPrimaryKey", b"doctorPrimaryKey", "healthInstituteId", b"healthInstituteId", "healthInstitutePrimaryKey", b"healthInstitutePrimaryKey", "patientMedicalRecordId", b"patientMedicalRecordId", "status", b"status", "title", b"title"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___PatientMedicalRecordsList: _TypeAlias = PatientMedicalRecordsList  # noqa: Y015
+
+@_typing.final
+class GetPatientMedicalRecordsRes(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    MEDICALRECORDS_FIELD_NUMBER: _builtins.int
+    TOTAL_FIELD_NUMBER: _builtins.int
+    OFFSET_FIELD_NUMBER: _builtins.int
+    LIMIT_FIELD_NUMBER: _builtins.int
+    total: _builtins.int
+    offset: _builtins.int
+    limit: _builtins.int
+    @_builtins.property
+    def medicalRecords(self) -> _containers.RepeatedCompositeFieldContainer[Global___PatientMedicalRecordsList]: ...
+    def __init__(
+        self,
+        *,
+        medicalRecords: _abc.Iterable[Global___PatientMedicalRecordsList] | None = ...,
+        total: _builtins.int = ...,
+        offset: _builtins.int = ...,
+        limit: _builtins.int = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["limit", b"limit", "medicalRecords", b"medicalRecords", "offset", b"offset", "total", b"total"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___GetPatientMedicalRecordsRes: _TypeAlias = GetPatientMedicalRecordsRes  # noqa: Y015
+
+@_typing.final
+class GetPatientMedicalHistoryRes(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTMEDICALID_FIELD_NUMBER: _builtins.int
+    patientMedicalId: _builtins.str
+    def __init__(
+        self,
+        *,
+        patientMedicalId: _builtins.str = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["patientMedicalId", b"patientMedicalId"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___GetPatientMedicalHistoryRes: _TypeAlias = GetPatientMedicalHistoryRes  # noqa: Y015
+
+@_typing.final
+class GetPatientMedicalRecordDetailsReq(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    MEDICALRECORDID_FIELD_NUMBER: _builtins.int
+    medicalRecordId: _builtins.str
+    def __init__(
+        self,
+        *,
+        medicalRecordId: _builtins.str = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["medicalRecordId", b"medicalRecordId"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___GetPatientMedicalRecordDetailsReq: _TypeAlias = GetPatientMedicalRecordDetailsReq  # noqa: Y015
+
+@_typing.final
+class GetPateintMedicalDocuments(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTMEDICALDOCUMENTID_FIELD_NUMBER: _builtins.int
+    DOCUMENTTYPE_FIELD_NUMBER: _builtins.int
+    DOCUMENTTYPENAME_FIELD_NUMBER: _builtins.int
+    TITLE_FIELD_NUMBER: _builtins.int
+    DOCUMENTURL_FIELD_NUMBER: _builtins.int
+    DOCUMENTDATE_FIELD_NUMBER: _builtins.int
+    patientMedicalDocumentId: _builtins.str
+    documentType: _builtins.int
+    documentTypeName: _builtins.str
+    title: _builtins.str
+    documentUrl: _builtins.str
+    documentDate: _builtins.str
+    def __init__(
+        self,
+        *,
+        patientMedicalDocumentId: _builtins.str = ...,
+        documentType: _builtins.int = ...,
+        documentTypeName: _builtins.str = ...,
+        title: _builtins.str = ...,
+        documentUrl: _builtins.str = ...,
+        documentDate: _builtins.str = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["documentDate", b"documentDate", "documentType", b"documentType", "documentTypeName", b"documentTypeName", "documentUrl", b"documentUrl", "patientMedicalDocumentId", b"patientMedicalDocumentId", "title", b"title"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    def WhichOneof(self, oneof_group: _Never) -> None: ...
+
+Global___GetPateintMedicalDocuments: _TypeAlias = GetPateintMedicalDocuments  # noqa: Y015
+
+@_typing.final
+class GetPatientMedications(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTMEDICATIONID_FIELD_NUMBER: _builtins.int
+    MEDICATIONNAME_FIELD_NUMBER: _builtins.int
+    DOSAGE_FIELD_NUMBER: _builtins.int
+    STARTDATE_FIELD_NUMBER: _builtins.int
+    ENDDATE_FIELD_NUMBER: _builtins.int
+    STATUS_FIELD_NUMBER: _builtins.int
+    patientMedicationId: _builtins.str
+    medicationName: _builtins.str
+    dosage: _builtins.str
+    startDate: _builtins.str
+    endDate: _builtins.str
+    status: _builtins.int
+    def __init__(
+        self,
+        *,
+        patientMedicationId: _builtins.str = ...,
+        medicationName: _builtins.str = ...,
+        dosage: _builtins.str = ...,
+        startDate: _builtins.str = ...,
+        endDate: _builtins.str | None = ...,
+        status: _builtins.int = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _typing.Literal["_endDate", b"_endDate", "endDate", b"endDate"]  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_endDate", b"_endDate", "dosage", b"dosage", "endDate", b"endDate", "medicationName", b"medicationName", "patientMedicationId", b"patientMedicationId", "startDate", b"startDate", "status", b"status"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    _WhichOneofReturnType__endDate: _TypeAlias = _typing.Literal["endDate"]  # noqa: Y015
+    _WhichOneofArgType__endDate: _TypeAlias = _typing.Literal["_endDate", b"_endDate"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__endDate) -> _WhichOneofReturnType__endDate | None: ...
+
+Global___GetPatientMedications: _TypeAlias = GetPatientMedications  # noqa: Y015
+
+@_typing.final
+class GetPatientMedicalRecordDetailsRes(_message.Message):
+    DESCRIPTOR: _descriptor.Descriptor
+
+    PATIENTMEDICALRECORDID_FIELD_NUMBER: _builtins.int
+    TITLE_FIELD_NUMBER: _builtins.int
+    DIAGNOSIS_FIELD_NUMBER: _builtins.int
+    STATUS_FIELD_NUMBER: _builtins.int
+    STARTEDDATE_FIELD_NUMBER: _builtins.int
+    RESOLVEDDATE_FIELD_NUMBER: _builtins.int
+    MEDICALDOCUMENTS_FIELD_NUMBER: _builtins.int
+    MEDICATIONS_FIELD_NUMBER: _builtins.int
+    patientMedicalRecordId: _builtins.str
+    title: _builtins.str
+    diagnosis: _builtins.str
+    status: _builtins.int
+    startedDate: _builtins.str
+    resolvedDate: _builtins.str
+    @_builtins.property
+    def medicalDocuments(self) -> _containers.RepeatedCompositeFieldContainer[Global___GetPateintMedicalDocuments]: ...
+    @_builtins.property
+    def medications(self) -> _containers.RepeatedCompositeFieldContainer[Global___GetPatientMedications]: ...
+    def __init__(
+        self,
+        *,
+        patientMedicalRecordId: _builtins.str = ...,
+        title: _builtins.str = ...,
+        diagnosis: _builtins.str = ...,
+        status: _builtins.int = ...,
+        startedDate: _builtins.str = ...,
+        resolvedDate: _builtins.str | None = ...,
+        medicalDocuments: _abc.Iterable[Global___GetPateintMedicalDocuments] | None = ...,
+        medications: _abc.Iterable[Global___GetPatientMedications] | None = ...,
+    ) -> None: ...
+    _HasFieldArgType: _TypeAlias = _typing.Literal["_resolvedDate", b"_resolvedDate", "resolvedDate", b"resolvedDate"]  # noqa: Y015
+    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_resolvedDate", b"_resolvedDate", "diagnosis", b"diagnosis", "medicalDocuments", b"medicalDocuments", "medications", b"medications", "patientMedicalRecordId", b"patientMedicalRecordId", "resolvedDate", b"resolvedDate", "startedDate", b"startedDate", "status", b"status", "title", b"title"]  # noqa: Y015
+    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    _WhichOneofReturnType__resolvedDate: _TypeAlias = _typing.Literal["resolvedDate"]  # noqa: Y015
+    _WhichOneofArgType__resolvedDate: _TypeAlias = _typing.Literal["_resolvedDate", b"_resolvedDate"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__resolvedDate) -> _WhichOneofReturnType__resolvedDate | None: ...
+
+Global___GetPatientMedicalRecordDetailsRes: _TypeAlias = GetPatientMedicalRecordDetailsRes  # noqa: Y015

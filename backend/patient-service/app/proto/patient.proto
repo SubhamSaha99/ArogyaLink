@@ -16,6 +16,10 @@ service PatientService {
   rpc GetDistricts(GetDistrictsReq) returns (GetDistrictsRes);
 
   rpc GetPatientsList(GetPatientsListReq) returns (GetPatientsListRes);
+
+  rpc GetPatientMedicalRecords(GetPatientMedicalRecordsReq) returns (GetPatientMedicalRecordsRes);
+
+  rpc GetPatientMedicalRecordDetails(GetPatientMedicalRecordDetailsReq) returns (GetPatientMedicalRecordDetailsRes);
 }
 
 message PatientProfileReq {
@@ -160,4 +164,63 @@ message GetPatientsListRes {
   uint32                    total    = 2;
   uint32                    offset   = 3;
   uint32                    limit    = 4;
+}
+
+message GetPatientMedicalRecordsReq {
+  uint32 patientPrimaryKey = 1;
+  string patientId         = 2;
+  uint32 offset            = 3;
+  uint32 limit             = 4;
+}
+
+message PatientMedicalRecordsList {
+  string patientMedicalRecordId    = 1;
+  uint32 doctorPrimaryKey          = 2;
+  string doctorId                  = 3;
+  uint32 healthInstitutePrimaryKey = 4;
+  string healthInstituteId         = 5;
+  string title                     = 6;
+  string diagnosis                 = 7;
+  uint32 status                    = 8;
+}
+
+message GetPatientMedicalRecordsRes {
+  repeated PatientMedicalRecordsList medicalRecords = 1;
+  uint32                             total          = 2;
+  uint32                             offset         = 3;
+  uint32                             limit          = 4;
+}
+
+
+message GetPatientMedicalRecordDetailsReq {
+  string medicalRecordId = 1;
+}
+
+message GetPateintMedicalDocuments {
+  string patientMedicalDocumentId = 1;
+  uint32 documentType             = 2;
+  string documentTypeName         = 3;
+  string title                    = 4;
+  string documentUrl              = 5;
+  string documentDate             = 6;
+}
+
+message GetPatientMedications {
+  string          patientMedicationId = 1;
+  string          medicationName      = 2;
+  string          dosage              = 3;
+  string          startDate           = 4;
+  optional string endDate             = 5;
+  uint32          status              = 6;
+}
+
+message GetPatientMedicalRecordDetailsRes {
+  string                              patientMedicalRecordId = 1;
+  string                              title                  = 6;
+  string                              diagnosis              = 7;
+  uint32                              status                 = 8;
+  string                              startedDate            = 9;
+  optional string                     resolvedDate           = 10;
+  repeated GetPateintMedicalDocuments medicalDocuments       = 11;
+  repeated GetPatientMedications      medications            = 12;
 }

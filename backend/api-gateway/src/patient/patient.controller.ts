@@ -17,6 +17,8 @@ import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import {
   CreateMedicalRecordDto,
+  GetPatientDetailsDto,
+  GetPatientMedicalRecordsDto,
   GetPatientsListDto,
   PatientProfileDetailsDto,
 } from './patient.dto';
@@ -69,18 +71,29 @@ export class PatientController {
    * @param user
    * @returns json
    */
-  @Get('getPatientDetails')
+  @Post('getPatientDetails')
   @HttpCode(HttpStatus.OK)
-  @Auth(UserRole.PATIENT)
-  async getPatientDetails(@CurrentUser() user: JwtPayload) {
+  @Auth(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  async getPatientDetails(
+    @CurrentUser() user: JwtPayload,
+    @Body() request: GetPatientDetailsDto,
+  ) {
+    let patientPrimaryKey: number = user.userPrimaryKey;
+    let patientId: string = user.userBusinessId;
+
+    if (user.role !== UserRole.PATIENT) {
+      patientPrimaryKey = request.patientPrimaryKey || user.userPrimaryKey;
+      patientId = request.patientId || user.userBusinessId;
+    }
+
     const result = await this.patientService.getPatientDetails(
-      user.userPrimaryKey,
-      user.userBusinessId,
+      patientPrimaryKey,
+      patientId,
     );
 
     return {
       success: true,
-      message: 'Details Fetched Successfully.',
+      message: 'Patient Details Fetched Successfully.',
       data: result,
     };
   }
@@ -139,6 +152,59 @@ export class PatientController {
     return {
       success: true,
       message: 'Medical Record Created Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Get Patient Medical Records
+   * @param user
+   * @param request
+   * @returns json
+   */
+  @Post('getPatientMedicalRecords')
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
+  @HttpCode(HttpStatus.OK)
+  async getPatientMedicalRecords(
+    @CurrentUser() user: JwtPayload,
+    @Body() request: GetPatientMedicalRecordsDto,
+  ) {
+    let patientPrimaryKey: number = user.userPrimaryKey;
+    let patientId: string = user.userBusinessId;
+
+    if (user.role !== UserRole.PATIENT) {
+      patientPrimaryKey = request.patientPrimaryKey || user.userPrimaryKey;
+      patientId = request.patientId || user.userBusinessId;
+    }
+
+    const result = await this.patientService.getPatientMedicalRecords(
+      patientPrimaryKey,
+      patientId,
+      request.offset,
+      request.limit,
+    );
+
+    return {
+      success: true,
+      message: 'Patient Medical Records Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Get Patient Medical Record Details
+   * @param medicalRecordId 
+   * @returns json
+   */
+  @Get('getPatientMedicalRecordDetails/:id')
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
+  @HttpCode(HttpStatus.OK)
+  async getPatientMedicalRecordDetails(@Param('id') medicalRecordId: string) {
+    const result = await this.patientService.getPatientMedicalRecordDetails(medicalRecordId);
+
+    return {
+      success: true,
+      message: 'Patient Medical Record Details Fetched Successfully.',
       data: result,
     };
   }

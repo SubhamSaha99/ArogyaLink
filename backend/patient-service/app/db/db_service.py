@@ -1,13 +1,8 @@
 from app.common.logger import get_logger
-from app.config.settings import settings
 from app.db.mongodb import mongo_client, mongo_db
-from motor.motor_asyncio import AsyncIOMotorClient
 from pymongo import ASCENDING
 
 logger = get_logger("database")
-
-client: AsyncIOMotorClient | None = None
-db = None
 
 
 # * Connect Database
@@ -18,7 +13,6 @@ async def connect_database():
     except Exception as error:
         logger.error(f"MongoDB connection failed: {error}")
         raise
-    global client, db
 
 
 # * Get Database
@@ -37,16 +31,13 @@ async def close_database() -> None:
 
 # * Create DB Indexes
 async def create_indexes():
-    client = AsyncIOMotorClient(settings.mongodb_url)
-    db = client[settings.mongodb_database]
-
-    await db.patient_profiles.create_index(
+    await mongo_db.patient_profiles.create_index(
         [("patient_primary_key", ASCENDING)],
         unique=True,
         name="idx_patient_primary_key",
     )
 
-    await db.patient_profiles.create_index(
+    await mongo_db.patient_profiles.create_index(
         [("patient_id", ASCENDING)],
         unique=True,
         name="idx_patient_id",

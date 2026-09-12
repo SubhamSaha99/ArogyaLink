@@ -55,3 +55,52 @@ class PatientsListResponseInterface(TypedDict):
     total: int
     offset: int
     limit: int
+
+
+class PatientMedicalRecordListItemInterface(TypedDict):
+    patient_medical_record_id: str
+    doctor_primary_key: int
+    doctor_id: str
+    health_institute_primary_key: int
+    health_institute_id: str
+    title: str
+    diagnosis: str
+    status: int
+
+
+class PatientMedicalRecordsResponseInterface(TypedDict):
+    medical_records: list[PatientMedicalRecordListItemInterface]
+    total: int
+    offset: int
+    limit: int
+
+
+class PatientMedicalDocumentItemInterface(TypedDict):
+    patient_medical_document_id: str
+    document_type: int
+    document_type_name: str
+    title: str
+    document_url: str
+    document_date: str
+
+
+class PatientMedicationItemInterface(TypedDict):
+    patient_medication_id: str
+    medication_name: str
+    dosage: str
+    start_date: str
+    end_date: str | None
+    status: int
+
+
+class PatientMedicalRecordDetailsResponseInterface(TypedDict):
+    patient_medical_record_id: str
+    title: str
+    diagnosis: str
+    status: int
+    started_date: str
+    resolved_date: str | None
+    medical_documents: list[PatientMedicalDocumentItemInterface]
+    medications: list[PatientMedicationItemInterface]
+
+

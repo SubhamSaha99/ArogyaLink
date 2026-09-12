@@ -33,7 +33,7 @@ class PatientRepository:
 
         await self.collection.insert_one(data)
 
-        return PatientProfile(**data)
+        return patient_profile
 
     # * Get patient by patient primary key
     async def get_by_patient_primary_key(
@@ -86,43 +86,6 @@ class PatientRepository:
             "pincode": document.get("pincode"),
         }
         return patient_details
-
-    # * Get Patient by _id
-    async def get_patient_by_id(
-        self,
-        patient_profile_id: str,
-    ) -> PatientProfile | None:
-        try:
-            profile_object_id = ObjectId(patient_profile_id)
-        except InvalidId:
-            raise ValueError("Invalid patient profile ID")
-
-        document = await self.collection.find_one(
-            {"_id": profile_object_id}, {"patient_id": 1}
-        )
-
-        if not document:
-            return None
-
-        document.pop("_id", None)
-
-        return PatientProfile(**document)
-
-    # * Get patient by primary key
-    async def get_patient_by_primary_key(
-        self, patient_primary_key: int
-    ) -> PatientProfile | None:
-
-        document = await self.collection.find_one(
-            {"patient_primary_key": patient_primary_key}, {"patient_id": 1}
-        )
-
-        if not document:
-            return None
-
-        document.pop("_id", None)
-
-        return PatientProfile(**document)
 
     # @ Update Patient
     async def update_patient_profile(

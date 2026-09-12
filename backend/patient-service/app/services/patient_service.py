@@ -1,9 +1,10 @@
-import json
 import random
 
 from app.common.interfaces.patient_interface import (
     MasterDataItemInterface,
     PatientDetailsInterface,
+    PatientMedicalRecordDetailsResponseInterface,
+    PatientMedicalRecordsResponseInterface,
     PatientProfileUpdateInterface,
     PatientsListResponseInterface,
 )
@@ -137,16 +138,11 @@ class PatientService:
 
         return await self.redis_cache_service.get_or_set(
             key=cache_key,
-            fetcher=lambda: self._fetch_states(),
+            fetcher=self.master_data_repository.get_all_states,
             ttl=3600,
             lock_ttl=10,
             jitter=random.randrange(300),
         )
-
-    # * Fetch States
-    async def _fetch_states(self) -> list[MasterDataItemInterface]:
-        states = await self.master_data_repository.get_all_states()
-        return states
 
     # * Get Districts
     async def get_districts(self, state_id: int) -> list[MasterDataItemInterface]:
@@ -154,18 +150,13 @@ class PatientService:
 
         return await self.redis_cache_service.get_or_set(
             key=cache_key,
-            fetcher=lambda: self._fetch_districts(state_id),
+            fetcher=lambda: self.master_data_repository.get_districts_by_state_id(
+                state_id
+            ),
             ttl=3600,
             lock_ttl=10,
             jitter=random.randrange(300),
         )
-
-    # * Fetch Districts
-    async def _fetch_districts(self, state_id: int) -> list[MasterDataItemInterface]:
-        districts = await self.master_data_repository.get_districts_by_state_id(
-            state_id
-        )
-        return districts
 
     # * Get Patients List
     async def get_patients_list(
@@ -181,3 +172,44 @@ class PatientService:
             search=search,
             state_id=state_id,
         )
+
+    # * Get Patient Medical Records
+    async def get_patient_medical_records(
+        self,
+        patient_primary_key: int,
+        patient_id: str | None = None,
+        offset: int = 0,
+        limit: int = 10,
+    ) -> PatientMedicalRecordsResponseInterface:
+        return await self.medical_record_repository.get_patient_medical_records(
+            patient_primary_key=patient_primary_key,
+            patient_id=patient_id,
+            offset=offset,
+            limit=limit,
+        )
+
+    # * Get Patient Medical Record Details
+    async def get_patient_medical_record_details(
+        self, medical_record_id: str
+    ) -> PatientMedicalRecordDetailsResponseInterface:
+        cache_key = f"medical-record-id:{medical_record_id}"
+        return await self.redis_cache_service.get_or_set(
+            key=cache_key,
+            fetcher=lambda: self.fetch_patient_medical_record_details(medical_record_id),
+            ttl=3600,
+            lock_ttl=10,
+            jitter=random.randrange(300),
+        )
+
+    # * Fetch Patient Medical Record Details
+    async def fetch_patient_medical_record_details(
+        self, medical_record_id: str
+    ) -> PatientMedicalRecordDetailsResponseInterface:
+        record_details = (
+            await self.medical_record_repository.get_medical_record_details(
+                medical_record_id=medical_record_id
+            )
+        )
+        if not record_details:
+            raise ValueError("Medical record not found")
+        return record_details

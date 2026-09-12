@@ -3,6 +3,7 @@ import importlib
 
 MIGRATIONS = [
     "app.db.migrations.versions.001_create_states_districts",
+    "app.db.migrations.versions.002_create_medical_document_types",
 ]
 
 

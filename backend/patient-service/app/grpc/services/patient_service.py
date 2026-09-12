@@ -94,35 +94,31 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             request.patientId,
         )
 
-        profile_data = {
-            "patientProfileId": patient_details["patient_profile_id"],
-            "firstName": patient_details["first_name"],
-            "lastName": patient_details["last_name"],
-            "middleName": patient_details["middle_name"],
-            "dateOfBirth": patient_details["date_of_birth"],
-            "age": patient_details["age"],
-            "gender": patient_details["gender"],
-            "profileImage": (
-                settings.api_base_url + "/uploads/" + patient_details["profile_image"]
-                if patient_details["profile_image"] is not None
-                else None
-            ),
-            "address": patient_details["address"],
-            "stateId": patient_details["state_id"],
-            "stateName": patient_details.get("state_name"),
-            "districtId": patient_details["district_id"],
-            "districtName": patient_details.get("district_name"),
-            "pincode": patient_details.get("pincode"),
-        }
-
-        patient_profile = patient_pb2.PatientDetails(
-            **{key: value for key, value in profile_data.items() if value is not None}
+        profile_image = (
+            f"{settings.api_base_url}/uploads/{patient_details['profile_image']}"
+            if patient_details.get("profile_image")
+            else None
         )
 
         return patient_pb2.GetPatientDetailsRes(
             patientPrimaryKey=patient_details["patient_primary_key"],
             patientId=patient_details["patient_id"],
-            patientProfile=patient_profile,
+            patientProfile=patient_pb2.PatientDetails(
+                patientProfileId=patient_details["patient_profile_id"],
+                firstName=patient_details["first_name"],
+                middleName=patient_details.get("middle_name"),
+                lastName=patient_details["last_name"],
+                dateOfBirth=patient_details.get("date_of_birth"),
+                age=patient_details.get("age"),
+                gender=patient_details.get("gender"),
+                profileImage=profile_image,
+                address=patient_details.get("address"),
+                stateId=patient_details.get("state_id"),
+                stateName=patient_details.get("state_name"),
+                districtId=patient_details.get("district_id"),
+                districtName=patient_details.get("district_name"),
+                pincode=patient_details.get("pincode"),
+            ),
         )
 
     # * Create Patient Medical Record
@@ -254,28 +250,109 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             state_id=state_id,
         )
 
-        patients_data = [
-            patient_pb2.PatientsListData(
-                **{
-                    key: value
-                    for key, value in {
-                        "patientPrimaryKey": patient["patient_primary_key"],
-                        "patientId": patient["patient_id"],
-                        "firstName": patient["first_name"],
-                        "middleName": patient.get("middle_name"),
-                        "lastName": patient["last_name"],
-                        "age": patient.get("age"),
-                        "gender": patient.get("gender"),
-                    }.items()
-                    if value is not None
-                }
-            )
-            for patient in result["patients"]
-        ]
-
         return patient_pb2.GetPatientsListRes(
-            patients=patients_data,
+            patients=[
+                patient_pb2.PatientsListData(
+                    patientPrimaryKey=patient["patient_primary_key"],
+                    patientId=patient["patient_id"],
+                    firstName=patient["first_name"],
+                    middleName=patient.get("middle_name"),
+                    lastName=patient["last_name"],
+                    age=patient.get("age"),
+                    gender=patient.get("gender"),
+                )
+                for patient in result["patients"]
+            ],
             total=result["total"],
             offset=result["offset"],
             limit=result["limit"],
         )
+
+    # * Get Patient Medical Records
+    @grpc_error_handler
+    async def GetPatientMedicalRecords(
+        self,
+        request: patient_pb2.GetPatientMedicalRecordsReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.GetPatientMedicalRecordsRes:
+
+        offset = request.offset or 0
+        limit = request.limit if request.limit > 0 else 10
+
+        result = await self.patient_service.get_patient_medical_records(
+            patient_primary_key=request.patientPrimaryKey,
+            patient_id=request.patientId if request.patientId else None,
+            offset=offset,
+            limit=limit,
+        )
+
+        return patient_pb2.GetPatientMedicalRecordsRes(
+            medicalRecords=[
+                patient_pb2.PatientMedicalRecordsList(
+                    patientMedicalRecordId=rec["patient_medical_record_id"],
+                    doctorPrimaryKey=rec["doctor_primary_key"],
+                    doctorId=rec["doctor_id"],
+                    healthInstitutePrimaryKey=rec["health_institute_primary_key"],
+                    healthInstituteId=rec["health_institute_id"],
+                    title=rec["title"],
+                    diagnosis=rec["diagnosis"],
+                    status=rec["status"],
+                )
+                for rec in result["medical_records"]
+            ],
+            total=result["total"],
+            offset=result["offset"],
+            limit=result["limit"],
+        )
+
+    # * Get Patient Medical Record Details
+    @grpc_error_handler
+    async def GetPatientMedicalRecordDetails(
+        self,
+        request: patient_pb2.GetPatientMedicalRecordDetailsReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.GetPatientMedicalRecordDetailsRes:
+
+        result = await self.patient_service.get_patient_medical_record_details(
+            medical_record_id=request.medicalRecordId
+        )
+
+        return patient_pb2.GetPatientMedicalRecordDetailsRes(
+            patientMedicalRecordId=result["patient_medical_record_id"],
+            title=result["title"],
+            diagnosis=result["diagnosis"],
+            status=result["status"],
+            startedDate=result["started_date"],
+            resolvedDate=result.get("resolved_date"),
+            medicalDocuments=[
+                patient_pb2.GetPateintMedicalDocuments(
+                    patientMedicalDocumentId=doc["patient_medical_document_id"],
+                    documentType=doc["document_type"],
+                    documentTypeName=doc["document_type_name"],
+                    title=doc["title"],
+                    documentUrl=(
+                        f"{settings.api_base_url}/uploads/{doc['document_url'].lstrip('/')}"
+                        if doc["document_url"]
+                        and not doc["document_url"].startswith(
+                            ("http://", "https://")
+                        )
+                        else doc["document_url"]
+                    ),
+                    documentDate=doc["document_date"],
+                )
+                for doc in result["medical_documents"]
+            ],
+            medications=[
+                patient_pb2.GetPatientMedications(
+                    patientMedicationId=med["patient_medication_id"],
+                    medicationName=med["medication_name"],
+                    dosage=med["dosage"],
+                    startDate=med["start_date"],
+                    endDate=med.get("end_date"),
+                    status=med["status"],
+                )
+                for med in result["medications"]
+            ],
+        )
+
+
