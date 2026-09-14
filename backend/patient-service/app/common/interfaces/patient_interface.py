@@ -22,6 +22,8 @@ class PatientDetailsInterface(TypedDict):
     first_name: str
     middle_name: str | None
     last_name: str
+    email: str
+    mobile: str
     date_of_birth: str | None
     age: int | None
     gender: int | None

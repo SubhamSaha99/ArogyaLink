@@ -34,6 +34,8 @@ export const API_ROUTES = {
   getPatientsList: "/api/patient/getPatientsList",
   updatePatientProfileDetails: "/api/patient/updatePatientProfileDetails",
   createPatientMedicalRecord: "/api/patient/createPatientMedicalRecord",
+  getPatientMedicalRecords: "/api/patient/getPatientMedicalRecords",
+  getPatientMedicalRecordDetails: "/api/patient/getPatientMedicalRecordDetails",
   getPatientStates: "/api/patient/states",
   getPatientDistricts: "/api/patient/districts",
 } as const;

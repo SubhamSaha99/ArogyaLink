@@ -87,12 +87,12 @@ export class PatientService implements OnModuleInit {
    * @returns GetPatientDetailsRes
    */
   async getPatientDetails(
-    patientPrimaryKey: number,
-    patientId: string,
+    patientPrimaryKey: number | undefined,
+    patientId: string | undefined,
   ): Promise<GetPatientDetailsRes> {
     const patientProfileReq: GetPatientDetailsReq = {
-      patientPrimaryKey,
-      patientId,
+      patientPrimaryKey: patientPrimaryKey ?? 0,
+      patientId: patientId ?? '',
     };
 
     return await firstValueFrom(
@@ -197,15 +197,15 @@ export class PatientService implements OnModuleInit {
    * @returns GetPatientMedicalRecordsRes
    */
   async getPatientMedicalRecords(
-    patientPrimaryKey: number,
-    patientId: string,
+    patientPrimaryKey: number | undefined,
+    patientId: string | undefined,
     offset: number,
     limit: number,
   ): Promise<GetPatientMedicalRecordsRes> {
     return firstValueFrom(
       this.patientGrpcService.getPatientMedicalRecords({
-        patientPrimaryKey,
-        patientId,
+        patientPrimaryKey: patientPrimaryKey ?? 0,
+        patientId: patientId ?? '',
         offset,
         limit,
       }),
@@ -234,8 +234,14 @@ export class PatientService implements OnModuleInit {
    */
   async getPatientsList(
     request: GetPatientsListDto,
+    doctorPrimaryKey: number | undefined,
+    healthInstitutePrimaryKey: number | undefined
   ): Promise<GetPatientsListRes> {
-    return firstValueFrom(this.patientGrpcService.getPatientsList(request));
+    return firstValueFrom(this.patientGrpcService.getPatientsList({
+        ...request,
+        doctorPrimaryKey,
+        healthInstitutePrimaryKey
+    }));
   }
 
   /**

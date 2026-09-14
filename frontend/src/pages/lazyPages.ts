@@ -28,3 +28,7 @@ export const PatientLoginPage = lazyLoad(() => import("@/pages/patient/PatientLo
 export const PatientRegisterPage = lazyLoad(() => import("@/pages/patient/PatientRegisterPage"));
 export const PatientLayout = lazyLoad(() => import("@/components/layout/PatientLayout"));
 export const PatientProfilePage = lazyLoad(() => import("@/pages/patient/PatientProfilePage"));
+export const PatientMedicalRecordsPage = lazyLoad(() => import("@/pages/patient/PatientMedicalRecordsPage"));
+export const DoctorPatientClinicalHistoryPage = lazyLoad(() => import("@/pages/doctor/DoctorPatientClinicalHistoryPage"));
+
+

@@ -54,6 +54,8 @@ export interface PatientDetails {
   firstName: string;
   middleName?: string | undefined;
   lastName: string;
+  email: string;
+  mobile: string;
   dateOfBirth?: string | undefined;
   age?: number | undefined;
   gender?: number | undefined;
@@ -134,6 +136,8 @@ export interface GetPatientsListReq {
   limit: number;
   search?: string | undefined;
   stateId?: number | undefined;
+  doctorPrimaryKey?: number | undefined;
+  healthInstitutePrimaryKey?: number | undefined;
 }
 
 export interface PatientsListData {
@@ -176,10 +180,6 @@ export interface GetPatientMedicalRecordsRes {
   total: number;
   offset: number;
   limit: number;
-}
-
-export interface GetPatientMedicalHistoryRes {
-  patientMedicalId: string;
 }
 
 export interface GetPatientMedicalRecordDetailsReq {

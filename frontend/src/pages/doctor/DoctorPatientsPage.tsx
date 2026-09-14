@@ -5,14 +5,13 @@ import {
   Search,
   RefreshCw,
   ShieldCheck,
-  ChevronLeft,
-  ChevronRight,
   FilterX,
   Sparkles,
   AlertCircle,
   FileText,
   Activity,
   HeartPulse,
+  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -40,7 +39,9 @@ export interface StateItem {
   code: string;
 }
 
-const getGenderLabel = (gender?: number): { text: string; variant: "teal" | "emerald" | "secondary" | "outline" } => {
+const getGenderLabel = (
+  gender?: number
+): { text: string; variant: "teal" | "emerald" | "secondary" | "outline" } => {
   switch (gender) {
     case 1:
       return { text: "Male", variant: "teal" };
@@ -56,10 +57,15 @@ const getGenderLabel = (gender?: number): { text: string; variant: "teal" | "eme
 export const DoctorPatientsPage: React.FC = () => {
   const { user } = useAuth();
 
-  // Patients list & pagination state
+  // Patients list & infinite scroll state
   const [patients, setPatients] = useState<PatientListItem[]>([]);
+  const [offset, setOffset] = useState<number>(0);
+  const [limit] = useState<number>(12);
+  const [hasMore, setHasMore] = useState<boolean>(true);
   const [totalCount, setTotalCount] = useState<number>(0);
-  const [loading, setLoading] = useState<boolean>(true);
+
+  const [loadingInitial, setLoadingInitial] = useState<boolean>(true);
+  const [loadingMore, setLoadingMore] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
   // Search & Filter state
@@ -67,25 +73,23 @@ export const DoctorPatientsPage: React.FC = () => {
   const [debouncedSearch, setDebouncedSearch] = useState<string>("");
   const [selectedStateId, setSelectedStateId] = useState<number | null>(null);
   const [selectedGender, setSelectedGender] = useState<string>("");
-  const [currentPage, setCurrentPage] = useState<number>(1);
-  const [limit] = useState<number>(9);
 
   // States dropdown master data
   const [statesList, setStatesList] = useState<StateItem[]>([]);
   const [loadingStates, setLoadingStates] = useState<boolean>(false);
 
-  const lastQueryKeyRef = useRef<string>("");
+  const isFetchingRef = useRef<boolean>(false);
+  const observerTargetRef = useRef<HTMLDivElement>(null);
 
   // Debounce search term by 400ms
   useEffect(() => {
     const handler = setTimeout(() => {
       setDebouncedSearch(searchTerm);
-      setCurrentPage(1);
     }, 400);
     return () => clearTimeout(handler);
   }, [searchTerm]);
 
-  // Fetch states master data once
+  // Fetch states master data on component mount
   useEffect(() => {
     void (async () => {
       setLoadingStates(true);
@@ -102,28 +106,44 @@ export const DoctorPatientsPage: React.FC = () => {
     })();
   }, []);
 
-  // Fetch patients list from POST /api/patient/getPatientsList
-  const fetchPatientsList = useCallback(
-    async (force = false) => {
-      const offset = (currentPage - 1) * limit;
+  // Fetch patients batch with infinite scrolling
+  const fetchPatientsPage = useCallback(
+    async (targetOffset: number, isInitial: boolean) => {
+      if (isFetchingRef.current) return;
+      isFetchingRef.current = true;
 
-      const payload = {
-        offset,
-        limit,
-        search: debouncedSearch.trim() || undefined,
-        stateId: selectedStateId ? Number(selectedStateId) : undefined,
-      };
-
-      const queryKey = JSON.stringify(payload);
-      if (!force && lastQueryKeyRef.current === queryKey) {
-        return;
+      if (isInitial) {
+        setLoadingInitial(true);
+        setError(null);
+      } else {
+        setLoadingMore(true);
       }
-      lastQueryKeyRef.current = queryKey;
-
-      setLoading(true);
-      setError(null);
 
       try {
+        const payload: Record<string, any> = {
+          offset: targetOffset,
+          limit,
+        };
+
+        if (debouncedSearch.trim()) {
+          payload.search = debouncedSearch.trim();
+        }
+
+        if (
+          selectedStateId !== null &&
+          selectedStateId !== undefined &&
+          String(selectedStateId) !== ""
+        ) {
+          payload.stateId = Number(selectedStateId);
+        }
+
+        // Pass doctorPrimaryKey for filtering patients associated with the doctor
+        const doctorPrimaryKey =
+          user?.doctorPrimaryKey || user?.userPrimaryKey;
+        if (doctorPrimaryKey) {
+          payload.doctorPrimaryKey = Number(doctorPrimaryKey);
+        }
+
         const response = await callApi(
           API_ROUTES.getPatientsList,
           payload,
@@ -131,38 +151,85 @@ export const DoctorPatientsPage: React.FC = () => {
         );
 
         const data = response?.data || response;
-        if (data && Array.isArray(data.patients)) {
-          setPatients(data.patients);
-          setTotalCount(Number(data.total ?? data.patients.length));
-        } else if (Array.isArray(data)) {
-          setPatients(data);
-          setTotalCount(data.length);
-        } else {
-          setPatients([]);
-          setTotalCount(0);
-        }
+        const fetchedPatients: PatientListItem[] = Array.isArray(data?.patients)
+          ? data.patients
+          : Array.isArray(data)
+          ? data
+          : [];
+
+        const total = Number(data?.total ?? fetchedPatients.length);
+        setTotalCount(total);
+
+        setPatients((prev) => {
+          if (isInitial) {
+            return fetchedPatients;
+          }
+          // Avoid duplicate keys when appending
+          const existingKeys = new Set(
+            prev.map((p) => `${p.patientPrimaryKey}-${p.patientId}`)
+          );
+          const newItems = fetchedPatients.filter(
+            (p) => !existingKeys.has(`${p.patientPrimaryKey}-${p.patientId}`)
+          );
+          return [...prev, ...newItems];
+        });
+
+        const nextOffset = targetOffset + fetchedPatients.length;
+        setOffset(nextOffset);
+        setHasMore(nextOffset < total && fetchedPatients.length > 0);
       } catch (err: any) {
         console.error("Failed to fetch patients list:", err);
-        setError(
+        const errMsg =
           err?.response?.data?.message ||
-            err?.message ||
-            "Failed to load patient records from directory."
-        );
-        lastQueryKeyRef.current = "";
+          err?.message ||
+          "Failed to load patient records from directory.";
+        setError(Array.isArray(errMsg) ? errMsg.join(", ") : errMsg);
       } finally {
-        setLoading(false);
+        setLoadingInitial(false);
+        setLoadingMore(false);
+        isFetchingRef.current = false;
       }
     },
-    [currentPage, limit, debouncedSearch, selectedStateId]
+    [limit, debouncedSearch, selectedStateId, user]
   );
 
+  // Trigger initial fetch when filters change
   useEffect(() => {
-    void (async () => {
-      await fetchPatientsList();
-    })();
-  }, [fetchPatientsList]);
+    setOffset(0);
+    setHasMore(true);
+    void fetchPatientsPage(0, true);
+  }, [debouncedSearch, selectedStateId, fetchPatientsPage]);
 
-  // Client-side gender filtering if selected
+  // Infinite scroll intersection observer setup
+  useEffect(() => {
+    const target = observerTargetRef.current;
+    if (!target) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const first = entries[0];
+        if (
+          first.isIntersecting &&
+          hasMore &&
+          !loadingInitial &&
+          !loadingMore &&
+          !isFetchingRef.current
+        ) {
+          void fetchPatientsPage(offset, false);
+        }
+      },
+      {
+        root: null,
+        rootMargin: "200px",
+        threshold: 0.1,
+      }
+    );
+
+    observer.observe(target);
+    return () => observer.disconnect();
+  }, [hasMore, loadingInitial, loadingMore, offset, fetchPatientsPage]);
+
+  // Client-side gender filtering on loaded records
   const displayedPatients = selectedGender
     ? patients.filter((p) => String(p.gender) === selectedGender)
     : patients;
@@ -172,17 +239,15 @@ export const DoctorPatientsPage: React.FC = () => {
     setDebouncedSearch("");
     setSelectedStateId(null);
     setSelectedGender("");
-    setCurrentPage(1);
   };
 
-  const totalPages = Math.ceil(totalCount / limit) || 1;
   const hasActiveFilters = Boolean(
     searchTerm.trim() || selectedStateId !== null || selectedGender !== ""
   );
 
-  // Quick stats derived
-  const maleCount = patients.filter((p) => p.gender === 1).length;
-  const femaleCount = patients.filter((p) => p.gender === 2).length;
+  // Demographics stats
+  const maleCount = displayedPatients.filter((p) => p.gender === 1).length;
+  const femaleCount = displayedPatients.filter((p) => p.gender === 2).length;
 
   return (
     <div className={themeStyles.layout.pageContainer}>
@@ -195,11 +260,19 @@ export const DoctorPatientsPage: React.FC = () => {
             <span className={themeStyles.typography.pillTeal}>
               National Health Registry
             </span>
-            <Badge variant="outline" className="text-[10px] text-slate-500 font-mono">
+            <Badge
+              variant="outline"
+              className="text-[10px] text-slate-500 font-mono"
+            >
               {user?.doctorId || "Doctor Terminal"}
             </Badge>
           </div>
-          <h1 className={themeStyles.combine(themeStyles.typography.h1, "flex items-center gap-2.5")}>
+          <h1
+            className={themeStyles.combine(
+              themeStyles.typography.h1,
+              "flex items-center gap-2.5"
+            )}
+          >
             <Users className="w-6 h-6 text-teal-700" />
             Registered Patients
           </h1>
@@ -214,11 +287,19 @@ export const DoctorPatientsPage: React.FC = () => {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => fetchPatientsList(true)}
-            disabled={loading}
+            onClick={() => {
+              setOffset(0);
+              setHasMore(true);
+              void fetchPatientsPage(0, true);
+            }}
+            disabled={loadingInitial || loadingMore}
             className="text-xs border-slate-200 text-slate-600 hover:text-slate-900 cursor-pointer h-9 px-3.5 rounded-xl"
           >
-            <RefreshCw className={`w-3.5 h-3.5 mr-1.5 ${loading ? "animate-spin text-teal-600" : ""}`} />
+            <RefreshCw
+              className={`w-3.5 h-3.5 mr-1.5 ${
+                loadingInitial ? "animate-spin text-teal-600" : ""
+              }`}
+            />
             Refresh
           </Button>
         </div>
@@ -246,7 +327,7 @@ export const DoctorPatientsPage: React.FC = () => {
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className={themeStyles.form.label}>
-                Current Page Count
+                Loaded in View
               </span>
               <p className="text-2xl font-black text-emerald-600">
                 {displayedPatients.length}
@@ -265,7 +346,9 @@ export const DoctorPatientsPage: React.FC = () => {
                 Demographics (M / F)
               </span>
               <p className="text-2xl font-black text-cyan-700">
-                {maleCount} <span className="text-slate-400 text-lg font-normal">/</span> {femaleCount}
+                {maleCount}{" "}
+                <span className="text-slate-400 text-lg font-normal">/</span>{" "}
+                {femaleCount}
               </p>
             </div>
             <div className={themeStyles.iconBadge.cyan}>
@@ -326,17 +409,18 @@ export const DoctorPatientsPage: React.FC = () => {
             <div>
               <select
                 value={selectedStateId ?? ""}
-                onChange={(e) => {
-                  setSelectedStateId(e.target.value ? Number(e.target.value) : null);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) =>
+                  setSelectedStateId(
+                    e.target.value ? Number(e.target.value) : null
+                  )
+                }
                 disabled={loadingStates}
                 className="w-full h-9 px-3 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer disabled:bg-slate-50"
               >
                 <option value="">All States</option>
                 {statesList.map((state) => (
                   <option key={state.id} value={state.id}>
-                    {state.name}
+                    {state.name} {state.code ? `(${state.code})` : ""}
                   </option>
                 ))}
               </select>
@@ -371,7 +455,7 @@ export const DoctorPatientsPage: React.FC = () => {
       )}
 
       {/* Main Content Area */}
-      {loading ? (
+      {loadingInitial ? (
         <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">
@@ -418,7 +502,11 @@ export const DoctorPatientsPage: React.FC = () => {
           {/* Patients Grid */}
           <div className={themeStyles.layout.grid3}>
             {displayedPatients.map((patient) => {
-              const fullName = [patient.firstName, patient.middleName, patient.lastName]
+              const fullName = [
+                patient.firstName,
+                patient.middleName,
+                patient.lastName,
+              ]
                 .filter(Boolean)
                 .join(" ");
 
@@ -447,7 +535,12 @@ export const DoctorPatientsPage: React.FC = () => {
                           {initials}
                         </div>
                         <div className="min-w-0">
-                          <h4 className={themeStyles.combine(themeStyles.typography.h4, "truncate")}>
+                          <h4
+                            className={themeStyles.combine(
+                              themeStyles.typography.h4,
+                              "truncate"
+                            )}
+                          >
                             {fullName || "Registered Patient"}
                           </h4>
                           <span className={themeStyles.typography.monoTeal}>
@@ -483,7 +576,9 @@ export const DoctorPatientsPage: React.FC = () => {
                           Age
                         </span>
                         <span className="text-xs font-semibold text-slate-800">
-                          {patient.age ? `${patient.age} Years` : "Not Specified"}
+                          {patient.age
+                            ? `${patient.age} Years`
+                            : "Not Specified"}
                         </span>
                       </div>
 
@@ -505,7 +600,11 @@ export const DoctorPatientsPage: React.FC = () => {
                       ABDM Linked
                     </span>
                     <Link
-                      to={`/doctor/dashboard?patientId=${patient.patientId}`}
+                      to="/doctor/clinical-history"
+                      state={{
+                        patientPrimaryKey: patient.patientPrimaryKey,
+                        patientId: patient.patientId,
+                      }}
                     >
                       <Button
                         variant="ghost"
@@ -522,72 +621,24 @@ export const DoctorPatientsPage: React.FC = () => {
             })}
           </div>
 
-          {/* Pagination Footer */}
-          {totalPages > 1 && (
-            <div className="pt-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-t border-slate-200">
-              <p className="text-xs text-slate-500">
-                Showing{" "}
-                <strong className="text-slate-800">
-                  {(currentPage - 1) * limit + 1}
-                </strong>{" "}
-                to{" "}
-                <strong className="text-slate-800">
-                  {Math.min(currentPage * limit, totalCount)}
-                </strong>{" "}
-                of <strong className="text-slate-800">{totalCount}</strong> registered patients
+          {/* Infinite Scroll Bottom Intersection Sentinel */}
+          <div ref={observerTargetRef} className="h-4 w-full" />
+
+          {/* Loading More Spinner Indicator */}
+          {loadingMore && (
+            <div className="p-4 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-center gap-3 text-slate-600 text-xs font-medium animate-in fade-in">
+              <Loader2 className="w-4 h-4 animate-spin text-teal-600" />
+              <span>Loading more patient records...</span>
+            </div>
+          )}
+
+          {/* End of Directory Notification */}
+          {!hasMore && displayedPatients.length > 0 && (
+            <div className="text-center py-6 border-t border-slate-200/80">
+              <p className="text-xs text-slate-400 font-medium">
+                You have reached the end of the patient directory (
+                {displayedPatients.length} of {totalCount} patients loaded)
               </p>
-
-              <div className="flex items-center gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                  disabled={currentPage <= 1 || loading}
-                  className="text-xs text-slate-700 border-slate-300 h-8 px-3 cursor-pointer"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5 mr-1" />
-                  Previous
-                </Button>
-
-                {/* Numbered Page Buttons */}
-                <div className="flex items-center gap-1">
-                  {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                    let pageNum = i + 1;
-                    if (totalPages > 5 && currentPage > 3) {
-                      pageNum = currentPage - 2 + i;
-                      if (pageNum > totalPages) {
-                        pageNum = totalPages - 4 + i;
-                      }
-                    }
-                    if (pageNum <= 0 || pageNum > totalPages) return null;
-
-                    return (
-                      <button
-                        key={pageNum}
-                        onClick={() => setCurrentPage(pageNum)}
-                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all cursor-pointer ${
-                          currentPage === pageNum
-                            ? "bg-teal-600 text-white shadow-xs"
-                            : "bg-white text-slate-700 border border-slate-200 hover:bg-slate-100"
-                        }`}
-                      >
-                        {pageNum}
-                      </button>
-                    );
-                  })}
-                </div>
-
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-                  disabled={currentPage >= totalPages || loading}
-                  className="text-xs text-slate-700 border-slate-300 h-8 px-3 cursor-pointer"
-                >
-                  Next
-                  <ChevronRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </div>
             </div>
           )}
         </div>

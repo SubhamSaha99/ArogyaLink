@@ -32,6 +32,8 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             first_name=request.firstName,
             middle_name=request.middleName or None,
             last_name=request.lastName,
+            email=request.email,
+            mobile=request.mobile
         )
 
         result = await self.patient_service.create_patient_profile(patient_profile)
@@ -90,8 +92,8 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
     ) -> patient_pb2.GetPatientDetailsRes:
 
         patient_details = await self.patient_service.get_patient_details(
-            request.patientPrimaryKey,
-            request.patientId,
+            patient_primary_key=request.patientPrimaryKey,
+            patient_id=request.patientId,
         )
 
         profile_image = (
@@ -108,6 +110,8 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                 firstName=patient_details["first_name"],
                 middleName=patient_details.get("middle_name"),
                 lastName=patient_details["last_name"],
+                email= patient_details["email"],
+                mobile=patient_details["mobile"],
                 dateOfBirth=patient_details.get("date_of_birth"),
                 age=patient_details.get("age"),
                 gender=patient_details.get("gender"),
@@ -240,14 +244,26 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             if request.HasField("stateId") and request.stateId > 0
             else None
         )
+        doctor_primary_key = (
+            request.doctorPrimaryKey
+            if request.HasField("doctorPrimaryKey") and request.doctorPrimaryKey > 0
+            else None
+        )
+        health_institute_primary_key = (
+            request.healthInstitutePrimaryKey
+            if request.HasField("healthInstitutePrimaryKey") and request.healthInstitutePrimaryKey > 0
+            else None
+        )
         offset = request.offset or 0
         limit = request.limit if request.limit > 0 else 10
 
         result = await self.patient_service.get_patients_list(
-            offset=offset,
-            limit=limit,
-            search=search,
-            state_id=state_id,
+            offset,
+            limit,
+            search,
+            state_id,
+            doctor_primary_key,
+            health_institute_primary_key,
         )
 
         return patient_pb2.GetPatientsListRes(

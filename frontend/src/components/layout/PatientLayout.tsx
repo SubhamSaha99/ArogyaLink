@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, NavLink, Outlet, useNavigate } from "react-router-dom";
-import { User, LogOut, HeartPulse, Home } from "lucide-react";
+import { User, LogOut, HeartPulse, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/context/AuthContext";
 
@@ -24,7 +24,7 @@ export const PatientLayout: React.FC = () => {
           {/* Sidebar Header / Brand */}
           <div className="p-6 border-b border-slate-800 flex items-center justify-between shrink-0">
             <Link to="/" className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-slate-900 shadow-md">
+              <div className="w-10 h-10 rounded-xl bg-linear-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-slate-900 shadow-md">
                 <HeartPulse className="w-6 h-6 text-white font-bold" />
               </div>
               <div className="flex flex-col">
@@ -55,11 +55,17 @@ export const PatientLayout: React.FC = () => {
             </NavLink>
 
             <NavLink
-              to="/"
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+              to="/patient/medical-records"
+              className={({ isActive }) =>
+                `w-full flex items-center gap-3 px-4 py-3 rounded-xl font-semibold text-sm transition-all ${
+                  isActive
+                    ? "bg-emerald-600 text-white shadow-lg shadow-emerald-600/30 font-bold"
+                    : "text-slate-400 hover:text-white hover:bg-slate-800"
+                }`
+              }
             >
-              <Home className="w-5 h-5 shrink-0" />
-              <span>National Network</span>
+              <FileText className="w-5 h-5 shrink-0" />
+              <span>Medical Records</span>
             </NavLink>
           </nav>
         </div>

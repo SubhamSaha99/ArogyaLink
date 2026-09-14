@@ -76,15 +76,16 @@ class PatientService:
     # * Get Patient Details
     async def get_patient_details(
         self,
-        patient_primary_key: int,
-        patient_id: str,
+        patient_primary_key: int | None = None,
+        patient_id: str | None = None,
     ) -> PatientDetailsInterface:
-
         cache_key = f"patient:profile:{patient_id}"
 
         return await self.redis_cache_service.get_or_set(
             key=cache_key,
-            fetcher=lambda: self._fetch_patient_details(patient_primary_key),
+            fetcher=lambda: self._fetch_patient_details(
+                patient_primary_key, patient_id
+            ),
             ttl=3600,
             lock_ttl=10,
             jitter=random.randrange(300),
@@ -93,11 +94,14 @@ class PatientService:
     # * Fetch Patient Details
     async def _fetch_patient_details(
         self,
-        patient_primary_key: int,
+        patient_primary_key: int | None = None,
+        patient_id: str | None = None,
     ) -> PatientDetailsInterface:
 
-        patient_details = await self.patient_repository.get_by_patient_primary_key(
-            patient_primary_key
+        patient_details = (
+            await self.patient_repository.get_by_patient_primary_key(
+                patient_primary_key, patient_id
+            )
         )
 
         if patient_details is None:
@@ -165,12 +169,16 @@ class PatientService:
         limit: int = 10,
         search: str | None = None,
         state_id: int | None = None,
+        doctor_primary_key: int | None = None,
+        health_institute_primary_key: int | None = None,
     ) -> PatientsListResponseInterface:
         return await self.patient_repository.get_patients_list(
-            offset=offset,
-            limit=limit,
-            search=search,
-            state_id=state_id,
+            offset,
+            limit,
+            search,
+            state_id,
+            doctor_primary_key,
+            health_institute_primary_key,
         )
 
     # * Get Patient Medical Records
@@ -195,14 +203,16 @@ class PatientService:
         cache_key = f"medical-record-id:{medical_record_id}"
         return await self.redis_cache_service.get_or_set(
             key=cache_key,
-            fetcher=lambda: self.fetch_patient_medical_record_details(medical_record_id),
+            fetcher=lambda: self._fetch_patient_medical_record_details(
+                medical_record_id
+            ),
             ttl=3600,
             lock_ttl=10,
             jitter=random.randrange(300),
         )
 
     # * Fetch Patient Medical Record Details
-    async def fetch_patient_medical_record_details(
+    async def _fetch_patient_medical_record_details(
         self, medical_record_id: str
     ) -> PatientMedicalRecordDetailsResponseInterface:
         record_details = (

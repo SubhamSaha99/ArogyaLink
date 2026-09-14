@@ -26,7 +26,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { SelectDropdown } from "@/components/common/SelectDropdown";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
@@ -209,6 +208,12 @@ const LICENSE_STATUS_OPTIONS = [
   { value: 3, label: "Suspended / Expired" },
 ];
 
+const CURRENT_YEAR = new Date().getFullYear();
+const YEAR_OPTIONS = Array.from({ length: CURRENT_YEAR - 1950 + 1 }, (_, i) => {
+  const year = CURRENT_YEAR - i;
+  return { value: year, label: String(year) };
+});
+
 export const DoctorProfilePage: React.FC = () => {
   const { user } = useAuth();
   const [doctorDetails, setDoctorDetails] =
@@ -288,18 +293,6 @@ export const DoctorProfilePage: React.FC = () => {
       setMasterDataLoading(false);
     }
   };
-
-  const specializationOptions = React.useMemo(() => {
-    const opts: Array<{ value: string | number; label: string; code?: string }> = [
-      { value: "", label: "None / General" },
-    ];
-    if (masterData?.specializations) {
-      masterData.specializations.forEach((sp) => {
-        opts.push({ value: sp.id, label: sp.name, code: sp.code });
-      });
-    }
-    return opts;
-  }, [masterData?.specializations]);
 
   useEffect(() => {
     if (hasFetchedRef.current) return;
@@ -1173,33 +1166,27 @@ export const DoctorProfilePage: React.FC = () => {
               </div>
 
               {/* Gender selector */}
-              <div className="space-y-1.5">
-                <label className="text-xs font-semibold text-slate-700 block">
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Gender
                 </label>
-                <div className="grid grid-cols-3 gap-2">
-                  {[
-                    { id: 1, label: "Male" },
-                    { id: 2, label: "Female" },
-                    { id: 3, label: "Other" },
-                  ].map((g) => (
-                    <button
-                      key={g.id}
-                      type="button"
-                      onClick={() => {
-                        basicFormik.setFieldValue("gender", g.id);
-                        basicFormik.setFieldTouched("gender", true);
-                      }}
-                      className={`py-2 px-3 rounded-lg border text-xs font-semibold transition-all text-center ${
-                        basicFormik.values.gender === g.id
-                          ? "bg-teal-600 text-white border-teal-600 shadow-xs"
-                          : "bg-white text-slate-700 border-slate-200 hover:bg-slate-50"
-                      }`}
-                    >
-                      {g.label}
-                    </button>
-                  ))}
-                </div>
+                <select
+                  name="gender"
+                  value={basicFormik.values.gender || ""}
+                  onChange={(e) => {
+                    basicFormik.setFieldValue(
+                      "gender",
+                      e.target.value ? Number(e.target.value) : ""
+                    );
+                  }}
+                  onBlur={basicFormik.handleBlur}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                >
+                  <option value="">Select Gender</option>
+                  <option value="1">Male</option>
+                  <option value="2">Female</option>
+                  <option value="3">Other</option>
+                </select>
                 {basicFormik.touched.gender && basicFormik.errors.gender && (
                   <p className="text-xs text-red-600 font-medium">
                     {basicFormik.errors.gender}
@@ -1328,93 +1315,148 @@ export const DoctorProfilePage: React.FC = () => {
               </div>
 
               {/* Registration Council Dropdown */}
-              <SelectDropdown
-                label="Registration Council"
-                name="registrationCouncil"
-                required
-                value={profFormik.values.registrationCouncil}
-                options={masterData?.registrationCouncils || []}
-                onChange={(val) => {
-                  profFormik.setFieldValue("registrationCouncil", val);
-                  profFormik.setFieldTouched("registrationCouncil", true);
-                }}
-                onBlur={() => profFormik.setFieldTouched("registrationCouncil", true)}
-                placeholder="Select Medical Council"
-                isLoading={masterDataLoading}
-                error={
-                  profFormik.touched.registrationCouncil &&
-                  profFormik.errors.registrationCouncil
-                    ? String(profFormik.errors.registrationCouncil)
-                    : undefined
-                }
-              />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Registration Council <span className="text-red-500">*</span>
+                  </label>
+                  {masterDataLoading && (
+                    <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                    </span>
+                  )}
+                </div>
+                <select
+                  name="registrationCouncil"
+                  value={profFormik.values.registrationCouncil}
+                  onChange={(e) => {
+                    profFormik.setFieldValue(
+                      "registrationCouncil",
+                      e.target.value ? Number(e.target.value) : ""
+                    );
+                  }}
+                  onBlur={profFormik.handleBlur}
+                  disabled={masterDataLoading}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <option value="">Select Medical Council</option>
+                  {masterData?.registrationCouncils?.map((council) => (
+                    <option key={council.id} value={council.id}>
+                      {council.name} {council.code ? `(${council.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+                {profFormik.touched.registrationCouncil &&
+                  profFormik.errors.registrationCouncil && (
+                    <p className="text-xs text-red-600 font-medium">
+                      {String(profFormik.errors.registrationCouncil)}
+                    </p>
+                  )}
+              </div>
 
               {/* Registration State Dropdown */}
-              <SelectDropdown
-                label="Registration State"
-                name="registrationState"
-                required
-                value={profFormik.values.registrationState}
-                options={masterData?.states || []}
-                onChange={(val) => {
-                  profFormik.setFieldValue("registrationState", val);
-                  profFormik.setFieldTouched("registrationState", true);
-                }}
-                onBlur={() => profFormik.setFieldTouched("registrationState", true)}
-                placeholder="Select State"
-                isLoading={masterDataLoading}
-                error={
-                  profFormik.touched.registrationState &&
-                  profFormik.errors.registrationState
-                    ? String(profFormik.errors.registrationState)
-                    : undefined
-                }
-              />
+              <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                    Registration State <span className="text-red-500">*</span>
+                  </label>
+                  {masterDataLoading && (
+                    <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
+                      <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                    </span>
+                  )}
+                </div>
+                <select
+                  name="registrationState"
+                  value={profFormik.values.registrationState}
+                  onChange={(e) => {
+                    profFormik.setFieldValue(
+                      "registrationState",
+                      e.target.value ? Number(e.target.value) : ""
+                    );
+                  }}
+                  onBlur={profFormik.handleBlur}
+                  disabled={masterDataLoading}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
+                >
+                  <option value="">Select State</option>
+                  {masterData?.states?.map((state) => (
+                    <option key={state.id} value={state.id}>
+                      {state.name} {state.code ? `(${state.code})` : ""}
+                    </option>
+                  ))}
+                </select>
+                {profFormik.touched.registrationState &&
+                  profFormik.errors.registrationState && (
+                    <p className="text-xs text-red-600 font-medium">
+                      {String(profFormik.errors.registrationState)}
+                    </p>
+                  )}
+              </div>
 
               {/* Registration Year */}
-              <div>
-                <label className="text-xs font-semibold text-slate-700 block mb-1">
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
                   Registration Year <span className="text-red-500">*</span>
                 </label>
-                <Input
-                  type="number"
+                <select
                   name="registrationYear"
                   value={profFormik.values.registrationYear}
-                  onChange={profFormik.handleChange}
+                  onChange={(e) => {
+                    profFormik.setFieldValue(
+                      "registrationYear",
+                      e.target.value ? Number(e.target.value) : ""
+                    );
+                  }}
                   onBlur={profFormik.handleBlur}
-                  placeholder="e.g. 2018"
-                  className="text-xs font-mono"
-                  min={1900}
-                  max={new Date().getFullYear()}
-                  error={
-                    profFormik.touched.registrationYear &&
-                    profFormik.errors.registrationYear
-                      ? profFormik.errors.registrationYear
-                      : undefined
-                  }
-                />
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                >
+                  <option value="">Select Registration Year</option>
+                  {YEAR_OPTIONS.map((yr) => (
+                    <option key={yr.value} value={yr.value}>
+                      {yr.label}
+                    </option>
+                  ))}
+                </select>
+                {profFormik.touched.registrationYear &&
+                  profFormik.errors.registrationYear && (
+                    <p className="text-xs text-red-600 font-medium">
+                      {String(profFormik.errors.registrationYear)}
+                    </p>
+                  )}
               </div>
 
               {/* License Status Dropdown */}
-              <SelectDropdown
-                label="License Status"
-                name="licenseStatus"
-                required
-                value={profFormik.values.licenseStatus}
-                options={LICENSE_STATUS_OPTIONS}
-                onChange={(val) => {
-                  profFormik.setFieldValue("licenseStatus", val);
-                  profFormik.setFieldTouched("licenseStatus", true);
-                }}
-                onBlur={() => profFormik.setFieldTouched("licenseStatus", true)}
-                placeholder="Select Status"
-                error={
-                  profFormik.touched.licenseStatus &&
-                  profFormik.errors.licenseStatus
-                    ? String(profFormik.errors.licenseStatus)
-                    : undefined
-                }
-              />
+              <div className="space-y-1">
+                <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                  License Status <span className="text-red-500">*</span>
+                </label>
+                <select
+                  name="licenseStatus"
+                  value={profFormik.values.licenseStatus}
+                  onChange={(e) => {
+                    profFormik.setFieldValue(
+                      "licenseStatus",
+                      e.target.value ? Number(e.target.value) : ""
+                    );
+                  }}
+                  onBlur={profFormik.handleBlur}
+                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                >
+                  <option value="">Select Status</option>
+                  {LICENSE_STATUS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>
+                      {opt.label}
+                    </option>
+                  ))}
+                </select>
+                {profFormik.touched.licenseStatus &&
+                  profFormik.errors.licenseStatus && (
+                    <p className="text-xs text-red-600 font-medium">
+                      {String(profFormik.errors.licenseStatus)}
+                    </p>
+                  )}
+              </div>
 
               {/* Modal Actions */}
               <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -1552,67 +1594,84 @@ export const DoctorProfilePage: React.FC = () => {
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                         {/* Qualification Degree Dropdown */}
-                        <SelectDropdown
-                          label="Qualification Degree"
-                          name={`qualifications[${index}].qualificationId`}
-                          required
-                          value={item.qualificationId}
-                          options={masterData?.qualifications || []}
-                          onChange={(val) => {
-                            qualFormik.setFieldValue(
-                              `qualifications[${index}].qualificationId`,
-                              val
-                            );
-                            qualFormik.setFieldTouched(
-                              `qualifications[${index}].qualificationId`,
-                              true
-                            );
-                          }}
-                          onBlur={() =>
-                            qualFormik.setFieldTouched(
-                              `qualifications[${index}].qualificationId`,
-                              true
-                            )
-                          }
-                          placeholder="Select Degree (e.g. MBBS, MD)"
-                          isLoading={masterDataLoading}
-                          error={
-                            itemTouched?.qualificationId && itemErrors?.qualificationId
-                              ? String(itemErrors.qualificationId)
-                              : undefined
-                          }
-                        />
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                              Qualification Degree <span className="text-red-500">*</span>
+                            </label>
+                            {masterDataLoading && (
+                              <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
+                                <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                              </span>
+                            )}
+                          </div>
+                          <select
+                            name={`qualifications[${index}].qualificationId`}
+                            value={item.qualificationId || ""}
+                            onChange={(e) => {
+                              qualFormik.setFieldValue(
+                                `qualifications[${index}].qualificationId`,
+                                e.target.value ? Number(e.target.value) : ""
+                              );
+                            }}
+                            onBlur={qualFormik.handleBlur}
+                            disabled={masterDataLoading}
+                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <option value="">Select Degree (e.g. MBBS, MD)</option>
+                            {masterData?.qualifications?.map((q) => (
+                              <option key={q.id} value={q.id}>
+                                {q.name} {q.code ? `(${q.code})` : ""}
+                              </option>
+                            ))}
+                          </select>
+                          {itemTouched?.qualificationId &&
+                            itemErrors?.qualificationId && (
+                              <p className="text-xs text-red-600 font-medium">
+                                {String(itemErrors.qualificationId)}
+                              </p>
+                            )}
+                        </div>
 
                         {/* Specialization Dropdown */}
-                        <SelectDropdown
-                          label="Specialization (Optional)"
-                          name={`qualifications[${index}].specializationId`}
-                          value={item.specializationId}
-                          options={specializationOptions}
-                          onChange={(val) => {
-                            qualFormik.setFieldValue(
-                              `qualifications[${index}].specializationId`,
-                              val !== "" ? val : null
-                            );
-                            qualFormik.setFieldTouched(
-                              `qualifications[${index}].specializationId`,
-                              true
-                            );
-                          }}
-                          onBlur={() =>
-                            qualFormik.setFieldTouched(
-                              `qualifications[${index}].specializationId`,
-                              true
-                            )
-                          }
-                          placeholder="Select Specialization"
-                          isLoading={masterDataLoading}
-                          error={
-                            itemTouched?.specializationId && itemErrors?.specializationId
-                              ? String(itemErrors.specializationId)
-                              : undefined
-                          }
-                        />
+                        <div className="space-y-1">
+                          <div className="flex items-center justify-between">
+                            <label className="text-xs font-bold uppercase tracking-wider text-slate-700">
+                              Specialization (Optional)
+                            </label>
+                            {masterDataLoading && (
+                              <span className="text-[10px] text-teal-600 flex items-center gap-1 font-medium">
+                                <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                              </span>
+                            )}
+                          </div>
+                          <select
+                            name={`qualifications[${index}].specializationId`}
+                            value={item.specializationId || ""}
+                            onChange={(e) => {
+                              qualFormik.setFieldValue(
+                                `qualifications[${index}].specializationId`,
+                                e.target.value ? Number(e.target.value) : null
+                              );
+                            }}
+                            onBlur={qualFormik.handleBlur}
+                            disabled={masterDataLoading}
+                            className="w-full px-3 py-2 bg-white border border-slate-300 rounded-lg text-sm text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 disabled:bg-slate-100 disabled:cursor-not-allowed cursor-pointer"
+                          >
+                            <option value="">None / General</option>
+                            {masterData?.specializations?.map((sp) => (
+                              <option key={sp.id} value={sp.id}>
+                                {sp.name} {sp.code ? `(${sp.code})` : ""}
+                              </option>
+                            ))}
+                          </select>
+                          {itemTouched?.specializationId &&
+                            itemErrors?.specializationId && (
+                              <p className="text-xs text-red-600 font-medium">
+                                {String(itemErrors.specializationId)}
+                              </p>
+                            )}
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">

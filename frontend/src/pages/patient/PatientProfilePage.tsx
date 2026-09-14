@@ -165,14 +165,10 @@ export const PatientProfilePage: React.FC = () => {
     setLoading(true);
     setFetchingError(null);
     try {
-      const response = await callApi(API_ROUTES.getPatientDetails, null, "GET");
+      const response = await callApi(API_ROUTES.getPatientDetails, {}, "POST");
       const data = response?.data || response;
       if (data) {
         setDetails(data);
-        fetchStates();
-        if (data?.patientProfile?.stateId) {
-          fetchDistricts(data.patientProfile.stateId);
-        }
       }
     } catch (err: any) {
       const message =
@@ -194,7 +190,7 @@ export const PatientProfilePage: React.FC = () => {
     })();
   }, [fetchPatientDetails]);
 
-  // Fetch States API
+  // Fetch States API (called when edit modal opens)
   const fetchStates = async () => {
     if (statesList.length > 0) return statesList;
     setLoadingStates(true);
@@ -214,11 +210,11 @@ export const PatientProfilePage: React.FC = () => {
     }
   };
 
-  // Fetch Districts API
+  // Fetch Districts API (called when edit modal opens or state changes)
   const fetchDistricts = async (stateId: number) => {
     if (!stateId) {
       setDistrictsList([]);
-      return;
+      return [];
     }
     setLoadingDistricts(true);
     try {
@@ -230,12 +226,15 @@ export const PatientProfilePage: React.FC = () => {
       const list = response?.data?.districts || response?.districts || response?.data || [];
       if (Array.isArray(list)) {
         setDistrictsList(list);
+        return list;
       } else {
         setDistrictsList([]);
+        return [];
       }
     } catch (err) {
       console.error("Failed to load districts:", err);
       setDistrictsList([]);
+      return [];
     } finally {
       setLoadingDistricts(false);
     }
@@ -263,9 +262,12 @@ export const PatientProfilePage: React.FC = () => {
     setImagePreview(details?.patientProfile?.profileImage || null);
     setIsEditModalOpen(true);
 
+    const currentStateId = details?.patientProfile?.stateId;
+
+    // Fetch states and dependent districts when modal opens
     await fetchStates();
-    if (details?.patientProfile?.stateId) {
-      await fetchDistricts(details.patientProfile.stateId);
+    if (currentStateId) {
+      await fetchDistricts(Number(currentStateId));
     }
   };
 

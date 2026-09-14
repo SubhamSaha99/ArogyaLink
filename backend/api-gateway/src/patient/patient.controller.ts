@@ -24,7 +24,7 @@ import {
 } from './patient.dto';
 import { Auth } from '../common/decorators/auth.decorator';
 import { UserRole } from '../common/utils/constants';
-import { MultipartNestedInterceptor } from '../auth/interceptor/multipart-nested.interceptor';
+import { MultipartNestedInterceptor } from '../common/interceptor/multipart-nested.interceptor';
 
 @Controller('patient')
 export class PatientController {
@@ -78,12 +78,15 @@ export class PatientController {
     @CurrentUser() user: JwtPayload,
     @Body() request: GetPatientDetailsDto,
   ) {
-    let patientPrimaryKey: number = user.userPrimaryKey;
-    let patientId: string = user.userBusinessId;
+    let patientPrimaryKey: number | undefined = undefined;
+    let patientId: string | undefined = undefined;
 
-    if (user.role !== UserRole.PATIENT) {
-      patientPrimaryKey = request.patientPrimaryKey || user.userPrimaryKey;
-      patientId = request.patientId || user.userBusinessId;
+    if (user.role === UserRole.PATIENT) {
+      patientPrimaryKey = user.userPrimaryKey;
+      patientId = user.userBusinessId;
+    } else {
+      patientPrimaryKey = request.patientPrimaryKey;
+      patientId = request.patientId;
     }
 
     const result = await this.patientService.getPatientDetails(
@@ -169,12 +172,15 @@ export class PatientController {
     @CurrentUser() user: JwtPayload,
     @Body() request: GetPatientMedicalRecordsDto,
   ) {
-    let patientPrimaryKey: number = user.userPrimaryKey;
-    let patientId: string = user.userBusinessId;
+    let patientPrimaryKey: number | undefined = undefined;
+    let patientId: string | undefined = undefined;
 
-    if (user.role !== UserRole.PATIENT) {
-      patientPrimaryKey = request.patientPrimaryKey || user.userPrimaryKey;
-      patientId = request.patientId || user.userBusinessId;
+    if (user.role === UserRole.PATIENT) {
+      patientPrimaryKey = user.userPrimaryKey;
+      patientId = user.userBusinessId;
+    } else {
+      patientPrimaryKey = request.patientPrimaryKey;
+      patientId = request.patientId;
     }
 
     const result = await this.patientService.getPatientMedicalRecords(
@@ -193,14 +199,15 @@ export class PatientController {
 
   /**
    * @description Get Patient Medical Record Details
-   * @param medicalRecordId 
+   * @param medicalRecordId
    * @returns json
    */
   @Get('getPatientMedicalRecordDetails/:id')
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
   @HttpCode(HttpStatus.OK)
   async getPatientMedicalRecordDetails(@Param('id') medicalRecordId: string) {
-    const result = await this.patientService.getPatientMedicalRecordDetails(medicalRecordId);
+    const result =
+      await this.patientService.getPatientMedicalRecordDetails(medicalRecordId);
 
     return {
       success: true,
@@ -217,8 +224,18 @@ export class PatientController {
   @Post('getPatientsList')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
-  async getPatientsList(@Body() request: GetPatientsListDto) {
-    const result = await this.patientService.getPatientsList(request);
+  async getPatientsList(
+    @CurrentUser() user: JwtPayload,
+    @Body() request: GetPatientsListDto,
+  ) {
+    let doctorPrimaryKey: number | undefined = undefined;
+    let healthInstitutePrimaryKey: number | undefined = undefined;
+
+    if (user.role === UserRole.DOCTOR) doctorPrimaryKey = user.userPrimaryKey;
+    if (user.role === UserRole.HEALTH_INSTITUTE)
+      healthInstitutePrimaryKey = user.userPrimaryKey;
+
+    const result = await this.patientService.getPatientsList(request, doctorPrimaryKey, healthInstitutePrimaryKey);
 
     return {
       success: true,

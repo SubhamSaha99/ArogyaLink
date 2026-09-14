@@ -223,6 +223,8 @@ class PatientDetails(_message.Message):
     FIRSTNAME_FIELD_NUMBER: _builtins.int
     MIDDLENAME_FIELD_NUMBER: _builtins.int
     LASTNAME_FIELD_NUMBER: _builtins.int
+    EMAIL_FIELD_NUMBER: _builtins.int
+    MOBILE_FIELD_NUMBER: _builtins.int
     DATEOFBIRTH_FIELD_NUMBER: _builtins.int
     AGE_FIELD_NUMBER: _builtins.int
     GENDER_FIELD_NUMBER: _builtins.int
@@ -237,6 +239,8 @@ class PatientDetails(_message.Message):
     firstName: _builtins.str
     middleName: _builtins.str
     lastName: _builtins.str
+    email: _builtins.str
+    mobile: _builtins.str
     dateOfBirth: _builtins.str
     age: _builtins.int
     gender: _builtins.int
@@ -254,6 +258,8 @@ class PatientDetails(_message.Message):
         firstName: _builtins.str = ...,
         middleName: _builtins.str | None = ...,
         lastName: _builtins.str = ...,
+        email: _builtins.str = ...,
+        mobile: _builtins.str = ...,
         dateOfBirth: _builtins.str | None = ...,
         age: _builtins.int | None = ...,
         gender: _builtins.int | None = ...,
@@ -267,7 +273,7 @@ class PatientDetails(_message.Message):
     ) -> None: ...
     _HasFieldArgType: _TypeAlias = _typing.Literal["_address", b"_address", "_age", b"_age", "_dateOfBirth", b"_dateOfBirth", "_districtId", b"_districtId", "_districtName", b"_districtName", "_gender", b"_gender", "_middleName", b"_middleName", "_pincode", b"_pincode", "_profileImage", b"_profileImage", "_stateId", b"_stateId", "_stateName", b"_stateName", "address", b"address", "age", b"age", "dateOfBirth", b"dateOfBirth", "districtId", b"districtId", "districtName", b"districtName", "gender", b"gender", "middleName", b"middleName", "pincode", b"pincode", "profileImage", b"profileImage", "stateId", b"stateId", "stateName", b"stateName"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["_address", b"_address", "_age", b"_age", "_dateOfBirth", b"_dateOfBirth", "_districtId", b"_districtId", "_districtName", b"_districtName", "_gender", b"_gender", "_middleName", b"_middleName", "_pincode", b"_pincode", "_profileImage", b"_profileImage", "_stateId", b"_stateId", "_stateName", b"_stateName", "address", b"address", "age", b"age", "dateOfBirth", b"dateOfBirth", "districtId", b"districtId", "districtName", b"districtName", "firstName", b"firstName", "gender", b"gender", "lastName", b"lastName", "middleName", b"middleName", "patientProfileId", b"patientProfileId", "pincode", b"pincode", "profileImage", b"profileImage", "stateId", b"stateId", "stateName", b"stateName"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_address", b"_address", "_age", b"_age", "_dateOfBirth", b"_dateOfBirth", "_districtId", b"_districtId", "_districtName", b"_districtName", "_gender", b"_gender", "_middleName", b"_middleName", "_pincode", b"_pincode", "_profileImage", b"_profileImage", "_stateId", b"_stateId", "_stateName", b"_stateName", "address", b"address", "age", b"age", "dateOfBirth", b"dateOfBirth", "districtId", b"districtId", "districtName", b"districtName", "email", b"email", "firstName", b"firstName", "gender", b"gender", "lastName", b"lastName", "middleName", b"middleName", "mobile", b"mobile", "patientProfileId", b"patientProfileId", "pincode", b"pincode", "profileImage", b"profileImage", "stateId", b"stateId", "stateName", b"stateName"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
     _WhichOneofReturnType__address: _TypeAlias = _typing.Literal["address"]  # noqa: Y015
     _WhichOneofArgType__address: _TypeAlias = _typing.Literal["_address", b"_address"]  # noqa: Y015
@@ -599,10 +605,14 @@ class GetPatientsListReq(_message.Message):
     LIMIT_FIELD_NUMBER: _builtins.int
     SEARCH_FIELD_NUMBER: _builtins.int
     STATEID_FIELD_NUMBER: _builtins.int
+    DOCTORPRIMARYKEY_FIELD_NUMBER: _builtins.int
+    HEALTHINSTITUTEPRIMARYKEY_FIELD_NUMBER: _builtins.int
     offset: _builtins.int
     limit: _builtins.int
     search: _builtins.str
     stateId: _builtins.int
+    doctorPrimaryKey: _builtins.int
+    healthInstitutePrimaryKey: _builtins.int
     def __init__(
         self,
         *,
@@ -610,15 +620,25 @@ class GetPatientsListReq(_message.Message):
         limit: _builtins.int = ...,
         search: _builtins.str | None = ...,
         stateId: _builtins.int | None = ...,
+        doctorPrimaryKey: _builtins.int | None = ...,
+        healthInstitutePrimaryKey: _builtins.int | None = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _typing.Literal["_search", b"_search", "_stateId", b"_stateId", "search", b"search", "stateId", b"stateId"]  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["_doctorPrimaryKey", b"_doctorPrimaryKey", "_healthInstitutePrimaryKey", b"_healthInstitutePrimaryKey", "_search", b"_search", "_stateId", b"_stateId", "doctorPrimaryKey", b"doctorPrimaryKey", "healthInstitutePrimaryKey", b"healthInstitutePrimaryKey", "search", b"search", "stateId", b"stateId"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["_search", b"_search", "_stateId", b"_stateId", "limit", b"limit", "offset", b"offset", "search", b"search", "stateId", b"stateId"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_doctorPrimaryKey", b"_doctorPrimaryKey", "_healthInstitutePrimaryKey", b"_healthInstitutePrimaryKey", "_search", b"_search", "_stateId", b"_stateId", "doctorPrimaryKey", b"doctorPrimaryKey", "healthInstitutePrimaryKey", b"healthInstitutePrimaryKey", "limit", b"limit", "offset", b"offset", "search", b"search", "stateId", b"stateId"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
+    _WhichOneofReturnType__doctorPrimaryKey: _TypeAlias = _typing.Literal["doctorPrimaryKey"]  # noqa: Y015
+    _WhichOneofArgType__doctorPrimaryKey: _TypeAlias = _typing.Literal["_doctorPrimaryKey", b"_doctorPrimaryKey"]  # noqa: Y015
+    _WhichOneofReturnType__healthInstitutePrimaryKey: _TypeAlias = _typing.Literal["healthInstitutePrimaryKey"]  # noqa: Y015
+    _WhichOneofArgType__healthInstitutePrimaryKey: _TypeAlias = _typing.Literal["_healthInstitutePrimaryKey", b"_healthInstitutePrimaryKey"]  # noqa: Y015
     _WhichOneofReturnType__search: _TypeAlias = _typing.Literal["search"]  # noqa: Y015
     _WhichOneofArgType__search: _TypeAlias = _typing.Literal["_search", b"_search"]  # noqa: Y015
     _WhichOneofReturnType__stateId: _TypeAlias = _typing.Literal["stateId"]  # noqa: Y015
     _WhichOneofArgType__stateId: _TypeAlias = _typing.Literal["_stateId", b"_stateId"]  # noqa: Y015
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__doctorPrimaryKey) -> _WhichOneofReturnType__doctorPrimaryKey | None: ...
+    @_typing.overload
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__healthInstitutePrimaryKey) -> _WhichOneofReturnType__healthInstitutePrimaryKey | None: ...
     @_typing.overload
     def WhichOneof(self, oneof_group: _WhichOneofArgType__search) -> _WhichOneofReturnType__search | None: ...
     @_typing.overload
@@ -799,25 +819,6 @@ class GetPatientMedicalRecordsRes(_message.Message):
     def WhichOneof(self, oneof_group: _Never) -> None: ...
 
 Global___GetPatientMedicalRecordsRes: _TypeAlias = GetPatientMedicalRecordsRes  # noqa: Y015
-
-@_typing.final
-class GetPatientMedicalHistoryRes(_message.Message):
-    DESCRIPTOR: _descriptor.Descriptor
-
-    PATIENTMEDICALID_FIELD_NUMBER: _builtins.int
-    patientMedicalId: _builtins.str
-    def __init__(
-        self,
-        *,
-        patientMedicalId: _builtins.str = ...,
-    ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
-    def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["patientMedicalId", b"patientMedicalId"]  # noqa: Y015
-    def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    def WhichOneof(self, oneof_group: _Never) -> None: ...
-
-Global___GetPatientMedicalHistoryRes: _TypeAlias = GetPatientMedicalHistoryRes  # noqa: Y015
 
 @_typing.final
 class GetPatientMedicalRecordDetailsReq(_message.Message):

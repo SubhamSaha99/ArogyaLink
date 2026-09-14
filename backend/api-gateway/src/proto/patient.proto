@@ -59,7 +59,6 @@ message UpdatePatientProfileDetailsRes {
 message GetPatientDetailsReq {
   uint32 patientPrimaryKey = 1;
   string patientId         = 2;
-
 }
 
 message PatientDetails {
@@ -67,16 +66,18 @@ message PatientDetails {
   string          firstName        = 2;
   optional string middleName       = 3;
   string          lastName         = 4;
-  optional string dateOfBirth      = 5;
-  optional uint32 age              = 6;
-  optional uint32 gender           = 7;
-  optional string profileImage     = 8;
-  optional string address          = 9;
-  optional uint32 stateId          = 10;
-  optional string stateName        = 11;
-  optional uint32 districtId       = 12;
-  optional string districtName     = 13;
-  optional int32  pincode          = 14;
+  string          email            = 5;
+  string          mobile           = 6;
+  optional string dateOfBirth      = 7;
+  optional uint32 age              = 8;
+  optional uint32 gender           = 9;
+  optional string profileImage     = 10;
+  optional string address          = 11;
+  optional uint32 stateId          = 12;
+  optional string stateName        = 13;
+  optional uint32 districtId       = 14;
+  optional string districtName     = 15;
+  optional int32  pincode          = 16;
 }
 
 message GetPatientDetailsRes {
@@ -143,10 +144,12 @@ message GetDistrictsRes {
 }
 
 message GetPatientsListReq {
-  uint32          offset  = 1;
-  uint32          limit   = 2;
-  optional string search  = 3;
-  optional uint32 stateId = 4;
+  uint32          offset                    = 1;
+  uint32          limit                     = 2;
+  optional string search                    = 3;
+  optional uint32 stateId                   = 4;
+  optional uint32 doctorPrimaryKey          = 5;
+  optional uint32 healthInstitutePrimaryKey = 6;
 }
 
 message PatientsListData {
@@ -190,7 +193,6 @@ message GetPatientMedicalRecordsRes {
   uint32                             offset         = 3;
   uint32                             limit          = 4;
 }
-
 
 message GetPatientMedicalRecordDetailsReq {
   string medicalRecordId = 1;

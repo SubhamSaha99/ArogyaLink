@@ -35,15 +35,21 @@ class PatientRepository:
 
         return patient_profile
 
-    # * Get patient by patient primary key
+    # * Get patient by patient primary key or patient id
     async def get_by_patient_primary_key(
         self,
-        patient_primary_key: int,
+        patient_primary_key: int | None = None,
+        patient_id: str | None = None,
     ) -> PatientDetailsInterface | None:
+        query: dict = {}
+        if patient_primary_key is not None and patient_primary_key > 0:
+            query["patient_primary_key"] = patient_primary_key
+        elif patient_id and patient_id.strip():
+            query["patient_id"] = patient_id.strip()
+        else:
+            return None
 
-        document = await self.collection.find_one(
-            {"patient_primary_key": patient_primary_key}
-        )
+        document = await self.collection.find_one(query)
 
         if not document:
             return None
@@ -74,6 +80,8 @@ class PatientRepository:
             "first_name": document["first_name"],
             "middle_name": document.get("middle_name"),
             "last_name": document["last_name"],
+            "email": document["email"],
+            "mobile": document["mobile"],
             "date_of_birth": document.get("date_of_birth"),
             "age": document.get("age"),
             "gender": document.get("gender"),
@@ -133,33 +141,112 @@ class PatientRepository:
         limit: int = 10,
         search: str | None = None,
         state_id: int | None = None,
+        doctor_primary_key: int | None = None,
+        health_institute_primary_key: int | None = None,
     ) -> PatientsListResponseInterface:
-        filter_query: dict = {}
+        pipeline: list[dict] = []
 
+        # 1. Base filtering on patient_profiles (state_id & search)
+        match_query: dict = {}
         if state_id is not None and state_id > 0:
-            filter_query["state_id"] = state_id
+            match_query["state_id"] = state_id
 
         if search and search.strip():
             escaped_search = re.escape(search.strip())
             regex_search = {"$regex": escaped_search, "$options": "i"}
-            filter_query["$or"] = [
+            match_query["$or"] = [
                 {"first_name": regex_search},
                 {"middle_name": regex_search},
                 {"last_name": regex_search},
                 {"patient_id": regex_search},
             ]
 
-        total = await self.collection.count_documents(filter_query)
+        if match_query:
+            pipeline.append({"$match": match_query})
 
-        cursor = (
-            self.collection.find(filter_query)
-            .sort([("created_at", DESCENDING), ("_id", DESCENDING)])
-            .skip(offset)
-            .limit(limit)
+        # 2. Medical records filter (doctor_primary_key / health_institute_primary_key)
+        medical_record_match: dict = {}
+        if doctor_primary_key is not None and doctor_primary_key > 0:
+            medical_record_match["doctor_primary_key"] = doctor_primary_key
+
+        if (
+            health_institute_primary_key is not None
+            and health_institute_primary_key > 0
+        ):
+            medical_record_match["health_institute_primary_key"] = (
+                health_institute_primary_key
+            )
+
+        if medical_record_match:
+            pipeline.extend([
+                {
+                    "$lookup": {
+                        "from": "patient_medical_records",
+                        "let": {
+                            "p_pk": "$patient_primary_key",
+                            "p_id": "$patient_id",
+                        },
+                        "pipeline": [
+                            {
+                                "$match": {
+                                    "$expr": {
+                                        "$or": [
+                                            {
+                                                "$eq": [
+                                                    "$patient_primary_key",
+                                                    "$$p_pk",
+                                                ]
+                                            },
+                                            {"$eq": ["$patient_id", "$$p_id"]},
+                                        ]
+                                    },
+                                    **medical_record_match,
+                                }
+                            },
+                            {"$limit": 1},
+                        ],
+                        "as": "medical_records",
+                    }
+                },
+                {
+                    "$match": {
+                        "medical_records.0": {"$exists": True},
+                    }
+                },
+            ])
+
+        # 3. Sorting
+        pipeline.append(
+            {"$sort": {"created_at": DESCENDING, "_id": DESCENDING}}
         )
 
-        patients: list[PatientsListItemInterface] = []
+        # 4. Pagination & Total Count Facet
+        pipeline.append({
+            "$facet": {
+                "total_count": [{"$count": "count"}],
+                "paginated_results": [
+                    {"$skip": offset},
+                    {"$limit": limit},
+                ],
+            }
+        })
+
+        cursor = await self.collection.aggregate(pipeline)
+        facet_data = None
         async for doc in cursor:
+            facet_data = doc
+            break
+
+        if facet_data:
+            total_list = facet_data.get("total_count", [])
+            total = total_list[0]["count"] if total_list else 0
+            docs = facet_data.get("paginated_results", [])
+        else:
+            total = 0
+            docs = []
+
+        patients: list[PatientsListItemInterface] = []
+        for doc in docs:
             patients.append(
                 {
                     "patient_primary_key": doc["patient_primary_key"],

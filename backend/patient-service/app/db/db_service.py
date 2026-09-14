@@ -42,4 +42,24 @@ async def create_indexes():
         unique=True,
         name="idx_patient_id",
     )
+    await mongo_db.patient_medical_records.create_index(
+        [("doctor_primary_key", ASCENDING)],
+        unique=False,
+        name="idx_medical_record_doctor_primary_key",
+    )
+    await mongo_db.patient_medical_records.create_index(
+        [("health_institute_primary_key", ASCENDING)],
+        unique=False,
+        name="idx_medical_record_health_institute_primary_key",
+    )
+    await mongo_db.patient_medical_records.create_index(
+        [("patient_primary_key", ASCENDING)],
+        unique=False,
+        name="idx_medical_record_patient_primary_key",
+    )
+    await mongo_db.patient_medical_records.create_index(
+        [("patient_id", ASCENDING)],
+        unique=False,
+        name="idx_medical_record_patient_id",
+    )
     logger.info("MongoDB indexes created")

@@ -4,6 +4,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { PageLoader } from "@/components/common/PageLoader";
 import { AuthProvider } from "@/context/AuthContext";
+import { ProtectedRoute, PublicOnlyRoute } from "@/components/common/RouteGuards";
 import {
   LandingPage,
   DoctorLoginPage,
@@ -25,6 +26,8 @@ import {
   PatientRegisterPage,
   PatientLayout,
   PatientProfilePage,
+  PatientMedicalRecordsPage,
+  DoctorPatientClinicalHistoryPage,
 } from "@/pages/lazyPages";
 
 function AppLayout() {
@@ -37,7 +40,9 @@ function AppLayout() {
     location.pathname.startsWith("/health-institute/appointed-doctors") ||
     location.pathname.startsWith("/health-institute/appoint-doctor") ||
     location.pathname.startsWith("/health-institute/doctors");
-  const isPatientTerminalRoute = location.pathname.startsWith("/patient/profile");
+  const isPatientTerminalRoute =
+    location.pathname.startsWith("/patient/profile") ||
+    location.pathname.startsWith("/patient/medical-records");
   const hidePublicNavAndFooter =
     isDoctorRoute || isHealthInstituteTerminalRoute || isPatientTerminalRoute;
 
@@ -47,41 +52,56 @@ function AppLayout() {
       <div className="flex-1">
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/login" element={<DoctorLoginPage />} />
-            <Route path="/register" element={<DoctorRegisterPage />} />
-            <Route path="/health-institute/login" element={<HealthInstituteLoginPage />} />
-            <Route path="/health-institute/register" element={<HealthInstituteRegisterPage />} />
-            <Route path="/patient/login" element={<PatientLoginPage />} />
-            <Route path="/patient/register" element={<PatientRegisterPage />} />
+            {/* Public & Guest Only Routes: Redirect to Profile if already logged in */}
+            <Route element={<PublicOnlyRoute />}>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/login" element={<DoctorLoginPage />} />
+              <Route path="/register" element={<DoctorRegisterPage />} />
+              <Route path="/health-institute/login" element={<HealthInstituteLoginPage />} />
+              <Route path="/health-institute/register" element={<HealthInstituteRegisterPage />} />
+              <Route path="/patient/login" element={<PatientLoginPage />} />
+              <Route path="/patient/register" element={<PatientRegisterPage />} />
+            </Route>
 
             {/* Redirect /dashboard to /doctor/profile */}
             <Route path="/dashboard" element={<Navigate to="/doctor/profile" replace />} />
 
-            {/* Common Doctor Side Navbar Layout & Separate Route Views */}
-            <Route path="/doctor" element={<DoctorLayout />}>
-              <Route path="profile" element={<DoctorProfilePage />} />
-              <Route path="patients" element={<DoctorPatientsPage />} />
-              <Route path="associated-institutes" element={<DoctorAssociatedInstitutesPage />} />
-              <Route path="institutes" element={<DoctorAssociatedInstitutesPage />} />
-              <Route path="dashboard" element={<DoctorDashboardPreview />} />
+            {/* Protected Doctor Module Routes */}
+            <Route element={<ProtectedRoute allowedRole="DOCTOR" />}>
+              <Route path="/doctor" element={<DoctorLayout />}>
+                <Route path="profile" element={<DoctorProfilePage />} />
+                <Route path="patients" element={<DoctorPatientsPage />} />
+                <Route path="clinical-history" element={<DoctorPatientClinicalHistoryPage />} />
+                <Route path="patient-history" element={<DoctorPatientClinicalHistoryPage />} />
+                <Route path="associated-institutes" element={<DoctorAssociatedInstitutesPage />} />
+                <Route path="institutes" element={<DoctorAssociatedInstitutesPage />} />
+                <Route path="dashboard" element={<DoctorDashboardPreview />} />
+              </Route>
             </Route>
 
-            {/* Common Health Institute Side Navbar Layout & Separate Route Views */}
-            <Route path="/health-institute" element={<HealthInstituteLayout />}>
-              <Route path="profile" element={<HealthInstituteProfilePage />} />
-              <Route path="dashboard" element={<HealthInstituteDashboardPage />} />
-              <Route path="appointed-doctors" element={<HealthInstituteAppointedDoctorsPage />} />
-              <Route path="appoint-doctor" element={<HealthInstituteAppointDoctorPage />} />
-              <Route path="appoint-doctor/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
-              <Route path="doctors" element={<HealthInstituteAppointedDoctorsPage />} />
-              <Route path="doctors/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
+            {/* Protected Health Institute Module Routes */}
+            <Route element={<ProtectedRoute allowedRole="HEALTH_INSTITUTE" />}>
+              <Route path="/health-institute" element={<HealthInstituteLayout />}>
+                <Route path="profile" element={<HealthInstituteProfilePage />} />
+                <Route path="dashboard" element={<HealthInstituteDashboardPage />} />
+                <Route path="appointed-doctors" element={<HealthInstituteAppointedDoctorsPage />} />
+                <Route path="appoint-doctor" element={<HealthInstituteAppointDoctorPage />} />
+                <Route path="appoint-doctor/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
+                <Route path="doctors" element={<HealthInstituteAppointedDoctorsPage />} />
+                <Route path="doctors/:doctorId" element={<HealthInstituteDoctorDetailsPage />} />
+              </Route>
             </Route>
 
-            {/* Common Patient Side Navbar Layout & Separate Route Views */}
-            <Route path="/patient" element={<PatientLayout />}>
-              <Route path="profile" element={<PatientProfilePage />} />
+            {/* Protected Patient Module Routes */}
+            <Route element={<ProtectedRoute allowedRole="PATIENT" />}>
+              <Route path="/patient" element={<PatientLayout />}>
+                <Route path="profile" element={<PatientProfilePage />} />
+                <Route path="medical-records" element={<PatientMedicalRecordsPage />} />
+              </Route>
             </Route>
+
+            {/* Fallback Catch-All */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </div>

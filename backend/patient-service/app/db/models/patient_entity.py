@@ -9,6 +9,8 @@ class PatientProfile(BaseModel):
     first_name: str = Field(..., max_length=255)
     middle_name: str | None = Field(default=None, max_length=255)
     last_name: str = Field(..., max_length=255)
+    email: str = Field(..., max_length=255)
+    mobile: str = Field(..., max_length=20)
     date_of_birth: date | None = None
     age: int | None = None
     gender: int | None = None

@@ -13,6 +13,8 @@ export interface User {
   healthInstituteId?: string;
   healthInstituteName?: string;
   healthInstituteType?: number;
+  role?: "DOCTOR" | "HEALTH_INSTITUTE" | "PATIENT" | string;
+  userBusinessId?: string;
   email: string;
   mobile?: string;
 }
@@ -29,8 +31,37 @@ export interface LoginResponseData {
   healthInstituteId?: string;
   healthInstituteName?: string;
   healthInstituteType?: number;
+  role?: string;
+  userBusinessId?: string;
   email?: string;
   mobile?: string;
+}
+
+interface DecodedJwtPayload {
+  sessionId?: string;
+  userPrimaryKey?: number;
+  userBusinessId?: string;
+  role?: string;
+  exp?: number;
+  iat?: number;
+}
+
+export function decodeJwt(token: string): DecodedJwtPayload | null {
+  try {
+    const parts = token.split(".");
+    if (parts.length < 2) return null;
+    const base64Url = parts[1];
+    const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+    const jsonPayload = decodeURIComponent(
+      atob(base64)
+        .split("")
+        .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+        .join("")
+    );
+    return JSON.parse(jsonPayload);
+  } catch {
+    return null;
+  }
 }
 
 interface AuthContextType {
@@ -69,17 +100,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setCookie("refreshToken", data.refreshToken, 7);
     }
 
-    // 3. User details in React state
+    // 3. Decode JWT payload to guarantee role & business ID presence
+    const decoded = decodeJwt(data.accessToken);
+    const role = decoded?.role || data.role;
+    const userBusinessId = decoded?.userBusinessId || data.userBusinessId || data.doctorId || data.patientId || data.healthInstituteId;
+    const userPrimaryKey = decoded?.userPrimaryKey || data.userPrimaryKey;
+
+    const isDoc = role === "DOCTOR" || userBusinessId?.startsWith("AGL-DOC") || !!data.doctorId || !!data.doctorPrimaryKey;
+    const isIns = role === "HEALTH_INSTITUTE" || userBusinessId?.startsWith("AGL-INS") || !!data.healthInstituteId || !!data.healthInstitutePrimaryKey;
+    const isPat = role === "PATIENT" || userBusinessId?.startsWith("AGL-PAT") || !!data.patientId || !!data.patientPrimaryKey;
+
+    // 4. User details in React state
     setUser({
-      userPrimaryKey: data.userPrimaryKey,
-      doctorPrimaryKey: data.doctorPrimaryKey,
-      doctorId: data.doctorId,
-      patientPrimaryKey: data.patientPrimaryKey,
-      patientId: data.patientId,
-      healthInstitutePrimaryKey: data.healthInstitutePrimaryKey,
-      healthInstituteId: data.healthInstituteId,
+      userPrimaryKey,
+      doctorPrimaryKey: isDoc ? (data.doctorPrimaryKey || userPrimaryKey) : undefined,
+      doctorId: isDoc ? (data.doctorId || userBusinessId) : undefined,
+      patientPrimaryKey: isPat ? (data.patientPrimaryKey || userPrimaryKey) : undefined,
+      patientId: isPat ? (data.patientId || userBusinessId) : undefined,
+      healthInstitutePrimaryKey: isIns ? (data.healthInstitutePrimaryKey || userPrimaryKey) : undefined,
+      healthInstituteId: isIns ? (data.healthInstituteId || userBusinessId) : undefined,
       healthInstituteName: data.healthInstituteName,
       healthInstituteType: data.healthInstituteType,
+      role: role || (isDoc ? "DOCTOR" : isIns ? "HEALTH_INSTITUTE" : isPat ? "PATIENT" : undefined),
+      userBusinessId: userBusinessId,
       email: data.email || "",
       mobile: data.mobile,
     });
@@ -94,6 +137,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       updateAccessToken(null);
       deleteCookie("refreshToken");
       setUser(null);
+      // Clean up any remaining legacy localStorage keys
+      try {
+        localStorage.removeItem("token");
+        localStorage.removeItem("arogya_token");
+        localStorage.removeItem("arogya_doctor_authenticated");
+        localStorage.removeItem("arogya_doctor_name");
+        localStorage.removeItem("arogya_doctor_id");
+        localStorage.removeItem("arogya_doctor_email");
+        localStorage.removeItem("arogya_doctor_mobile");
+        localStorage.removeItem("arogya_institute_name");
+        localStorage.removeItem("arogya_institute_email");
+      } catch {
+        // ignore localStorage access errors
+      }
     }
   };
 
@@ -129,16 +186,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
             setCookie("refreshToken", data.refreshToken, 7);
           }
 
-          if (data?.doctorId || data?.patientId || data?.healthInstituteId || data?.email || data?.mobile) {
-            setUser((prev) => ({
-              ...prev,
-              doctorId: data.doctorId || prev?.doctorId,
-              patientId: data.patientId || prev?.patientId,
-              healthInstituteId: data.healthInstituteId || prev?.healthInstituteId,
-              email: data.email || prev?.email || "",
-              mobile: data.mobile || prev?.mobile || "",
-            }));
-          }
+          const decoded = decodeJwt(data.accessToken);
+          const role = decoded?.role;
+          const userBusinessId = decoded?.userBusinessId;
+          const userPrimaryKey = decoded?.userPrimaryKey;
+
+          const isDoc = role === "DOCTOR" || userBusinessId?.startsWith("AGL-DOC") || !!data.doctorId;
+          const isIns = role === "HEALTH_INSTITUTE" || userBusinessId?.startsWith("AGL-INS") || !!data.healthInstituteId;
+          const isPat = role === "PATIENT" || userBusinessId?.startsWith("AGL-PAT") || !!data.patientId;
+
+          setUser((prev) => ({
+            ...prev,
+            userPrimaryKey: userPrimaryKey || prev?.userPrimaryKey,
+            role: role || prev?.role || (isDoc ? "DOCTOR" : isIns ? "HEALTH_INSTITUTE" : isPat ? "PATIENT" : undefined),
+            userBusinessId: userBusinessId || prev?.userBusinessId,
+            doctorId: isDoc ? (userBusinessId || data.doctorId || prev?.doctorId) : prev?.doctorId,
+            doctorPrimaryKey: isDoc ? (userPrimaryKey || prev?.doctorPrimaryKey) : prev?.doctorPrimaryKey,
+            healthInstituteId: isIns ? (userBusinessId || data.healthInstituteId || prev?.healthInstituteId) : prev?.healthInstituteId,
+            healthInstitutePrimaryKey: isIns ? (userPrimaryKey || prev?.healthInstitutePrimaryKey) : prev?.healthInstitutePrimaryKey,
+            healthInstituteName: data.healthInstituteName || prev?.healthInstituteName,
+            healthInstituteType: data.healthInstituteType || prev?.healthInstituteType,
+            patientId: isPat ? (userBusinessId || data.patientId || prev?.patientId) : prev?.patientId,
+            patientPrimaryKey: isPat ? (userPrimaryKey || prev?.patientPrimaryKey) : prev?.patientPrimaryKey,
+            email: data.email || prev?.email || "",
+            mobile: data.mobile || prev?.mobile || "",
+          }));
 
           return data.accessToken;
         }
