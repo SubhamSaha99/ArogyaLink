@@ -167,6 +167,7 @@ class MedicalRecordRepository:
                                     ]
                                 },
                                 "title": 1,
+                                "description": 1,
                                 "document_url": 1,
                                 "document_date": 1,
                             }
@@ -217,6 +218,7 @@ class MedicalRecordRepository:
                 "document_type": int(doc.get("document_type", 1)),
                 "document_type_name": doc.get("document_type_name", "Other"),
                 "title": doc.get("title", ""),
+                "description": doc.get("description"),
                 "document_url": doc.get("document_url", ""),
                 "document_date": str(doc.get("document_date", "") or ""),
             }

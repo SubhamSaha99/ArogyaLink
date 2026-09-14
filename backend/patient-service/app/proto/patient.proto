@@ -104,7 +104,8 @@ message PatientMedicalDocuments {
   uint32          documentType = 1;
   string          title        = 2;
   string          documentUrl  = 3;
-  optional string documentDate = 4;
+  optional string description  = 4;
+  optional string documentDate = 5;
 }
 
 message PatientMedication {
@@ -199,12 +200,13 @@ message GetPatientMedicalRecordDetailsReq {
 }
 
 message GetPateintMedicalDocuments {
-  string patientMedicalDocumentId = 1;
-  uint32 documentType             = 2;
-  string documentTypeName         = 3;
-  string title                    = 4;
-  string documentUrl              = 5;
-  string documentDate             = 6;
+  string          patientMedicalDocumentId = 1;
+  uint32          documentType             = 2;
+  string          documentTypeName         = 3;
+  string          title                    = 4;
+  string          documentUrl              = 5;
+  string          documentDate             = 6;
+  optional string description              = 7;
 }
 
 message GetPatientMedications {

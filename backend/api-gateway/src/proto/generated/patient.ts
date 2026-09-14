@@ -91,6 +91,7 @@ export interface PatientMedicalDocuments {
   documentType: number;
   title: string;
   documentUrl: string;
+  description?: string | undefined;
   documentDate?: string | undefined;
 }
 
@@ -193,6 +194,7 @@ export interface GetPateintMedicalDocuments {
   title: string;
   documentUrl: string;
   documentDate: string;
+  description?: string | undefined;
 }
 
 export interface GetPatientMedications {

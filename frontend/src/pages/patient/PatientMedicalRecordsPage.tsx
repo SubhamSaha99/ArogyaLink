@@ -51,6 +51,7 @@ export interface MedicalDocumentItem {
   documentType: number;
   documentTypeName: string;
   title: string;
+  description?: string;
   documentUrl: string;
   documentDate: string;
 }
@@ -773,41 +774,49 @@ export const PatientMedicalRecordsPage: React.FC = () => {
                         return (
                           <div
                             key={doc.patientMedicalDocumentId}
-                            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between gap-3 hover:border-teal-400 transition-colors"
+                            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between gap-2.5 hover:border-teal-400 transition-colors"
                           >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-                                <FileText className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-900 truncate" title={doc.title}>
-                                  {doc.title || "Clinical Document"}
-                                </p>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                    {doc.documentTypeName || "Document"}
-                                  </Badge>
-                                  <span>{doc.documentDate}</span>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
+                                  <FileText className="w-5 h-5" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-slate-900 truncate" title={doc.title}>
+                                    {doc.title || "Clinical Document"}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                      {doc.documentTypeName || "Document"}
+                                    </Badge>
+                                    <span>{doc.documentDate}</span>
+                                  </div>
                                 </div>
                               </div>
+
+                              {fileUrl && (
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="shrink-0"
+                                >
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-2.5 text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200 rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    View
+                                  </Button>
+                                </a>
+                              )}
                             </div>
 
-                            {fileUrl && (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="shrink-0"
-                              >
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 px-2.5 text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200 rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
-                                >
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                  View
-                                </Button>
-                              </a>
+                            {doc.description && (
+                              <p className="text-xs text-slate-600 bg-slate-50/80 p-2 rounded-xl border border-slate-100 leading-relaxed">
+                                {doc.description}
+                              </p>
                             )}
                           </div>
                         );

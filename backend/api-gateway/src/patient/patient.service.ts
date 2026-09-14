@@ -143,6 +143,7 @@ export class PatientService implements OnModuleInit {
             return {
               documentType: meta?.documentType ?? 1,
               title: meta?.title ?? file.originalname,
+              description: meta?.description ?? '',
               documentUrl: uploadedPath,
               documentDate:
                 meta?.documentDate ?? new Date().toISOString().split('T')[0],

@@ -135,6 +135,10 @@ export class MedicalDocumentDto {
   @IsNotEmpty()
   title!: string;
 
+  @IsString()
+  @IsOptional()
+  description?: string;
+
   @IsOptional()
   @IsString()
   @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {

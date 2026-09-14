@@ -84,6 +84,7 @@ export interface MedicalDocumentItem {
   documentType: number;
   documentTypeName: string;
   title: string;
+  description?: string;
   documentUrl: string;
   documentDate: string;
 }
@@ -245,7 +246,13 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
     Array<{ medicationName: string; dosage: string; startDate: string }>
   >([]);
   const [newDocuments, setNewDocuments] = useState<
-    Array<{ file: File; documentType: number; title: string; documentDate: string }>
+    Array<{
+      file: File;
+      documentType: number;
+      title: string;
+      description?: string;
+      documentDate: string;
+    }>
   >([]);
 
   // Infinite scroll observer refs & fetch guards
@@ -511,6 +518,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
         file,
         documentType: 1, // Default to Prescription
         title: file.name.replace(/\.[^/.]+$/, ""),
+        description: "",
         documentDate: new Date().toISOString().split("T")[0],
       },
     ]);
@@ -519,7 +527,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
 
   const handleUpdateDocumentMeta = (
     index: number,
-    field: "title" | "documentType" | "documentDate",
+    field: "title" | "documentType" | "documentDate" | "description",
     value: any
   ) => {
     setNewDocuments((prev) =>
@@ -571,6 +579,9 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
         formData.append(`medicalDocuments[${idx}].title`, doc.title || doc.file.name);
         formData.append(`medicalDocuments[${idx}].documentType`, String(doc.documentType));
         formData.append(`medicalDocuments[${idx}].documentDate`, doc.documentDate);
+        if (doc.description?.trim()) {
+          formData.append(`medicalDocuments[${idx}].description`, doc.description.trim());
+        }
       });
 
       await callApi(API_ROUTES.createPatientMedicalRecord, formData, "POST");
@@ -1522,41 +1533,49 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                         return (
                           <div
                             key={doc.patientMedicalDocumentId}
-                            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex items-center justify-between gap-3 hover:border-teal-400 transition-colors"
+                            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between gap-2.5 hover:border-teal-400 transition-colors"
                           >
-                            <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-                                <FileText className="w-5 h-5" />
-                              </div>
-                              <div className="min-w-0">
-                                <p className="text-xs font-bold text-slate-900 truncate" title={doc.title}>
-                                  {doc.title || "Clinical Document"}
-                                </p>
-                                <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                                  <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                    {doc.documentTypeName || "Document"}
-                                  </Badge>
-                                  <span>{doc.documentDate}</span>
+                            <div className="flex items-center justify-between gap-3">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
+                                  <FileText className="w-5 h-5" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-slate-900 truncate" title={doc.title}>
+                                    {doc.title || "Clinical Document"}
+                                  </p>
+                                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
+                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
+                                      {doc.documentTypeName || "Document"}
+                                    </Badge>
+                                    <span>{doc.documentDate}</span>
+                                  </div>
                                 </div>
                               </div>
+
+                              {fileUrl && (
+                                <a
+                                  href={fileUrl}
+                                  target="_blank"
+                                  rel="noreferrer"
+                                  className="shrink-0"
+                                >
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="h-8 px-2.5 text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200 rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
+                                  >
+                                    <ExternalLink className="w-3.5 h-3.5" />
+                                    View
+                                  </Button>
+                                </a>
+                              )}
                             </div>
 
-                            {fileUrl && (
-                              <a
-                                href={fileUrl}
-                                target="_blank"
-                                rel="noreferrer"
-                                className="shrink-0"
-                              >
-                                <Button
-                                  variant="outline"
-                                  size="sm"
-                                  className="h-8 px-2.5 text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200 rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
-                                >
-                                  <ExternalLink className="w-3.5 h-3.5" />
-                                  View
-                                </Button>
-                              </a>
+                            {doc.description && (
+                              <p className="text-xs text-slate-600 bg-slate-50/80 p-2 rounded-xl border border-slate-100 leading-relaxed">
+                                {doc.description}
+                              </p>
                             )}
                           </div>
                         );
@@ -1811,74 +1830,91 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                     No files attached. Upload prescriptions, blood test reports, or scan results (PDF / Images).
                   </p>
                 ) : (
-                  <div className="space-y-2.5">
+                    <div className="space-y-2.5">
                     {newDocuments.map((doc, idx) => (
                       <div
                         key={idx}
-                        className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col sm:flex-row items-center gap-3"
+                        className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5"
                       >
-                        <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-                          <FileText className="w-4 h-4" />
+                        <div className="flex flex-col sm:flex-row items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
+                            <FileText className="w-4 h-4" />
+                          </div>
+
+                          <div className="flex-1 w-full sm:w-auto">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Document Title
+                            </label>
+                            <Input
+                              type="text"
+                              value={doc.title}
+                              onChange={(e) =>
+                                handleUpdateDocumentMeta(idx, "title", e.target.value)
+                              }
+                              required
+                              className="text-xs rounded-xl h-8 bg-slate-50"
+                            />
+                          </div>
+
+                          <div className="w-full sm:w-44">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Document Type
+                            </label>
+                            <select
+                              value={doc.documentType}
+                              onChange={(e) =>
+                                handleUpdateDocumentMeta(idx, "documentType", Number(e.target.value))
+                              }
+                              className="w-full h-8 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                            >
+                              <option value={1}>Prescription</option>
+                              <option value={2}>Lab Test Report</option>
+                              <option value={3}>Discharge Summary</option>
+                              <option value={4}>Diagnostic Scan</option>
+                              <option value={5}>Other Medical Record</option>
+                            </select>
+                          </div>
+
+                          <div className="w-full sm:w-36">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Document Date
+                            </label>
+                            <Input
+                              type="date"
+                              value={doc.documentDate}
+                              onChange={(e) =>
+                                handleUpdateDocumentMeta(idx, "documentDate", e.target.value)
+                              }
+                              required
+                              className="text-xs rounded-xl h-8 bg-slate-50"
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveDocument(idx)}
+                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
 
-                        <div className="flex-1 w-full sm:w-auto">
+                        <div className="pt-2 border-t border-slate-100">
                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Document Title
+                            Document Description / Clinical Notes (Optional)
                           </label>
                           <Input
                             type="text"
-                            value={doc.title}
+                            placeholder="e.g. Fasting glucose report, Dr. Roy handwritten notes..."
+                            value={doc.description || ""}
                             onChange={(e) =>
-                              handleUpdateDocumentMeta(idx, "title", e.target.value)
+                              handleUpdateDocumentMeta(idx, "description", e.target.value)
                             }
-                            required
                             className="text-xs rounded-xl h-8 bg-slate-50"
                           />
                         </div>
-
-                        <div className="w-full sm:w-44">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Document Type
-                          </label>
-                          <select
-                            value={doc.documentType}
-                            onChange={(e) =>
-                              handleUpdateDocumentMeta(idx, "documentType", Number(e.target.value))
-                            }
-                            className="w-full h-8 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                          >
-                            <option value={1}>Prescription</option>
-                            <option value={2}>Lab Test Report</option>
-                            <option value={3}>Discharge Summary</option>
-                            <option value={4}>Diagnostic Scan</option>
-                            <option value={5}>Other Medical Record</option>
-                          </select>
-                        </div>
-
-                        <div className="w-full sm:w-36">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Document Date
-                          </label>
-                          <Input
-                            type="date"
-                            value={doc.documentDate}
-                            onChange={(e) =>
-                              handleUpdateDocumentMeta(idx, "documentDate", e.target.value)
-                            }
-                            required
-                            className="text-xs rounded-xl h-8 bg-slate-50"
-                          />
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveDocument(idx)}
-                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>

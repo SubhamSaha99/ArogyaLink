@@ -82,6 +82,7 @@ class PatientMedicalDocumentItemInterface(TypedDict):
     document_type: int
     document_type_name: str
     title: str
+    description: str | None
     document_url: str
     document_date: str
 

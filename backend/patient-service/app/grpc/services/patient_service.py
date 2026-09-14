@@ -156,6 +156,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                 medical_record_id="",
                 document_type=MedicalDocumentType(doc.documentType),
                 title=doc.title,
+                description=doc.description,
                 document_url=doc.documentUrl,
                 document_date=(
                     date.fromisoformat(doc.documentDate) if doc.documentDate else None
@@ -346,6 +347,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                     documentType=doc["document_type"],
                     documentTypeName=doc["document_type_name"],
                     title=doc["title"],
+                    description=doc.get("description"),
                     documentUrl=(
                         f"{settings.api_base_url}/uploads/{doc['document_url'].lstrip('/')}"
                         if doc["document_url"]
