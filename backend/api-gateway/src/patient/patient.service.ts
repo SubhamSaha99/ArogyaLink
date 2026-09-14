@@ -111,10 +111,10 @@ export class PatientService implements OnModuleInit {
    * @returns CreatePatientMedicalRecordRes
    */
   async createPatientMedicalRecord(
-    doctorPrimaryKey: number,
-    doctorId: string,
-    healthInstitutePrimaryKey: number,
-    healthInstituteId: string,
+    doctorPrimaryKey: number | undefined,
+    doctorId: string | undefined,
+    healthInstitutePrimaryKey: number | undefined,
+    healthInstituteId: string | undefined,
     request: CreateMedicalRecordDto,
     documents?: Express.Multer.File[],
   ): Promise<CreatePatientMedicalRecordRes> {
@@ -160,12 +160,12 @@ export class PatientService implements OnModuleInit {
 
       const medicalRecordReq: CreatePatientMedicalRecordReq = {
         medicalRecord: {
-          patientPrimaryKey: request.patientPrimaryKey,
-          patientId: request.patientId,
-          doctorPrimaryKey,
-          doctorId,
-          healthInstitutePrimaryKey,
-          healthInstituteId,
+          patientPrimaryKey: request.patientPrimaryKey ?? 0,
+          patientId: request.patientId ?? '',
+          doctorPrimaryKey: doctorPrimaryKey ?? 0,
+          doctorId: doctorId ?? '',
+          healthInstitutePrimaryKey: healthInstitutePrimaryKey ?? 0,
+          healthInstituteId: healthInstituteId ?? '',
           title: request.title,
           diagnosis: request.diagnosis,
           description: request.description ?? '',

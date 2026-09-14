@@ -16,7 +16,7 @@ import {
   X,
   ShieldCheck,
   FileSpreadsheet,
-  Loader2,
+  Loader2
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";

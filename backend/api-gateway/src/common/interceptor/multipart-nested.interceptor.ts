@@ -38,6 +38,12 @@ export class MultipartNestedInterceptor implements NestInterceptor {
       result[arrayName][Number(index)][field] = value;
     }
 
+    for (const [key, value] of Object.entries(result)) {
+      if (Array.isArray(value)) {
+        result[key] = value.filter((item) => item !== undefined && item !== null);
+      }
+    }
+
     request.body = result;
 
     return next.handle();

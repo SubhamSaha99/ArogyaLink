@@ -164,14 +164,14 @@ export class MedicalMedicationDto {
  * @description Create medical record dto
  */
 export class CreateMedicalRecordDto {
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
-  @IsNotEmpty()
-  patientPrimaryKey!: number;
+  patientPrimaryKey?: number;
 
+  @IsOptional()
   @IsString()
-  @IsNotEmpty()
-  patientId!: string;
+  patientId?: string;
 
   @IsOptional()
   @Type(() => Number)
@@ -293,4 +293,12 @@ export class GetPatientsListDto {
   @IsInt()
   @IsOptional()
   stateId?: number;
+
+  @IsInt()
+  @IsOptional()
+  doctorPrimaryKey?: number;
+
+  @IsInt()
+  @IsOptional()
+  healthInstitutePrimaryKey?: number;
 }

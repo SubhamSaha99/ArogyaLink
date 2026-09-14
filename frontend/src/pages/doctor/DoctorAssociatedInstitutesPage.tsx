@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import {
   Building2,
   RefreshCw,
@@ -49,8 +49,13 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
   const [selectedDept, setSelectedDept] = useState<string>("");
   const [selectedScope, setSelectedScope] = useState<string>("");
 
+  const isFetchingRef = useRef<boolean>(false);
+
   // Fetch Associated Health Institutes
   const fetchAssociatedInstitutes = useCallback(async () => {
+    if (isFetchingRef.current) return;
+    isFetchingRef.current = true;
+
     setLoading(true);
     setError(null);
     try {
@@ -77,14 +82,12 @@ export const DoctorAssociatedInstitutesPage: React.FC = () => {
       );
     } finally {
       setLoading(false);
+      isFetchingRef.current = false;
     }
   }, []);
 
   useEffect(() => {
-    const loadAssociatedInstitutes = async () => {
-      await fetchAssociatedInstitutes();
-    };
-    void loadAssociatedInstitutes();
+    void fetchAssociatedInstitutes();
   }, [fetchAssociatedInstitutes]);
 
   // Extract distinct departments and scopes for filters

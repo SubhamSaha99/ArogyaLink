@@ -567,7 +567,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
 
       // Append documents with files
       newDocuments.forEach((doc, idx) => {
-        formData.append(`documents`, doc.file);
+        formData.append(`medicalDocuments[${idx}].file`, doc.file);
         formData.append(`medicalDocuments[${idx}].title`, doc.title || doc.file.name);
         formData.append(`medicalDocuments[${idx}].documentType`, String(doc.documentType));
         formData.append(`medicalDocuments[${idx}].documentDate`, doc.documentDate);

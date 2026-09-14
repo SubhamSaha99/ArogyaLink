@@ -109,7 +109,7 @@ export class PatientController {
    * @returns json
    */
   @Post('createPatientMedicalRecord')
-  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
   @UseInterceptors(
     AnyFilesInterceptor(
       multerConfig({
@@ -141,13 +141,21 @@ export class PatientController {
         doctorPrimaryKey = request.doctorPrimaryKey;
         doctorId = request.doctorId;
         break;
+      case UserRole.PATIENT:
+        request.patientPrimaryKey = user.userPrimaryKey;
+        request.patientId = user.userBusinessId;
+        doctorPrimaryKey = request.doctorPrimaryKey;
+        doctorId = request.doctorId;
+        healthInstitutePrimaryKey = request.healthInstitutePrimaryKey;
+        healthInstituteId = request.healthInstituteId;
+        break;
     }
 
     const result = await this.patientService.createPatientMedicalRecord(
-      doctorPrimaryKey!,
-      doctorId!,
-      healthInstitutePrimaryKey!,
-      healthInstituteId!,
+      doctorPrimaryKey,
+      doctorId,
+      healthInstitutePrimaryKey,
+      healthInstituteId,
       request,
       documents,
     );
@@ -231,11 +239,16 @@ export class PatientController {
     let doctorPrimaryKey: number | undefined = undefined;
     let healthInstitutePrimaryKey: number | undefined = undefined;
 
-    if (user.role === UserRole.DOCTOR) doctorPrimaryKey = user.userPrimaryKey;
+    if (user.role === UserRole.DOCTOR)
+      doctorPrimaryKey = request.doctorPrimaryKey;
     if (user.role === UserRole.HEALTH_INSTITUTE)
-      healthInstitutePrimaryKey = user.userPrimaryKey;
+      healthInstitutePrimaryKey = request.healthInstitutePrimaryKey;
 
-    const result = await this.patientService.getPatientsList(request, doctorPrimaryKey, healthInstitutePrimaryKey);
+    const result = await this.patientService.getPatientsList(
+      request,
+      doctorPrimaryKey,
+      healthInstitutePrimaryKey,
+    );
 
     return {
       success: true,

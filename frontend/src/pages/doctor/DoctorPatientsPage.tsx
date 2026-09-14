@@ -12,6 +12,8 @@ import {
   Activity,
   HeartPulse,
   Loader2,
+  UserCheck,
+  Globe,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -55,7 +57,10 @@ const getGenderLabel = (
 };
 
 export const DoctorPatientsPage: React.FC = () => {
-  const { user } = useAuth();
+  const { user, isLoading: isAuthLoading } = useAuth();
+
+  // Active view tab: My Consulted Patients vs All Registered Patients
+  const [activeTab, setActiveTab] = useState<"MY_PATIENTS" | "ALL_PATIENTS">("MY_PATIENTS");
 
   // Patients list & infinite scroll state
   const [patients, setPatients] = useState<PatientListItem[]>([]);
@@ -137,11 +142,13 @@ export const DoctorPatientsPage: React.FC = () => {
           payload.stateId = Number(selectedStateId);
         }
 
-        // Pass doctorPrimaryKey for filtering patients associated with the doctor
-        const doctorPrimaryKey =
-          user?.doctorPrimaryKey || user?.userPrimaryKey;
-        if (doctorPrimaryKey) {
-          payload.doctorPrimaryKey = Number(doctorPrimaryKey);
+        // Send doctorPrimaryKey in request body only for "MY_PATIENTS" tab
+        if (activeTab === "MY_PATIENTS") {
+          const doctorPrimaryKey =
+            user?.doctorPrimaryKey ?? user?.userPrimaryKey;
+          if (doctorPrimaryKey !== undefined && doctorPrimaryKey !== null) {
+            payload.doctorPrimaryKey = Number(doctorPrimaryKey);
+          }
         }
 
         const response = await callApi(
@@ -190,15 +197,16 @@ export const DoctorPatientsPage: React.FC = () => {
         isFetchingRef.current = false;
       }
     },
-    [limit, debouncedSearch, selectedStateId, user]
+    [limit, debouncedSearch, selectedStateId, user, activeTab]
   );
 
-  // Trigger initial fetch when filters change
+  // Trigger initial fetch when filters, active tab, or auth readiness changes
   useEffect(() => {
+    if (isAuthLoading) return;
     setOffset(0);
     setHasMore(true);
     void fetchPatientsPage(0, true);
-  }, [debouncedSearch, selectedStateId, fetchPatientsPage]);
+  }, [debouncedSearch, selectedStateId, activeTab, fetchPatientsPage, isAuthLoading]);
 
   // Infinite scroll intersection observer setup
   useEffect(() => {
@@ -274,11 +282,12 @@ export const DoctorPatientsPage: React.FC = () => {
             )}
           >
             <Users className="w-6 h-6 text-teal-700" />
-            Registered Patients
+            {activeTab === "MY_PATIENTS" ? "My Consulted Patients" : "All Registered Patients"}
           </h1>
           <p className={themeStyles.typography.subtext}>
-            Browse, search, and access clinical profiles of registered patients across
-            connected healthcare facilities and national digital health records.
+            {activeTab === "MY_PATIENTS"
+              ? "Access longitudinal clinical encounters, diagnosis records, and prescriptions for patients you have consulted with."
+              : "Browse, search, and access clinical profiles of all registered patients across connected healthcare facilities and national digital health records."}
           </p>
         </div>
 
@@ -305,13 +314,78 @@ export const DoctorPatientsPage: React.FC = () => {
         </div>
       </div>
 
+      {/* Tab Controls: My Consulted Patients vs All Registered Patients */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-1.5 bg-slate-200/60 rounded-2xl border border-slate-200/80">
+        <div className="flex items-center gap-1.5 p-1 bg-white rounded-xl shadow-xs">
+          <button
+            type="button"
+            onClick={() => {
+              if (activeTab !== "MY_PATIENTS") {
+                setActiveTab("MY_PATIENTS");
+                setSearchTerm("");
+                setDebouncedSearch("");
+                setSelectedStateId(null);
+                setSelectedGender("");
+              }
+            }}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              activeTab === "MY_PATIENTS"
+                ? "bg-teal-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+          >
+            <UserCheck className="w-4 h-4" />
+            <span>My Consulted Patients</span>
+            {activeTab === "MY_PATIENTS" && (
+              <span className="bg-teal-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold">
+                {totalCount}
+              </span>
+            )}
+          </button>
+
+          <button
+            type="button"
+            onClick={() => {
+              if (activeTab !== "ALL_PATIENTS") {
+                setActiveTab("ALL_PATIENTS");
+                setSearchTerm("");
+                setDebouncedSearch("");
+                setSelectedStateId(null);
+                setSelectedGender("");
+              }
+            }}
+            className={`flex items-center gap-2 px-4 py-2 text-xs font-bold rounded-lg transition-all cursor-pointer ${
+              activeTab === "ALL_PATIENTS"
+                ? "bg-teal-600 text-white shadow-xs"
+                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50"
+            }`}
+          >
+            <Globe className="w-4 h-4" />
+            <span>All Registered Patients</span>
+            {activeTab === "ALL_PATIENTS" && (
+              <span className="bg-teal-500 text-white text-[10px] px-1.5 py-0.5 rounded-full font-mono font-bold">
+                {totalCount}
+              </span>
+            )}
+          </button>
+        </div>
+
+        <div className="px-3 text-[11px] text-slate-500 font-medium">
+          {activeTab === "MY_PATIENTS"
+            ? "Showing patients with clinical encounter records created by you"
+            : "Showing all patients registered in the national health directory"}
+        </div>
+      </div>
+
       {/* Metrics Row */}
       <div className={themeStyles.layout.grid4}>
         <Card className={themeStyles.card.metric}>
           <CardContent className="p-4 flex items-center justify-between">
             <div className="space-y-1">
               <span className={themeStyles.form.label}>
-                Total Registered Patients
+                {activeTab === "MY_PATIENTS"
+                  ? "My Consulted Patients"
+                  : "Total Registered Patients"}
               </span>
               <p className="text-2xl font-black text-slate-900">
                 {totalCount}
@@ -459,10 +533,12 @@ export const DoctorPatientsPage: React.FC = () => {
         <div className={themeStyles.state.loading}>
           <RefreshCw className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
           <p className="text-sm font-bold text-slate-800">
-            Loading registered patients...
+            {activeTab === "MY_PATIENTS" ? "Loading consulted patients..." : "Loading registered patients..."}
           </p>
           <p className={themeStyles.typography.subtext}>
-            Querying patient index and digital health identifiers from registry.
+            {activeTab === "MY_PATIENTS"
+              ? "Querying clinical encounter records and patient profiles."
+              : "Querying national patient index and digital health identifiers from registry."}
           </p>
         </div>
       ) : displayedPatients.length === 0 ? (
@@ -474,16 +550,20 @@ export const DoctorPatientsPage: React.FC = () => {
             <h3 className="text-base font-bold text-slate-900">
               {hasActiveFilters
                 ? "No matching patients found"
+                : activeTab === "MY_PATIENTS"
+                ? "No consulted patients found"
                 : "No registered patients found"}
             </h3>
             <p className={themeStyles.typography.subtext}>
               {hasActiveFilters
                 ? "Try adjusting your search term, gender, or state filters to locate patient records."
+                : activeTab === "MY_PATIENTS"
+                ? "You have not recorded any clinical encounters for patients yet. Switch to 'All Registered Patients' to find patients and begin consultations."
                 : "No patient records have been registered in the system yet."}
             </p>
           </div>
 
-          {hasActiveFilters && (
+          {hasActiveFilters ? (
             <div className="pt-2">
               <Button
                 variant="outline"
@@ -495,7 +575,18 @@ export const DoctorPatientsPage: React.FC = () => {
                 Reset Filters
               </Button>
             </div>
-          )}
+          ) : activeTab === "MY_PATIENTS" ? (
+            <div className="pt-2">
+              <Button
+                size="sm"
+                onClick={() => setActiveTab("ALL_PATIENTS")}
+                className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold cursor-pointer rounded-xl h-9 px-4"
+              >
+                <Globe className="w-3.5 h-3.5 mr-1.5" />
+                Browse All Registered Patients
+              </Button>
+            </div>
+          ) : null}
         </div>
       ) : (
         <div className="space-y-6">
@@ -549,12 +640,21 @@ export const DoctorPatientsPage: React.FC = () => {
                         </div>
                       </div>
 
-                      <Badge
-                        variant="verified"
-                        className="text-[10px] shrink-0 font-bold"
-                      >
-                        Registered
-                      </Badge>
+                      {activeTab === "MY_PATIENTS" ? (
+                        <Badge
+                          variant="verified"
+                          className="text-[10px] shrink-0 font-bold bg-teal-50 text-teal-700 border-teal-200"
+                        >
+                          Consulted
+                        </Badge>
+                      ) : (
+                        <Badge
+                          variant="outline"
+                          className="text-[10px] shrink-0 font-bold bg-slate-50 text-slate-700 border-slate-200"
+                        >
+                          Registered
+                        </Badge>
+                      )}
                     </div>
 
                     {/* Patient Attributes */}
