@@ -27,6 +27,7 @@ class MedicalRecordRepository:
         self.medications_collection = self.db["patient_medications"]
         self.medical_document_types_collection = self.db["medical_document_types"]
 
+    # * Create medical Record
     async def create_medical_record(
         self,
         medical_record: MedicalRecord,
@@ -62,6 +63,20 @@ class MedicalRecordRepository:
         )
 
         return medical_record_id
+
+    # * Upload Medical Documents
+    async def upload_medical_documents(
+        self,
+        patient_id: str,
+        medical_documents: list[MedicalDocument],
+    ) -> str:
+        if medical_documents:
+            docs_data = [doc.model_dump(mode="json") for doc in medical_documents]
+            await self.medical_documents_collection.insert_many(docs_data)
+
+        logger.success(f"Uploaded medical documents for patient{patient_id}")
+
+        return patient_id
 
     # * Get Patient Medical Records
     async def get_patient_medical_records(

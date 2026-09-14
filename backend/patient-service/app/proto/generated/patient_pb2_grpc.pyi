@@ -40,6 +40,7 @@ class PatientServiceStub:
     GetPatientsList: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetPatientsListReq, _patient_pb2.GetPatientsListRes]
     GetPatientMedicalRecords: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetPatientMedicalRecordsReq, _patient_pb2.GetPatientMedicalRecordsRes]
     GetPatientMedicalRecordDetails: _grpc.UnaryUnaryMultiCallable[_patient_pb2.GetPatientMedicalRecordDetailsReq, _patient_pb2.GetPatientMedicalRecordDetailsRes]
+    UploadMedicalDocuments: _grpc.UnaryUnaryMultiCallable[_patient_pb2.UploadMedicalDocumentsReq, _patient_pb2.UploadMedicalDocumentsRes]
 
 @_typing.type_check_only
 class PatientServiceAsyncStub(PatientServiceStub):
@@ -53,6 +54,7 @@ class PatientServiceAsyncStub(PatientServiceStub):
     GetPatientsList: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetPatientsListReq, _patient_pb2.GetPatientsListRes]  # type: ignore[assignment]
     GetPatientMedicalRecords: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetPatientMedicalRecordsReq, _patient_pb2.GetPatientMedicalRecordsRes]  # type: ignore[assignment]
     GetPatientMedicalRecordDetails: _aio.UnaryUnaryMultiCallable[_patient_pb2.GetPatientMedicalRecordDetailsReq, _patient_pb2.GetPatientMedicalRecordDetailsRes]  # type: ignore[assignment]
+    UploadMedicalDocuments: _aio.UnaryUnaryMultiCallable[_patient_pb2.UploadMedicalDocumentsReq, _patient_pb2.UploadMedicalDocumentsRes]  # type: ignore[assignment]
 
 class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
     @_abc_1.abstractmethod
@@ -117,5 +119,12 @@ class PatientServiceServicer(metaclass=_abc_1.ABCMeta):
         request: _patient_pb2.GetPatientMedicalRecordDetailsReq,
         context: _ServicerContext,
     ) -> _typing.Union[_patient_pb2.GetPatientMedicalRecordDetailsRes, _abc.Awaitable[_patient_pb2.GetPatientMedicalRecordDetailsRes]]: ...
+
+    @_abc_1.abstractmethod
+    def UploadMedicalDocuments(
+        self,
+        request: _patient_pb2.UploadMedicalDocumentsReq,
+        context: _ServicerContext,
+    ) -> _typing.Union[_patient_pb2.UploadMedicalDocumentsRes, _abc.Awaitable[_patient_pb2.UploadMedicalDocumentsRes]]: ...
 
 def add_PatientServiceServicer_to_server(servicer: PatientServiceServicer, server: _typing.Union[_grpc.Server, _aio.Server]) -> None: ...

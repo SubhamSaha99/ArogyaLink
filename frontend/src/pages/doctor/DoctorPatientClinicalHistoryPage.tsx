@@ -255,6 +255,22 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
     }>
   >([]);
 
+  // Upload Documents Modal State (for existing record)
+  const [isUploadDocsModalOpen, setIsUploadDocsModalOpen] = useState<boolean>(false);
+  const [uploadTargetRecordId, setUploadTargetRecordId] = useState<string>("");
+  const [uploadDocsList, setUploadDocsList] = useState<
+    Array<{
+      file: File;
+      documentType: number;
+      title: string;
+      description?: string;
+      documentDate: string;
+    }>
+  >([]);
+  const [submittingUploadDocs, setSubmittingUploadDocs] = useState<boolean>(false);
+  const [uploadDocsError, setUploadDocsError] = useState<string | null>(null);
+  const [uploadDocsSuccessMsg, setUploadDocsSuccessMsg] = useState<string | null>(null);
+
   // Infinite scroll observer refs & fetch guards
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
   const isFetchingRef = useRef<boolean>(false);
@@ -612,6 +628,101 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
       );
     } finally {
       setSubmittingRecord(false);
+    }
+  };
+
+  // Upload Additional Documents to existing record
+  const handleOpenUploadDocs = (recordId: string) => {
+    setUploadTargetRecordId(recordId);
+    setUploadDocsList([]);
+    setUploadDocsError(null);
+    setUploadDocsSuccessMsg(null);
+    setIsUploadDocsModalOpen(true);
+  };
+
+  const handleAddUploadDocFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files || e.target.files.length === 0) return;
+    const file = e.target.files[0];
+    setUploadDocsList((prev) => [
+      ...prev,
+      {
+        file,
+        documentType: 1,
+        title: file.name.replace(/\.[^/.]+$/, ""),
+        description: "",
+        documentDate: new Date().toISOString().split("T")[0],
+      },
+    ]);
+    e.target.value = "";
+  };
+
+  const handleUpdateUploadDocMeta = (
+    index: number,
+    field: "title" | "documentType" | "documentDate" | "description",
+    value: any
+  ) => {
+    setUploadDocsList((prev) =>
+      prev.map((doc, i) => (i === index ? { ...doc, [field]: value } : doc))
+    );
+  };
+
+  const handleRemoveUploadDoc = (index: number) => {
+    setUploadDocsList((prev) => prev.filter((_, i) => i !== index));
+  };
+
+  const handleSubmitUploadDocs = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!uploadTargetRecordId || !patientDetails?.patientId) {
+      setUploadDocsError("Patient or Medical Record reference is missing.");
+      return;
+    }
+    if (uploadDocsList.length === 0) {
+      setUploadDocsError("Please attach at least one document to upload.");
+      return;
+    }
+
+    setSubmittingUploadDocs(true);
+    setUploadDocsError(null);
+    setUploadDocsSuccessMsg(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("patientId", patientDetails.patientId);
+      formData.append("medicalRecordId", uploadTargetRecordId);
+
+      uploadDocsList.forEach((doc, idx) => {
+        formData.append(`medicalDocuments[${idx}].file`, doc.file);
+        formData.append(`medicalDocuments[${idx}].title`, doc.title || doc.file.name);
+        formData.append(`medicalDocuments[${idx}].documentType`, String(doc.documentType));
+        formData.append(`medicalDocuments[${idx}].documentDate`, doc.documentDate);
+        if (doc.description?.trim()) {
+          formData.append(`medicalDocuments[${idx}].description`, doc.description.trim());
+        }
+      });
+
+      await callApi(API_ROUTES.uploadMedicalDocuments, formData, "POST");
+
+      setUploadDocsSuccessMsg("Medical documents uploaded successfully.");
+
+      // Refresh currently viewed record details if open
+      if (recordDetails?.patientMedicalRecordId === uploadTargetRecordId) {
+        void handleOpenRecordDetails(uploadTargetRecordId);
+      }
+
+      setTimeout(() => {
+        setIsUploadDocsModalOpen(false);
+        setUploadDocsSuccessMsg(null);
+        setUploadDocsList([]);
+      }, 1000);
+    } catch (err: any) {
+      console.error("Failed to upload medical documents:", err);
+      setUploadDocsError(
+        err?.response?.data?.message ||
+          err?.message ||
+          "Failed to upload medical documents."
+      );
+    } finally {
+      setSubmittingUploadDocs(false);
     }
   };
 
@@ -1519,6 +1630,15 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                       <FileText className="w-4 h-4 text-teal-600" />
                       Attached Clinical Documents ({recordDetails.medicalDocuments.length})
                     </h4>
+                    <Button
+                      type="button"
+                      size="sm"
+                      onClick={() => handleOpenUploadDocs(recordDetails.patientMedicalRecordId)}
+                      className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl cursor-pointer h-7 px-2.5 flex items-center gap-1 shadow-xs"
+                    >
+                      <Upload className="w-3.5 h-3.5" />
+                      Upload Documents
+                    </Button>
                   </div>
 
                   {recordDetails.medicalDocuments.length === 0 ? (
@@ -1948,6 +2068,206 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                   <>
                     <CheckCircle2 className="w-3.5 h-3.5" />
                     <span>Save & Sync Record</span>
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </form>
+        </DialogContent>
+      </Dialog>
+
+      {/* ========================================================================= */}
+      {/* 3. Upload More Documents Modal (Existing Medical Record) */}
+      {/* ========================================================================= */}
+      <Dialog open={isUploadDocsModalOpen} onOpenChange={setIsUploadDocsModalOpen}>
+        <DialogContent className="max-w-2xl w-full p-0 overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-2xl">
+          <div className="p-6 bg-linear-to-r from-teal-700 via-teal-800 to-emerald-900 text-white flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
+                <Upload className="w-5 h-5 text-white" />
+              </div>
+              <div>
+                <h3 className="text-base font-bold text-white">
+                  Upload Clinical Documents
+                </h3>
+                <p className="text-xs text-teal-100 font-medium">
+                  Attach more prescriptions, reports, or scans to this clinical encounter
+                </p>
+              </div>
+            </div>
+            {patientDetails?.patientId && (
+              <Badge className="bg-white/10 text-white border-white/20 text-xs font-mono">
+                {patientDetails.patientId}
+              </Badge>
+            )}
+          </div>
+
+          <form onSubmit={handleSubmitUploadDocs}>
+            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
+              {uploadDocsError && (
+                <Alert variant="destructive" className="bg-rose-50 border-rose-200 text-rose-800 rounded-2xl">
+                  <AlertCircle className="w-4 h-4 text-rose-600" />
+                  <AlertDescription className="text-xs font-medium ml-2">
+                    {uploadDocsError}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              {uploadDocsSuccessMsg && (
+                <Alert className="bg-teal-50 border-teal-200 text-teal-800 rounded-2xl">
+                  <CheckCircle2 className="w-4 h-4 text-teal-600" />
+                  <AlertDescription className="text-xs font-medium ml-2">
+                    {uploadDocsSuccessMsg}
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex items-center justify-between">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-teal-800 flex items-center gap-1.5">
+                  <FileText className="w-4 h-4 text-teal-600" />
+                  Select & Attach Files
+                </h4>
+
+                <label className="inline-flex items-center gap-1.5 text-xs bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-xs">
+                  <Upload className="w-3.5 h-3.5 text-teal-600" />
+                  Choose File(s)
+                  <input
+                    type="file"
+                    onChange={handleAddUploadDocFile}
+                    className="hidden"
+                    accept=".pdf,.png,.jpg,.jpeg,.webp"
+                  />
+                </label>
+              </div>
+
+              {uploadDocsList.length === 0 ? (
+                <div className="p-6 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 text-center space-y-2">
+                  <Upload className="w-8 h-8 text-slate-300 mx-auto" />
+                  <p className="text-xs font-medium text-slate-500">
+                    No documents selected yet.
+                  </p>
+                  <p className="text-[11px] text-slate-400">
+                    Upload medical prescriptions, blood tests, radiology scans, or discharge summaries (PDF / JPEG / PNG).
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {uploadDocsList.map((doc, idx) => (
+                    <div
+                      key={idx}
+                      className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5"
+                    >
+                      <div className="flex flex-col sm:flex-row items-center gap-3">
+                        <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
+                          <FileText className="w-4 h-4" />
+                        </div>
+
+                        <div className="flex-1 w-full sm:w-auto">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                            Document Title
+                          </label>
+                          <Input
+                            type="text"
+                            value={doc.title}
+                            onChange={(e) =>
+                              handleUpdateUploadDocMeta(idx, "title", e.target.value)
+                            }
+                            required
+                            className="text-xs rounded-xl h-8 bg-slate-50"
+                          />
+                        </div>
+
+                        <div className="w-full sm:w-44">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                            Document Type
+                          </label>
+                          <select
+                            value={doc.documentType}
+                            onChange={(e) =>
+                              handleUpdateUploadDocMeta(idx, "documentType", Number(e.target.value))
+                            }
+                            className="w-full h-8 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
+                          >
+                            <option value={1}>Prescription</option>
+                            <option value={2}>Lab Test Report</option>
+                            <option value={3}>Discharge Summary</option>
+                            <option value={4}>Diagnostic Scan</option>
+                            <option value={5}>Other Medical Record</option>
+                          </select>
+                        </div>
+
+                        <div className="w-full sm:w-36">
+                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                            Document Date
+                          </label>
+                          <Input
+                            type="date"
+                            value={doc.documentDate}
+                            onChange={(e) =>
+                              handleUpdateUploadDocMeta(idx, "documentDate", e.target.value)
+                            }
+                            required
+                            className="text-xs rounded-xl h-8 bg-slate-50"
+                          />
+                        </div>
+
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => handleRemoveUploadDoc(idx)}
+                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </Button>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                          Document Notes / Clinical Description (Optional)
+                        </label>
+                        <Input
+                          type="text"
+                          placeholder="e.g. Fasting glucose report, Dr. Roy handwritten notes..."
+                          value={doc.description || ""}
+                          onChange={(e) =>
+                            handleUpdateUploadDocMeta(idx, "description", e.target.value)
+                          }
+                          className="text-xs rounded-xl h-8 bg-slate-50"
+                        />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setIsUploadDocsModalOpen(false)}
+                disabled={submittingUploadDocs}
+                className="text-xs rounded-xl cursor-pointer"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="submit"
+                size="sm"
+                disabled={submittingUploadDocs || uploadDocsList.length === 0}
+                className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl cursor-pointer shadow-md shadow-teal-600/20 px-4 flex items-center gap-1.5"
+              >
+                {submittingUploadDocs ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Uploading...</span>
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>Upload & Attach ({uploadDocsList.length})</span>
                   </>
                 )}
               </Button>

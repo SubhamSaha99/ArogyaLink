@@ -1,4 +1,4 @@
-import { Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import { BadRequestException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
 import {
   CreatePatientMedicalRecordReq,
   CreatePatientMedicalRecordRes,
@@ -13,6 +13,8 @@ import {
   PatientServiceClient,
   UpdatePatientProfileDetailsReq,
   UpdatePatientProfileDetailsRes,
+  UploadMedicalDocumentsReq,
+  UploadMedicalDocumentsRes,
 } from '../proto/generated/patient';
 import { GrpcServiceName } from '../common/utils/constants';
 import type { ClientGrpc } from '@nestjs/microservices';
@@ -20,6 +22,7 @@ import {
   CreateMedicalRecordDto,
   GetPatientsListDto,
   PatientProfileDetailsDto,
+  UploadMedicalDocumentsDto,
 } from './patient.dto';
 import { moveFile } from '../common/utils/upload-file';
 import { firstValueFrom } from 'rxjs';
@@ -128,7 +131,7 @@ export class PatientService implements OnModuleInit {
           documents.map(async (file, loopIndex) => {
             const uploadedPath = await moveFile(
               file.path,
-              'patient-medical-documents',
+              `patient-medical-documents/${request.patientId}`,
             );
             uploadedFilePaths.push(uploadedPath);
 
@@ -190,6 +193,68 @@ export class PatientService implements OnModuleInit {
   }
 
   /**
+   * @description Upload Medical Documents
+   * @param request 
+   * @param documents 
+   * @returns UploadMedicalDocumentsRes
+   */
+  async uploadMedicalDocuments(
+    request: UploadMedicalDocumentsDto,
+    documents?: Express.Multer.File[],
+  ): Promise<UploadMedicalDocumentsRes> {
+    const uploadedFilePaths: string[] = [];
+    try {
+      let medicalDocuments: PatientMedicalDocuments[] = [];
+
+      if (documents && documents.length > 0) {
+        medicalDocuments = await Promise.all(
+          documents.map(async (file, loopIndex) => {
+            const uploadedPath = await moveFile(
+              file.path,
+              `patient-medical-documents/${request.patientId}`,
+            );
+            uploadedFilePaths.push(uploadedPath);
+
+            const indexMatch = file.fieldname?.match(
+              /medicalDocuments\[(\d+)\]/,
+            );
+            const metaIndex = indexMatch
+              ? parseInt(indexMatch[1], 10)
+              : loopIndex;
+            const meta = request.medicalDocuments?.[metaIndex];
+
+            return {
+              documentType: meta?.documentType ?? 1,
+              title: meta?.title ?? file.originalname,
+              description: meta?.description ?? '',
+              documentUrl: uploadedPath,
+              documentDate:
+                meta?.documentDate ?? new Date().toISOString().split('T')[0],
+            };
+          }),
+        );
+      }
+
+      const documentRequest: UploadMedicalDocumentsReq = {
+        patientId: request.patientId,
+        medicalRecordId: request.medicalRecordId,
+        medicalDocuments,
+      };
+
+      return await firstValueFrom(
+        this.patientGrpcService.uploadMedicalDocuments(documentRequest),
+      );
+    } catch (error) {
+      if (uploadedFilePaths.length > 0) {
+        await Promise.allSettled(
+          uploadedFilePaths.map((filePath) => deleteFile(filePath)),
+        );
+      }
+      throw error;
+    }
+  }
+
+  /**
    * @description Get Patient Medical Records
    * @param patientPrimaryKey
    * @param patientId
@@ -215,7 +280,7 @@ export class PatientService implements OnModuleInit {
 
   /**
    * @description Get Patient Medical Record Details
-   * @param medicalRecordId 
+   * @param medicalRecordId
    * @returns GetPatientMedicalRecordDetailsRes
    */
   async getPatientMedicalRecordDetails(
@@ -236,13 +301,15 @@ export class PatientService implements OnModuleInit {
   async getPatientsList(
     request: GetPatientsListDto,
     doctorPrimaryKey: number | undefined,
-    healthInstitutePrimaryKey: number | undefined
+    healthInstitutePrimaryKey: number | undefined,
   ): Promise<GetPatientsListRes> {
-    return firstValueFrom(this.patientGrpcService.getPatientsList({
+    return firstValueFrom(
+      this.patientGrpcService.getPatientsList({
         ...request,
         doctorPrimaryKey,
-        healthInstitutePrimaryKey
-    }));
+        healthInstitutePrimaryKey,
+      }),
+    );
   }
 
   /**

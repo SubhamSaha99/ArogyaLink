@@ -20,6 +20,8 @@ service PatientService {
   rpc GetPatientMedicalRecords(GetPatientMedicalRecordsReq) returns (GetPatientMedicalRecordsRes);
 
   rpc GetPatientMedicalRecordDetails(GetPatientMedicalRecordDetailsReq) returns (GetPatientMedicalRecordDetailsRes);
+
+  rpc UploadMedicalDocuments(UploadMedicalDocumentsReq) returns (UploadMedicalDocumentsRes);
 }
 
 message PatientProfileReq {
@@ -200,12 +202,6 @@ message GetPatientMedicalRecordDetailsReq {
 }
 
 message GetPateintMedicalDocuments {
-  string patientMedicalDocumentId = 1;
-  uint32 documentType             = 2;
-  string documentTypeName         = 3;
-  string title                    = 4;
-  string documentUrl              = 5;
-  string documentDate             = 6;
   string          patientMedicalDocumentId = 1;
   uint32          documentType             = 2;
   string          documentTypeName         = 3;
@@ -233,4 +229,14 @@ message GetPatientMedicalRecordDetailsRes {
   optional string                     resolvedDate           = 10;
   repeated GetPateintMedicalDocuments medicalDocuments       = 11;
   repeated GetPatientMedications      medications            = 12;
+}
+
+message UploadMedicalDocumentsReq {
+  string                           patientId        = 1;
+  string                           medicalRecordId  = 2;
+  repeated PatientMedicalDocuments medicalDocuments = 3;
+}
+
+message UploadMedicalDocumentsRes {
+  string patientId = 1;
 }

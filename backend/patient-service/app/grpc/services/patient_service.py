@@ -1,3 +1,4 @@
+from _collections_abc import Awaitable
 from datetime import date
 from typing import cast
 
@@ -33,7 +34,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             middle_name=request.middleName or None,
             last_name=request.lastName,
             email=request.email,
-            mobile=request.mobile
+            mobile=request.mobile,
         )
 
         result = await self.patient_service.create_patient_profile(patient_profile)
@@ -110,7 +111,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                 firstName=patient_details["first_name"],
                 middleName=patient_details.get("middle_name"),
                 lastName=patient_details["last_name"],
-                email= patient_details["email"],
+                email=patient_details["email"],
                 mobile=patient_details["mobile"],
                 dateOfBirth=patient_details.get("date_of_birth"),
                 age=patient_details.get("age"),
@@ -181,9 +182,36 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
             medications=medications,
         )
 
-        return patient_pb2.CreatePatientMedicalRecordRes(
-            patientId=patient_id,
+        return patient_pb2.CreatePatientMedicalRecordRes(patientId=patient_id)
+
+    # * Upload Medical Documents
+    @grpc_error_handler
+    async def UploadMedicalDocuments(
+        self,
+        request: patient_pb2.UploadMedicalDocumentsReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.UploadMedicalDocumentsRes:
+
+        medical_documents = [
+            MedicalDocument(
+                medical_record_id=request.medicalRecordId,
+                document_type=MedicalDocumentType(doc.documentType),
+                title=doc.title,
+                description=doc.description,
+                document_url=doc.documentUrl,
+                document_date=(
+                    date.fromisoformat(doc.documentDate) if doc.documentDate else None
+                ),
+            )
+            for doc in request.medicalDocuments
+        ]
+        patient_id = await self.patient_service.upload_medical_documents(
+            patient_id=request.patientId,
+            medical_record_id=request.medicalRecordId,
+            medical_documents=medical_documents,
         )
+
+        return patient_pb2.UploadMedicalDocumentsRes(patientId=patient_id)
 
     # * Get States
     @grpc_error_handler
@@ -252,7 +280,8 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
         )
         health_institute_primary_key = (
             request.healthInstitutePrimaryKey
-            if request.HasField("healthInstitutePrimaryKey") and request.healthInstitutePrimaryKey > 0
+            if request.HasField("healthInstitutePrimaryKey")
+            and request.healthInstitutePrimaryKey > 0
             else None
         )
         offset = request.offset or 0
@@ -351,9 +380,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                     documentUrl=(
                         f"{settings.api_base_url}/uploads/{doc['document_url'].lstrip('/')}"
                         if doc["document_url"]
-                        and not doc["document_url"].startswith(
-                            ("http://", "https://")
-                        )
+                        and not doc["document_url"].startswith(("http://", "https://"))
                         else doc["document_url"]
                     ),
                     documentDate=doc["document_date"],
@@ -372,5 +399,3 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                 for med in result["medications"]
             ],
         )
-
-

@@ -127,16 +127,25 @@ export class GetPatientDetailsDto {
  * @description medical document dto
  */
 export class MedicalDocumentDto {
+  @IsOptional()
+  @IsMongoId()
+  medicalRecordId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  medicalRecrodId?: string;
+
+  @IsOptional()
   @Type(() => Number)
   @IsInt()
-  documentType!: number;
+  documentType?: number;
 
-  @IsString()
-  @IsNotEmpty()
-  title!: string;
-
-  @IsString()
   @IsOptional()
+  @IsString()
+  title?: string;
+
+  @IsOptional()
+  @IsString()
   description?: string;
 
   @IsOptional()
@@ -246,6 +255,31 @@ export class CreateMedicalRecordDto {
 }
 
 /**
+ * @description insert medical documents dto
+ */
+export class UploadMedicalDocumentsDto {
+  @IsString()
+  patientId!: string;
+
+  @IsMongoId()
+  medicalRecordId!: string;
+
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @ValidateNested({ each: true })
+  @Type(() => MedicalDocumentDto)
+  medicalDocuments?: MedicalDocumentDto[];
+}
+
+/**
  * @description Get Patient Medical Records DTO.
  */
 export class GetPatientMedicalRecordsDto {
@@ -271,7 +305,6 @@ export class GetPatientMedicalRecordsDto {
   @Max(100)
   limit: number = 10;
 }
-
 
 /**
  * @description Get Patient List DTO.

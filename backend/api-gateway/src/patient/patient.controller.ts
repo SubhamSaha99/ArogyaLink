@@ -21,6 +21,7 @@ import {
   GetPatientMedicalRecordsDto,
   GetPatientsListDto,
   PatientProfileDetailsDto,
+  UploadMedicalDocumentsDto,
 } from './patient.dto';
 import { Auth } from '../common/decorators/auth.decorator';
 import { UserRole } from '../common/utils/constants';
@@ -109,7 +110,7 @@ export class PatientController {
    * @returns json
    */
   @Post('createPatientMedicalRecord')
-  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   @UseInterceptors(
     AnyFilesInterceptor(
       multerConfig({
@@ -141,14 +142,6 @@ export class PatientController {
         doctorPrimaryKey = request.doctorPrimaryKey;
         doctorId = request.doctorId;
         break;
-      case UserRole.PATIENT:
-        request.patientPrimaryKey = user.userPrimaryKey;
-        request.patientId = user.userBusinessId;
-        doctorPrimaryKey = request.doctorPrimaryKey;
-        doctorId = request.doctorId;
-        healthInstitutePrimaryKey = request.healthInstitutePrimaryKey;
-        healthInstituteId = request.healthInstituteId;
-        break;
     }
 
     const result = await this.patientService.createPatientMedicalRecord(
@@ -163,6 +156,38 @@ export class PatientController {
     return {
       success: true,
       message: 'Medical Record Created Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Upload Medical Documents
+   * @param request 
+   * @param documents 
+   * @returns json
+   */
+  @Post('uploadMedicalDocuments')
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
+  @UseInterceptors(
+    AnyFilesInterceptor(
+      multerConfig({
+        maxSize: 5 * 1024 * 1024,
+      }),
+    ),
+    MultipartNestedInterceptor,
+  )
+  async uploadMedicalDocuments(
+    @Body() request: UploadMedicalDocumentsDto,
+    @UploadedFiles() documents?: Express.Multer.File[],
+  ) {
+    const result = await this.patientService.uploadMedicalDocuments(
+      request,
+      documents,
+    );
+
+    return {
+      success: true,
+      message: 'Medical Documents Uploaded Successfully.',
       data: result,
     };
   }

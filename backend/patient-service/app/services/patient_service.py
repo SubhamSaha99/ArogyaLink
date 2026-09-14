@@ -98,10 +98,8 @@ class PatientService:
         patient_id: str | None = None,
     ) -> PatientDetailsInterface:
 
-        patient_details = (
-            await self.patient_repository.get_by_patient_primary_key(
-                patient_primary_key, patient_id
-            )
+        patient_details = await self.patient_repository.get_by_patient_primary_key(
+            patient_primary_key, patient_id
         )
 
         if patient_details is None:
@@ -135,6 +133,22 @@ class PatientService:
         )
 
         return medical_record.patient_id
+
+    # * Upload Medical Documents
+    async def upload_medical_documents(
+        self,
+        patient_id: str,
+        medical_record_id: str,
+        medical_documents: list[MedicalDocument],
+    ) -> str:
+        response = await self.medical_record_repository.upload_medical_documents(
+            patient_id=patient_id, medical_documents=medical_documents
+        )
+        if medical_documents:
+            cache_key = f"medical-record-id:{medical_record_id}"
+            await self.redis_service.delete(cache_key)
+
+        return response
 
     # * Get States
     async def get_states(self) -> list[MasterDataItemInterface]:

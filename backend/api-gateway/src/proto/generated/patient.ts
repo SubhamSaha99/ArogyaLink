@@ -217,6 +217,16 @@ export interface GetPatientMedicalRecordDetailsRes {
   medications: GetPatientMedications[];
 }
 
+export interface UploadMedicalDocumentsReq {
+  patientId: string;
+  medicalRecordId: string;
+  medicalDocuments: PatientMedicalDocuments[];
+}
+
+export interface UploadMedicalDocumentsRes {
+  patientId: string;
+}
+
 export const PATIENT_PACKAGE_NAME = "patient";
 
 export interface PatientServiceClient {
@@ -239,6 +249,8 @@ export interface PatientServiceClient {
   getPatientMedicalRecordDetails(
     request: GetPatientMedicalRecordDetailsReq,
   ): Observable<GetPatientMedicalRecordDetailsRes>;
+
+  uploadMedicalDocuments(request: UploadMedicalDocumentsReq): Observable<UploadMedicalDocumentsRes>;
 }
 
 export interface PatientServiceController {
@@ -279,6 +291,10 @@ export interface PatientServiceController {
     | Promise<GetPatientMedicalRecordDetailsRes>
     | Observable<GetPatientMedicalRecordDetailsRes>
     | GetPatientMedicalRecordDetailsRes;
+
+  uploadMedicalDocuments(
+    request: UploadMedicalDocumentsReq,
+  ): Promise<UploadMedicalDocumentsRes> | Observable<UploadMedicalDocumentsRes> | UploadMedicalDocumentsRes;
 }
 
 export function PatientServiceControllerMethods() {
@@ -293,6 +309,7 @@ export function PatientServiceControllerMethods() {
       "getPatientsList",
       "getPatientMedicalRecords",
       "getPatientMedicalRecordDetails",
+      "uploadMedicalDocuments",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
