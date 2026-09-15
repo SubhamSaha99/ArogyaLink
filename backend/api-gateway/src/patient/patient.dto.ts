@@ -12,6 +12,7 @@ import {
   IsNotEmpty,
   Max,
 } from 'class-validator';
+import { MedicationStatus } from '../common/utils/constants';
 
 /**
  * @description patient profile dto
@@ -167,7 +168,7 @@ export class MedicalMedicationDto {
 
   @IsString()
   @IsOptional()
-  description?: string | '';
+  description?: string;
 
   @IsString()
   @IsNotEmpty()
@@ -281,6 +282,81 @@ export class UploadMedicalDocumentsDto {
   @ValidateNested({ each: true })
   @Type(() => MedicalDocumentDto)
   medicalDocuments?: MedicalDocumentDto[];
+}
+
+/**
+ * @description  Medications item for update dto
+ */
+export class UpdateMedicationItemDto {
+  @IsOptional()
+  @IsMongoId()
+  patientMedicationId?: string;
+
+  @IsOptional()
+  @IsMongoId()
+  medicationId?: string;
+
+  @IsOptional()
+  @IsString()
+  medicationName?: string;
+
+  @IsOptional()
+  @IsString()
+  dosage?: string;
+
+  @IsOptional()
+  @IsString()
+  description?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
+    message: 'Start date must be in YYYY-MM-DD format',
+  })
+  startDate?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
+    message: 'End date must be in YYYY-MM-DD format',
+  })
+  endDate?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @IsIn([1, 2, 3, 4], {
+    message: 'Status must be 1 (Active), 2 (Completed), 3 (Discontinued), or 4 (On Hold)',
+  })
+  status?: MedicationStatus;
+}
+
+export class Medication extends UpdateMedicationItemDto {}
+
+/**
+ * @description Update Medications Dto
+ */
+export class UpdateMedicationsDto {
+  @IsString()
+  patientId!: string;
+
+  @IsMongoId()
+  medicalRecordId!: string;
+
+  @IsNotEmpty()
+  @Transform(({ value }: { value: unknown }) => {
+    if (typeof value === 'string') {
+      try {
+        return JSON.parse(value);
+      } catch {
+        return value;
+      }
+    }
+    return value;
+  })
+  @ValidateNested({ each: true })
+  @Type(() => UpdateMedicationItemDto)
+  medications!: UpdateMedicationItemDto[];
 }
 
 /**

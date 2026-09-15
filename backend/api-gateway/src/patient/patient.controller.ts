@@ -21,6 +21,7 @@ import {
   GetPatientMedicalRecordsDto,
   GetPatientsListDto,
   PatientProfileDetailsDto,
+  UpdateMedicationsDto,
   UploadMedicalDocumentsDto,
 } from './patient.dto';
 import { Auth } from '../common/decorators/auth.decorator';
@@ -167,7 +168,7 @@ export class PatientController {
    * @returns json
    */
   @Post('uploadMedicalDocuments')
-  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   @UseInterceptors(
     AnyFilesInterceptor(
       multerConfig({
@@ -188,6 +189,24 @@ export class PatientController {
     return {
       success: true,
       message: 'Medical Documents Uploaded Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Update Medications (Update existing medication status/endDate/details or enter new medications)
+   * @param request UpdateMedicationsDto
+   * @returns json
+   */
+  @Post('updateMedications')
+  @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
+  @HttpCode(HttpStatus.OK)
+  async updateMedications(@Body() request: UpdateMedicationsDto) {
+    const result = await this.patientService.updateMedications(request);
+
+    return {
+      success: true,
+      message: 'Medications updated successfully.',
       data: result,
     };
   }

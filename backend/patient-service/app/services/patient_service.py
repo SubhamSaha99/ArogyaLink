@@ -150,6 +150,23 @@ class PatientService:
 
         return response
 
+    # * Update Medications
+    async def update_medications(
+        self,
+        patient_id: str,
+        medical_record_id: str,
+        medications: list[dict],
+    ) -> str:
+        await self.medical_record_repository.update_medications(
+            medical_record_id=medical_record_id,
+            medications=medications,
+        )
+        if medications:
+            cache_key = f"medical-record-id:{medical_record_id}"
+            await self.redis_service.delete(cache_key)
+
+        return patient_id
+
     # * Get States
     async def get_states(self) -> list[MasterDataItemInterface]:
         cache_key = "states-patient-service"

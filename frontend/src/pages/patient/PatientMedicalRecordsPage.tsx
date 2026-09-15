@@ -1,12 +1,9 @@
-import React, { useCallback, useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState, useMemo } from "react";
 import {
-  FileText,
   Activity,
-  Pill,
   Building,
   User,
   Stethoscope,
-  ExternalLink,
   Eye,
   Search,
   CheckCircle2,
@@ -16,23 +13,18 @@ import {
   X,
   ShieldCheck,
   FileSpreadsheet,
-  Loader2
 } from "lucide-react";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 import { useAuth } from "@/context/AuthContext";
 import { themeStyles } from "@/styles/themeStyles";
+import { MedicalRecordDetailsModal } from "@/components/doctor/MedicalRecordDetailsModal";
 
 // Interfaces
 export interface PatientMedicalRecordItem {
@@ -45,68 +37,6 @@ export interface PatientMedicalRecordItem {
   diagnosis: string;
   status: number; // 1: Active, 2: Completed / Resolved
 }
-
-export interface MedicalDocumentItem {
-  patientMedicalDocumentId: string;
-  documentType: number;
-  documentTypeName: string;
-  title: string;
-  description?: string;
-  documentUrl: string;
-  documentDate: string;
-}
-
-export interface MedicationItem {
-  patientMedicationId: string;
-  medicationName: string;
-  dosage: string;
-  startDate: string;
-  endDate?: string;
-  status: number; // 1: Active, 2: Completed, 3: Discontinued, 4: On Hold
-  description?: string;
-}
-
-export interface PatientMedicalRecordDetails {
-  patientMedicalRecordId: string;
-  title: string;
-  diagnosis: string;
-  description?: string;
-  status: number;
-  startedDate: string;
-  resolvedDate?: string;
-  medicalDocuments: MedicalDocumentItem[];
-  medications: MedicationItem[];
-}
-
-export const getDocumentFullUrl = (url?: string) => {
-  if (!url) return "";
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("data:") ||
-    url.startsWith("blob:")
-  ) {
-    return url;
-  }
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-  const cleanPath = url.startsWith("/") ? url : `/${url}`;
-  return `${apiBase}${cleanPath}`;
-};
-
-const getMedicationStatusBadge = (status: number) => {
-  switch (status) {
-    case 1:
-      return { label: "Active", bg: "bg-teal-50 text-teal-700 border-teal-200" };
-    case 2:
-      return { label: "Completed", bg: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-    case 3:
-      return { label: "Discontinued", bg: "bg-rose-50 text-rose-700 border-rose-200" };
-    case 4:
-      return { label: "On Hold", bg: "bg-amber-50 text-amber-700 border-amber-200" };
-    default:
-      return { label: "Active", bg: "bg-teal-50 text-teal-700 border-teal-200" };
-  }
-};
 
 const PAGE_SIZE = 8;
 
@@ -128,10 +58,7 @@ export const PatientMedicalRecordsPage: React.FC = () => {
 
   // Record Details Modal State
   const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
-  const [recordDetails, setRecordDetails] =
-    useState<PatientMedicalRecordDetails | null>(null);
-  const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
-  const [detailsError, setDetailsError] = useState<string | null>(null);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
 
   // Sentinel ref for infinite scroll intersection observer
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
@@ -248,63 +175,42 @@ export const PatientMedicalRecordsPage: React.FC = () => {
     void fetchRecordsPage(0, true);
   };
 
-  // Fetch Record Details
-  const handleViewRecordDetails = async (recordId: string) => {
+  // Open Details Modal
+  const handleViewRecordDetails = (recordId: string) => {
+    setSelectedRecordId(recordId);
     setIsDetailsModalOpen(true);
-    setLoadingDetails(true);
-    setDetailsError(null);
-    setRecordDetails(null);
-
-    try {
-      const url = `${API_ROUTES.getPatientMedicalRecordDetails}/${recordId}`;
-      const response = await callApi(url, null, "GET");
-      const data = response?.data || response;
-      const rec = data?.medicalRecordDetails || data?.medicalRecord || data;
-
-      setRecordDetails({
-        patientMedicalRecordId:
-          rec.patientMedicalRecordId || rec._id || recordId,
-        title: rec.title || "Clinical Record",
-        diagnosis: rec.diagnosis || "No diagnosis specified",
-        description: rec.description || "",
-        status: Number(rec.status ?? 1),
-        startedDate: rec.startedDate || rec.created_at || "",
-        resolvedDate: rec.resolvedDate,
-        medicalDocuments: Array.isArray(rec.medicalDocuments)
-          ? rec.medicalDocuments
-          : [],
-        medications: Array.isArray(rec.medications) ? rec.medications : [],
-      });
-    } catch (err: any) {
-      console.error("Failed to load medical record details:", err);
-      setDetailsError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to load details for this clinical record."
-      );
-    } finally {
-      setLoadingDetails(false);
-    }
   };
 
   // Filtered records for client-side search & status tab
-  const filteredRecords = records.filter((rec) => {
-    const matchesSearch =
-      !searchTerm.trim() ||
-      rec.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-      rec.diagnosis.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-      rec.doctorId.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
-      rec.healthInstituteId.toLowerCase().includes(searchTerm.toLowerCase().trim());
+  const filteredRecords = useMemo(() => {
+    return records.filter((rec) => {
+      const matchesSearch =
+        !searchTerm.trim() ||
+        rec.title.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        rec.diagnosis.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        rec.doctorId.toLowerCase().includes(searchTerm.toLowerCase().trim()) ||
+        rec.healthInstituteId.toLowerCase().includes(searchTerm.toLowerCase().trim());
 
-    const matchesStatus =
-      statusFilter === "ALL" || String(rec.status) === statusFilter;
+      const matchesStatus =
+        statusFilter === "ALL" || String(rec.status) === statusFilter;
 
-    return matchesSearch && matchesStatus;
-  });
+      return matchesSearch && matchesStatus;
+    });
+  }, [records, searchTerm, statusFilter]);
 
   // Summary Metrics
-  const activeCount = records.filter((r) => r.status === 1).length;
-  const completedCount = records.filter((r) => r.status === 2).length;
+  const activeCount = useMemo(
+    () => records.filter((r) => r.status === 1).length,
+    [records]
+  );
+  const completedCount = useMemo(
+    () => records.filter((r) => r.status === 2).length,
+    [records]
+  );
+
+  const patientFullName = user?.patientId
+    ? `Patient ${user.patientId}`
+    : "My Records";
 
   return (
     <div className={themeStyles.layout.pageContainer}>
@@ -393,7 +299,7 @@ export const PatientMedicalRecordsPage: React.FC = () => {
       {/* Main Content Area */}
       <div className="space-y-6">
         {/* Search & Filter Controls */}
-        <Card className="bg-white rounded-2xl border-slate-200/80 shadow-sm p-4">
+        <Card className="bg-white rounded-2xl border-slate-200/80 shadow-none p-4">
           <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
             {/* Search Box */}
             <div className="relative w-full sm:w-80">
@@ -402,13 +308,13 @@ export const PatientMedicalRecordsPage: React.FC = () => {
                 placeholder="Search diagnosis, title, doctor ID..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-9.5 pr-8 h-10 text-xs rounded-xl bg-slate-50 border-slate-200 focus:bg-white focus:border-emerald-500 focus:ring-emerald-500"
+                className="pl-9.5 pr-8 h-10 text-xs rounded-xl bg-slate-50 border-slate-200 focus:bg-white"
               />
               {searchTerm && (
                 <button
                   type="button"
                   onClick={() => setSearchTerm("")}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
                 >
                   <X className="w-3.5 h-3.5" />
                 </button>
@@ -472,7 +378,7 @@ export const PatientMedicalRecordsPage: React.FC = () => {
             {[...Array(4)].map((_, i) => (
               <Card
                 key={i}
-                className="bg-white rounded-3xl border-slate-200/80 p-6 space-y-4 animate-pulse shadow-xs"
+                className="bg-white rounded-3xl border-slate-200/80 p-6 space-y-4 animate-pulse shadow-none"
               >
                 <div className="flex items-center justify-between">
                   <Skeleton className="h-6 w-3/5 rounded-lg bg-slate-100" />
@@ -488,7 +394,7 @@ export const PatientMedicalRecordsPage: React.FC = () => {
           </div>
         ) : filteredRecords.length === 0 ? (
           /* Empty State */
-          <Card className="bg-white rounded-3xl border-slate-200/80 p-12 text-center shadow-xs">
+          <Card className="bg-white rounded-3xl border-slate-200/80 p-12 text-center shadow-none">
             <div className="w-16 h-16 rounded-2xl bg-emerald-50 text-emerald-600 flex items-center justify-center mx-auto mb-4 border border-emerald-100">
               <FileSpreadsheet className="w-8 h-8 text-emerald-600" />
             </div>
@@ -528,7 +434,7 @@ export const PatientMedicalRecordsPage: React.FC = () => {
                     key={record.patientMedicalRecordId}
                     className="bg-white rounded-3xl border-slate-200/80 hover:border-emerald-500/50 hover:shadow-lg transition-all duration-300 flex flex-col justify-between overflow-hidden group"
                   >
-                    <div className="p-6 space-y-4">
+                    <CardContent className="p-6 space-y-4">
                       {/* Top Row: Title & Status Badge */}
                       <div className="flex items-start justify-between gap-3">
                         <div className="space-y-1 min-w-0">
@@ -569,7 +475,7 @@ export const PatientMedicalRecordsPage: React.FC = () => {
                           </span>
                         </div>
                       </div>
-                    </div>
+                    </CardContent>
 
                     {/* Bottom Action Footer */}
                     <div className="p-4 bg-slate-50/70 border-t border-slate-100 flex items-center justify-between">
@@ -582,7 +488,7 @@ export const PatientMedicalRecordsPage: React.FC = () => {
                         onClick={() =>
                           handleViewRecordDetails(record.patientMedicalRecordId)
                         }
-                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3.5 rounded-xl shadow-sm transition-all cursor-pointer flex items-center gap-1.5"
+                        className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs h-8 px-3.5 rounded-xl shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
                       >
                         <Eye className="w-3.5 h-3.5" />
                         View Full Details
@@ -623,231 +529,15 @@ export const PatientMedicalRecordsPage: React.FC = () => {
       </div>
 
       {/* ========================================================================= */}
-      {/* 1. Medical Record Details Modal */}
+      {/* Medical Record Details Modal (Read-Only) */}
       {/* ========================================================================= */}
-      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl border-slate-200 shadow-2xl">
-          <div className="p-6 bg-linear-to-r from-slate-900 via-teal-950 to-slate-900 text-white sticky top-0 z-20">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Badge variant="verified" className="text-[10px] bg-teal-500/20 text-teal-300 border-teal-400/30">
-                    Clinical Encounter
-                  </Badge>
-                  {recordDetails && (
-                    <Badge
-                      className={`text-[10px] font-bold ${
-                        recordDetails.status === 1
-                          ? "bg-amber-500 text-white"
-                          : "bg-emerald-600 text-white"
-                      }`}
-                    >
-                      {recordDetails.status === 1 ? "Active Condition" : "Resolved / Completed"}
-                    </Badge>
-                  )}
-                </div>
-                <h3 className="text-xl font-black text-white">
-                  {loadingDetails ? "Loading clinical details..." : recordDetails?.title || "Clinical Record"}
-                </h3>
-              </div>
-            </div>
-          </div>
-
-          <div className="p-6 space-y-6">
-            {loadingDetails ? (
-              <div className="space-y-4 py-8 text-center">
-                <Loader2 className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
-                <p className="text-xs text-slate-500 font-medium">Loading clinical history and attached artifacts...</p>
-              </div>
-            ) : detailsError ? (
-              <Alert variant="destructive" className="p-4">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                <AlertDescription className="text-xs">{detailsError}</AlertDescription>
-              </Alert>
-            ) : recordDetails ? (
-              <div className="space-y-6">
-                {/* Diagnosis and Description */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-teal-50/60 border border-teal-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-teal-800 tracking-wider">
-                      Diagnosis
-                    </span>
-                    <p className="text-sm font-bold text-slate-900">
-                      {recordDetails.diagnosis}
-                    </p>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                      Clinical Timeline
-                    </span>
-                    <div className="flex items-center justify-between text-xs text-slate-800 pt-0.5">
-                      <span>Started: <strong>{recordDetails.startedDate || "Not recorded"}</strong></span>
-                      {recordDetails.resolvedDate && (
-                        <span>Resolved: <strong>{recordDetails.resolvedDate}</strong></span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-
-                {recordDetails.description && (
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                      Clinical Notes & Description
-                    </span>
-                    <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {recordDetails.description}
-                    </p>
-                  </div>
-                )}
-
-                {/* Prescribed Medications */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <Pill className="w-4 h-4 text-teal-600" />
-                      Prescribed Medications ({recordDetails.medications.length})
-                    </h4>
-                  </div>
-
-                  {recordDetails.medications.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
-                      No prescription items recorded for this encounter.
-                    </div>
-                  ) : (
-                    <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                          <tr>
-                            <th className="p-3">Medication</th>
-                            <th className="p-3">Dosage / Frequency</th>
-                            <th className="p-3">Started Date</th>
-                            <th className="p-3">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {recordDetails.medications.map((med) => {
-                            const badgeInfo = getMedicationStatusBadge(med.status);
-                            return (
-                              <tr key={med.patientMedicationId} className="hover:bg-slate-50/50">
-                                <td className="p-3">
-                                  <div className="font-bold text-slate-900 flex items-center gap-2">
-                                    <Pill className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                                    <span>{med.medicationName}</span>
-                                  </div>
-                                  {med.description && (
-                                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 ml-5.5">
-                                      {med.description}
-                                    </p>
-                                  )}
-                                </td>
-                                <td className="p-3 font-semibold text-slate-700 font-mono">
-                                  {med.dosage}
-                                </td>
-                                <td className="p-3 text-slate-600">
-                                  {med.startDate}
-                                </td>
-                                <td className="p-3">
-                                  <Badge className={`text-[10px] font-semibold ${badgeInfo.bg}`}>
-                                    {badgeInfo.label}
-                                  </Badge>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-
-                {/* Attached Clinical Documents */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-teal-600" />
-                      Attached Clinical Documents ({recordDetails.medicalDocuments.length})
-                    </h4>
-                  </div>
-
-                  {recordDetails.medicalDocuments.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
-                      No documents or lab reports attached to this record.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {recordDetails.medicalDocuments.map((doc) => {
-                        const fileUrl = getDocumentFullUrl(doc.documentUrl);
-
-                        return (
-                          <div
-                            key={doc.patientMedicalDocumentId}
-                            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between gap-2.5 hover:border-teal-400 transition-colors"
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-                                  <FileText className="w-5 h-5" />
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-bold text-slate-900 truncate" title={doc.title}>
-                                    {doc.title || "Clinical Document"}
-                                  </p>
-                                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                      {doc.documentTypeName || "Document"}
-                                    </Badge>
-                                    <span>{doc.documentDate}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {fileUrl && (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="shrink-0"
-                                >
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 px-2.5 text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200 rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
-                                  >
-                                    <ExternalLink className="w-3.5 h-3.5" />
-                                    View
-                                  </Button>
-                                </a>
-                              )}
-                            </div>
-
-                            {doc.description && (
-                              <p className="text-xs text-slate-600 bg-slate-50/80 p-2 rounded-xl border border-slate-100 leading-relaxed">
-                                {doc.description}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsDetailsModalOpen(false)}
-              className="text-xs rounded-xl cursor-pointer"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <MedicalRecordDetailsModal
+        open={isDetailsModalOpen}
+        onOpenChange={setIsDetailsModalOpen}
+        recordId={selectedRecordId}
+        patientFullName={patientFullName}
+        readOnly={true}
+      />
     </div>
   );
 };

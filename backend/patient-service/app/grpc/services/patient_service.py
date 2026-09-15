@@ -214,6 +214,43 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
 
         return patient_pb2.UploadMedicalDocumentsRes(patientId=patient_id)
 
+    # * Update Medications
+    @grpc_error_handler
+    async def UpdateMedications(
+        self,
+        request: patient_pb2.UpdateMedicationsReq,
+        context: grpc.aio.ServicerContext,
+    ) -> patient_pb2.UpdateMedicationsRes:
+        if not request.medicalRecordId:
+            raise ValueError("medicalRecordId is required")
+
+        meds_data = []
+        for m in request.medications:
+            item: dict = {}
+            if m.HasField("patientMedicationId") and m.patientMedicationId:
+                item["patient_medication_id"] = m.patientMedicationId
+            if m.HasField("medicationName") and m.medicationName:
+                item["medication_name"] = m.medicationName
+            if m.HasField("dosage") and m.dosage:
+                item["dosage"] = m.dosage
+            if m.HasField("startDate") and m.startDate:
+                item["start_date"] = m.startDate
+            if m.HasField("endDate"):
+                item["end_date"] = m.endDate if m.endDate else None
+            if m.HasField("status"):
+                item["status"] = m.status
+            if m.HasField("description"):
+                item["description"] = m.description
+            meds_data.append(item)
+
+        patient_id = await self.patient_service.update_medications(
+            patient_id=request.patientId,
+            medical_record_id=request.medicalRecordId,
+            medications=meds_data,
+        )
+
+        return patient_pb2.UpdateMedicationsRes(patientId=patient_id)
+
     # * Get States
     @grpc_error_handler
     async def GetStates(

@@ -39,6 +39,7 @@ export const API_ROUTES = {
   getPatientStates: "/api/patient/states",
   getPatientDistricts: "/api/patient/districts",
   uploadMedicalDocuments: "/api/patient/uploadMedicalDocuments",
+  updateMedications: "/api/patient/updateMedications",
 } as const;
 
 export type ApiRoute = (typeof API_ROUTES)[keyof typeof API_ROUTES] | string;

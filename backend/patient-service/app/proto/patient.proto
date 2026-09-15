@@ -22,6 +22,8 @@ service PatientService {
   rpc GetPatientMedicalRecordDetails(GetPatientMedicalRecordDetailsReq) returns (GetPatientMedicalRecordDetailsRes);
 
   rpc UploadMedicalDocuments(UploadMedicalDocumentsReq) returns (UploadMedicalDocumentsRes);
+
+  rpc UpdateMedications(UpdateMedicationsReq) returns (UpdateMedicationsRes);
 }
 
 message PatientProfileReq {
@@ -240,5 +242,25 @@ message UploadMedicalDocumentsReq {
 }
 
 message UploadMedicalDocumentsRes {
+  string patientId = 1;
+}
+
+message UpdatePatientMedicationItem {
+  optional string patientMedicationId = 1;
+  optional string medicationName      = 2;
+  optional string dosage              = 3;
+  optional string startDate           = 4;
+  optional string endDate             = 5;
+  optional uint32 status              = 6;
+  optional string description         = 7;
+}
+
+message UpdateMedicationsReq {
+  string                               patientId        = 1;
+  string                               medicalRecordId  = 2;
+  repeated UpdatePatientMedicationItem medications      = 3;
+}
+
+message UpdateMedicationsRes {
   string patientId = 1;
 }

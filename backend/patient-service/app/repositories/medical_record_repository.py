@@ -1,8 +1,11 @@
+import datetime
+
 from bson import ObjectId
 from bson.errors import InvalidId
 from pymongo import ASCENDING, DESCENDING
+from datetime import date, datetime, timezone
 
-from app.common.enums.medical_enums import MedicalRecordStatus
+from app.common.enums.medical_enums import MedicalRecordStatus, MedicationStatus
 from app.common.interfaces.patient_interface import (
     PatientMedicalDocumentItemInterface,
     PatientMedicalRecordDetailsResponseInterface,
@@ -207,6 +210,7 @@ class MedicalRecordRepository:
                                 "_id": 1,
                                 "medication_name": 1,
                                 "dosage": 1,
+                                "description": 1,
                                 "start_date": 1,
                                 "end_date": 1,
                                 "status": 1,
@@ -269,3 +273,101 @@ class MedicalRecordRepository:
             "medical_documents": medical_documents,
             "medications": medications,
         }
+
+    # * Update Medications
+    async def update_medications(
+        self,
+        medical_record_id: str,
+        medications: list[dict | MedicalMedication],
+    ) -> str:
+        # 1. Verify medical record exists
+        try:
+            record_oid = ObjectId(medical_record_id)
+        except InvalidId:
+            raise ValueError(f"Invalid medical_record_id: {medical_record_id}")
+
+        record = await self.medical_records_collection.find_one({"_id": record_oid})
+        if not record:
+            raise ValueError(f"Medical record not found with id: {medical_record_id}")
+
+        new_meds_to_insert = []
+        now_utc = datetime.now(timezone.utc)
+
+        for med in medications:
+            med_data = (
+                dict(med) if isinstance(med, dict) else med.model_dump(mode="json")
+            )
+            med_id = med_data.get("patient_medication_id") or med_data.get(
+                "medication_id"
+            )
+
+            if med_id:
+                # Update existing medication status and end_date only
+                try:
+                    med_oid = ObjectId(med_id)
+                except InvalidId:
+                    continue
+
+                update_fields: dict = {"updated_at": now_utc}
+
+                if med_data.get("status") is not None:
+                    update_fields["status"] = int(med_data["status"])
+
+                if "end_date" in med_data:
+                    end_d = med_data["end_date"]
+                    update_fields["end_date"] = (
+                        end_d.isoformat()
+                        if isinstance(end_d, date)
+                        else end_d.strip()
+                        if isinstance(end_d, str) and end_d.strip()
+                        else None
+                    )
+
+                await self.medications_collection.update_one(
+                    {"_id": med_oid, "medical_record_id": medical_record_id},
+                    {"$set": update_fields},
+                )
+            else:
+                # Insert new medication
+                if not med_data.get("medication_name") or not med_data.get("dosage"):
+                    continue
+
+                start_d = med_data.get("start_date")
+                if isinstance(start_d, date):
+                    start_d_str = start_d.isoformat()
+                elif isinstance(start_d, str) and start_d.strip():
+                    start_d_str = start_d.strip()
+                else:
+                    start_d_str = date.today().isoformat()
+
+                status_val = med_data.get("status")
+                if status_val is None:
+                    status_val = MedicationStatus.ACTIVE.value
+                else:
+                    status_val = int(status_val)
+
+                new_med_entry = {
+                    "medical_record_id": medical_record_id,
+                    "medication_name": med_data.get("medication_name", "").strip(),
+                    "dosage": med_data.get("dosage", "").strip(),
+                    "description": (
+                        med_data.get("description", "").strip()
+                        if med_data.get("description")
+                        else None
+                    ),
+                    "start_date": start_d_str,
+                    "end_date": None,  # For new entry, do not set end date
+                    "status": status_val,
+                    "created_at": now_utc,
+                    "updated_at": None,
+                }
+                new_meds_to_insert.append(new_med_entry)
+
+        if new_meds_to_insert:
+            await self.medications_collection.insert_many(new_meds_to_insert)
+
+        logger.success(
+            f"Updated medications for medical record (id={medical_record_id})"
+        )
+
+        return medical_record_id

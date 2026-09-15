@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useState, useEffect, useCallback, useRef, useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -6,9 +6,6 @@ import {
   Activity,
   Sparkles,
   ShieldCheck,
-  Pill,
-  ExternalLink,
-  Plus,
   Search,
   AlertCircle,
   CheckCircle2,
@@ -20,8 +17,7 @@ import {
   FileCheck,
   Stethoscope,
   Eye,
-  Trash2,
-  Upload,
+  Plus,
   Users,
   Phone,
   Mail,
@@ -34,19 +30,21 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-} from "@/components/ui/dialog";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useAuth } from "@/context/AuthContext";
 import { callApi } from "@/utils/axios";
 import { API_ROUTES } from "@/utils/apiRoutes";
 import { themeStyles } from "@/styles/themeStyles";
+import { CreateMedicalRecordModal } from "@/components/doctor/CreateMedicalRecordModal";
+import { MedicalRecordDetailsModal } from "@/components/doctor/MedicalRecordDetailsModal";
+import type {
+  MedicationItem,
+  PatientMedicalRecordDetails,
+} from "@/components/doctor/MedicalRecordDetailsModal";
+import { UpdateMedicationsModal } from "@/components/doctor/UpdateMedicationsModal";
+import { UploadDocumentsModal } from "@/components/doctor/UploadDocumentsModal";
 
 // --- Interfaces ---
-
 export interface PatientProfileDetails {
   patientProfileId: string;
   patientPrimaryKey: number;
@@ -79,58 +77,12 @@ export interface PatientMedicalRecordItem {
   status: number; // 1: Active, 2: Completed / Resolved
 }
 
-export interface MedicalDocumentItem {
-  patientMedicalDocumentId: string;
-  documentType: number;
-  documentTypeName: string;
-  title: string;
-  description?: string;
-  documentUrl: string;
-  documentDate: string;
-}
-
-export interface MedicationItem {
-  patientMedicationId: string;
-  medicationName: string;
-  dosage: string;
-  startDate: string;
-  endDate?: string;
-  status: number; // 1: Active, 2: Completed, 3: Discontinued, 4: On Hold
-  description?: string;
-}
-
-export interface PatientMedicalRecordDetails {
-  patientMedicalRecordId: string;
-  title: string;
-  diagnosis: string;
-  description?: string;
-  status: number;
-  startedDate: string;
-  resolvedDate?: string;
-  medicalDocuments: MedicalDocumentItem[];
-  medications: MedicationItem[];
-}
-
 interface PatientLocationState {
   patientPrimaryKey?: number;
   patientId?: string;
 }
 
-// Helpers
-export const getDocumentFullUrl = (url?: string) => {
-  if (!url) return "";
-  if (
-    url.startsWith("http://") ||
-    url.startsWith("https://") ||
-    url.startsWith("data:") ||
-    url.startsWith("blob:")
-  ) {
-    return url;
-  }
-  const apiBase = import.meta.env.VITE_API_BASE_URL || "http://localhost:3000";
-  const cleanPath = url.startsWith("/") ? url : `/${url}`;
-  return `${apiBase}${cleanPath}`;
-};
+const PAGE_SIZE = 10;
 
 const getGenderBadge = (gender?: number) => {
   switch (gender) {
@@ -144,23 +96,6 @@ const getGenderBadge = (gender?: number) => {
       return { text: "Not Specified", variant: "outline" as const };
   }
 };
-
-const getMedicationStatusBadge = (status: number) => {
-  switch (status) {
-    case 1:
-      return { label: "Active", bg: "bg-teal-50 text-teal-700 border-teal-200" };
-    case 2:
-      return { label: "Completed", bg: "bg-emerald-50 text-emerald-700 border-emerald-200" };
-    case 3:
-      return { label: "Discontinued", bg: "bg-rose-50 text-rose-700 border-rose-200" };
-    case 4:
-      return { label: "On Hold", bg: "bg-amber-50 text-amber-700 border-amber-200" };
-    default:
-      return { label: "Active", bg: "bg-teal-50 text-teal-700 border-teal-200" };
-  }
-};
-
-const PAGE_SIZE = 10;
 
 export const DoctorPatientClinicalHistoryPage: React.FC = () => {
   const location = useLocation();
@@ -224,65 +159,27 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [statusFilter, setStatusFilter] = useState<"ALL" | "1" | "2">("ALL");
 
-  // Record Details Modal State
-  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
-  const [recordDetails, setRecordDetails] = useState<PatientMedicalRecordDetails | null>(null);
-  const [loadingDetails, setLoadingDetails] = useState<boolean>(false);
-  const [detailsError, setDetailsError] = useState<string | null>(null);
-
-  // Create Record Modal State
+  // Modals state
   const [isCreateModalOpen, setIsCreateModalOpen] = useState<boolean>(false);
-  const [submittingRecord, setSubmittingRecord] = useState<boolean>(false);
-  const [createError, setCreateError] = useState<string | null>(null);
-  const [createSuccessMsg, setCreateSuccessMsg] = useState<string | null>(null);
+  const [selectedRecordId, setSelectedRecordId] = useState<string | null>(null);
+  const [isDetailsModalOpen, setIsDetailsModalOpen] = useState<boolean>(false);
+  const [detailsRefreshTrigger, setDetailsRefreshTrigger] = useState<number>(0);
 
-  // Create Form State
-  const [newTitle, setNewTitle] = useState<string>("");
-  const [newDiagnosis, setNewDiagnosis] = useState<string>("");
-  const [newDescription, setNewDescription] = useState<string>("");
-  const [newStartedDate, setNewStartedDate] = useState<string>(
-    new Date().toISOString().split("T")[0]
-  );
-  const [newMedications, setNewMedications] = useState<
-    Array<{
-      medicationName: string;
-      dosage: string;
-      startDate: string;
-      description?: string;
-    }>
-  >([]);
-  const [newDocuments, setNewDocuments] = useState<
-    Array<{
-      file: File;
-      documentType: number;
-      title: string;
-      description?: string;
-      documentDate: string;
-    }>
-  >([]);
+  // Update Meds Modal state
+  const [isUpdateMedsModalOpen, setIsUpdateMedsModalOpen] = useState<boolean>(false);
+  const [updateMedsRecordId, setUpdateMedsRecordId] = useState<string>("");
+  const [updateMedsList, setUpdateMedsList] = useState<MedicationItem[]>([]);
 
-  // Upload Documents Modal State (for existing record)
+  // Upload Docs Modal state
   const [isUploadDocsModalOpen, setIsUploadDocsModalOpen] = useState<boolean>(false);
-  const [uploadTargetRecordId, setUploadTargetRecordId] = useState<string>("");
-  const [uploadDocsList, setUploadDocsList] = useState<
-    Array<{
-      file: File;
-      documentType: number;
-      title: string;
-      description?: string;
-      documentDate: string;
-    }>
-  >([]);
-  const [submittingUploadDocs, setSubmittingUploadDocs] = useState<boolean>(false);
-  const [uploadDocsError, setUploadDocsError] = useState<string | null>(null);
-  const [uploadDocsSuccessMsg, setUploadDocsSuccessMsg] = useState<string | null>(null);
+  const [uploadDocsRecordId, setUploadDocsRecordId] = useState<string>("");
 
   // Infinite scroll observer refs & fetch guards
   const observerTargetRef = useRef<HTMLDivElement | null>(null);
   const isFetchingRef = useRef<boolean>(false);
   const isFetchingPatientRef = useRef<boolean>(false);
 
-  // 1. Fetch Patient Profile Details (both patientPrimaryKey and patientId in payload body)
+  // 1. Fetch Patient Profile Details
   const fetchPatientProfile = useCallback(async () => {
     if (!activePatientPrimaryKey && !activePatientId) {
       setLoadingPatient(false);
@@ -302,11 +199,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
         payload.patientId = activePatientId;
       }
 
-      const response = await callApi(
-        API_ROUTES.getPatientDetails,
-        payload,
-        "POST"
-      );
+      const response = await callApi(API_ROUTES.getPatientDetails, payload, "POST");
       const data = response?.data || response;
       const profile = data?.patientProfile || data;
       if (!profile || (!data.patientId && !profile.patientProfileId)) {
@@ -314,7 +207,9 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
       }
       setPatientDetails({
         patientProfileId: profile.patientProfileId || "",
-        patientPrimaryKey: Number(data?.patientPrimaryKey || profile.patientPrimaryKey || activePatientPrimaryKey || 0),
+        patientPrimaryKey: Number(
+          data?.patientPrimaryKey || profile.patientPrimaryKey || activePatientPrimaryKey || 0
+        ),
         patientId: data?.patientId || profile.patientId || activePatientId,
         firstName: profile.firstName || "",
         middleName: profile.middleName || "",
@@ -345,7 +240,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
     }
   }, [activePatientPrimaryKey, activePatientId]);
 
-  // 2. Fetch Patient Medical Records page (both patientPrimaryKey and patientId in payload body)
+  // 2. Fetch Patient Medical Records page
   const fetchMedicalRecords = useCallback(
     async (targetOffset: number, isInitial = false) => {
       if ((!activePatientPrimaryKey && !activePatientId) || isFetchingRef.current) return;
@@ -394,9 +289,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
           if (isInitial) {
             return fetchedRecords;
           }
-          const existingIds = new Set(
-            prev.map((r) => r.patientMedicalRecordId)
-          );
+          const existingIds = new Set(prev.map((r) => r.patientMedicalRecordId));
           const newItems = fetchedRecords.filter(
             (r) => !existingIds.has(r.patientMedicalRecordId)
           );
@@ -422,7 +315,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
     [activePatientPrimaryKey, activePatientId]
   );
 
-  // Initial load - triggered once per active patient
+  // Initial load
   useEffect(() => {
     if (activePatientPrimaryKey || activePatientId) {
       void fetchPatientProfile();
@@ -433,8 +326,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
       setLoadingPatient(false);
       setLoadingInitial(false);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [activePatientPrimaryKey, activePatientId]);
+  }, [activePatientPrimaryKey, activePatientId, fetchPatientProfile, fetchMedicalRecords]);
 
   // Infinite Scroll Intersection Observer
   useEffect(() => {
@@ -465,306 +357,58 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
     return () => observer.disconnect();
   }, [hasMore, loadingInitial, loadingMore, offset, fetchMedicalRecords]);
 
-  // Fetch Record Details Modal Content
-  const handleOpenRecordDetails = async (recordId: string) => {
+  // Open Record Details
+  const handleOpenRecordDetails = (recordId: string) => {
+    setSelectedRecordId(recordId);
     setIsDetailsModalOpen(true);
-    setLoadingDetails(true);
-    setDetailsError(null);
-    setRecordDetails(null);
-
-    try {
-      const url = `${API_ROUTES.getPatientMedicalRecordDetails}/${recordId}`;
-      const response = await callApi(url, null, "GET");
-      const data = response?.data || response;
-      const rec = data?.medicalRecordDetails || data?.medicalRecord || data;
-
-      setRecordDetails({
-        patientMedicalRecordId:
-          rec.patientMedicalRecordId || rec._id || recordId,
-        title: rec.title || "Clinical Record",
-        diagnosis: rec.diagnosis || "No diagnosis specified",
-        description: rec.description || "",
-        status: Number(rec.status ?? 1),
-        startedDate: rec.startedDate || rec.created_at || "",
-        resolvedDate: rec.resolvedDate,
-        medicalDocuments: Array.isArray(rec.medicalDocuments)
-          ? rec.medicalDocuments
-          : [],
-        medications: Array.isArray(rec.medications) ? rec.medications : [],
-      });
-    } catch (err: any) {
-      console.error("Failed to load medical record details:", err);
-      setDetailsError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to load details for this clinical record."
-      );
-    } finally {
-      setLoadingDetails(false);
-    }
   };
 
-  // Add / Remove Medications in Create Modal
-  const handleAddMedication = () => {
-    setNewMedications((prev) => [
-      ...prev,
-      {
-        medicationName: "",
-        dosage: "",
-        description: "",
-        startDate: new Date().toISOString().split("T")[0],
-      },
-    ]);
+  // Triggered from details modal
+  const handleOpenUpdateMeds = (record: PatientMedicalRecordDetails) => {
+    setUpdateMedsRecordId(record.patientMedicalRecordId);
+    setUpdateMedsList(record.medications);
+    setIsUpdateMedsModalOpen(true);
   };
 
-  const handleUpdateMedication = (
-    index: number,
-    field: "medicationName" | "dosage" | "startDate" | "description",
-    value: string
-  ) => {
-    setNewMedications((prev) =>
-      prev.map((med, i) => (i === index ? { ...med, [field]: value } : med))
-    );
-  };
-
-  const handleRemoveMedication = (index: number) => {
-    setNewMedications((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Add / Remove Document files in Create Modal
-  const handleAddDocumentFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    setNewDocuments((prev) => [
-      ...prev,
-      {
-        file,
-        documentType: 1, // Default to Prescription
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        description: "",
-        documentDate: new Date().toISOString().split("T")[0],
-      },
-    ]);
-    e.target.value = "";
-  };
-
-  const handleUpdateDocumentMeta = (
-    index: number,
-    field: "title" | "documentType" | "documentDate" | "description",
-    value: any
-  ) => {
-    setNewDocuments((prev) =>
-      prev.map((doc, i) => (i === index ? { ...doc, [field]: value } : doc))
-    );
-  };
-
-  const handleRemoveDocument = (index: number) => {
-    setNewDocuments((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  // Submit New Medical Record
-  const handleCreateMedicalRecord = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!patientDetails) return;
-    if (!newTitle.trim() || !newDiagnosis.trim()) {
-      setCreateError("Please provide both a Title and Diagnosis for the clinical record.");
-      return;
-    }
-
-    setSubmittingRecord(true);
-    setCreateError(null);
-    setCreateSuccessMsg(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("patientPrimaryKey", String(patientDetails.patientPrimaryKey));
-      formData.append("patientId", patientDetails.patientId);
-      formData.append("title", newTitle.trim());
-      formData.append("diagnosis", newDiagnosis.trim());
-      if (newDescription.trim()) {
-        formData.append("description", newDescription.trim());
-      }
-      formData.append("startedDate", newStartedDate);
-
-      // Append medications array
-      const validMedications = newMedications.filter(
-        (m) => m.medicationName.trim() && m.dosage.trim()
-      );
-      validMedications.forEach((med, idx) => {
-        formData.append(`medications[${idx}].medicationName`, med.medicationName.trim());
-        formData.append(`medications[${idx}].dosage`, med.dosage.trim());
-        formData.append(`medications[${idx}].startDate`, med.startDate);
-        if (med.description?.trim()) {
-          formData.append(`medications[${idx}].description`, med.description.trim());
-        }
-      });
-
-      // Append documents with files
-      newDocuments.forEach((doc, idx) => {
-        formData.append(`medicalDocuments[${idx}].file`, doc.file);
-        formData.append(`medicalDocuments[${idx}].title`, doc.title || doc.file.name);
-        formData.append(`medicalDocuments[${idx}].documentType`, String(doc.documentType));
-        formData.append(`medicalDocuments[${idx}].documentDate`, doc.documentDate);
-        if (doc.description?.trim()) {
-          formData.append(`medicalDocuments[${idx}].description`, doc.description.trim());
-        }
-      });
-
-      await callApi(API_ROUTES.createPatientMedicalRecord, formData, "POST");
-
-      setCreateSuccessMsg("New clinical record created and synced with ABDM registry.");
-      
-      // Reset form fields
-      setNewTitle("");
-      setNewDiagnosis("");
-      setNewDescription("");
-      setNewMedications([]);
-      setNewDocuments([]);
-      
-      // Refresh list
-      setTimeout(() => {
-        setIsCreateModalOpen(false);
-        setCreateSuccessMsg(null);
-        setOffset(0);
-        setHasMore(true);
-        void fetchMedicalRecords(0, true);
-      }, 1000);
-    } catch (err: any) {
-      console.error("Failed to create medical record:", err);
-      setCreateError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to create patient medical record."
-      );
-    } finally {
-      setSubmittingRecord(false);
-    }
-  };
-
-  // Upload Additional Documents to existing record
   const handleOpenUploadDocs = (recordId: string) => {
-    setUploadTargetRecordId(recordId);
-    setUploadDocsList([]);
-    setUploadDocsError(null);
-    setUploadDocsSuccessMsg(null);
+    setUploadDocsRecordId(recordId);
     setIsUploadDocsModalOpen(true);
   };
 
-  const handleAddUploadDocFile = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-    const file = e.target.files[0];
-    setUploadDocsList((prev) => [
-      ...prev,
-      {
-        file,
-        documentType: 1,
-        title: file.name.replace(/\.[^/.]+$/, ""),
-        description: "",
-        documentDate: new Date().toISOString().split("T")[0],
-      },
-    ]);
-    e.target.value = "";
-  };
-
-  const handleUpdateUploadDocMeta = (
-    index: number,
-    field: "title" | "documentType" | "documentDate" | "description",
-    value: any
-  ) => {
-    setUploadDocsList((prev) =>
-      prev.map((doc, i) => (i === index ? { ...doc, [field]: value } : doc))
-    );
-  };
-
-  const handleRemoveUploadDoc = (index: number) => {
-    setUploadDocsList((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const handleSubmitUploadDocs = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!uploadTargetRecordId || !patientDetails?.patientId) {
-      setUploadDocsError("Patient or Medical Record reference is missing.");
-      return;
-    }
-    if (uploadDocsList.length === 0) {
-      setUploadDocsError("Please attach at least one document to upload.");
-      return;
-    }
-
-    setSubmittingUploadDocs(true);
-    setUploadDocsError(null);
-    setUploadDocsSuccessMsg(null);
-
-    try {
-      const formData = new FormData();
-      formData.append("patientId", patientDetails.patientId);
-      formData.append("medicalRecordId", uploadTargetRecordId);
-
-      uploadDocsList.forEach((doc, idx) => {
-        formData.append(`medicalDocuments[${idx}].file`, doc.file);
-        formData.append(`medicalDocuments[${idx}].title`, doc.title || doc.file.name);
-        formData.append(`medicalDocuments[${idx}].documentType`, String(doc.documentType));
-        formData.append(`medicalDocuments[${idx}].documentDate`, doc.documentDate);
-        if (doc.description?.trim()) {
-          formData.append(`medicalDocuments[${idx}].description`, doc.description.trim());
-        }
-      });
-
-      await callApi(API_ROUTES.uploadMedicalDocuments, formData, "POST");
-
-      setUploadDocsSuccessMsg("Medical documents uploaded successfully.");
-
-      // Refresh currently viewed record details if open
-      if (recordDetails?.patientMedicalRecordId === uploadTargetRecordId) {
-        void handleOpenRecordDetails(uploadTargetRecordId);
+  // Filter records in memory for instantaneous search/filtering
+  const filteredRecords = useMemo(() => {
+    return records.filter((rec) => {
+      if (statusFilter !== "ALL" && String(rec.status) !== statusFilter) {
+        return false;
       }
+      if (searchTerm.trim()) {
+        const q = searchTerm.toLowerCase();
+        const matchTitle = rec.title?.toLowerCase().includes(q);
+        const matchDiagnosis = rec.diagnosis?.toLowerCase().includes(q);
+        return matchTitle || matchDiagnosis;
+      }
+      return true;
+    });
+  }, [records, statusFilter, searchTerm]);
 
-      setTimeout(() => {
-        setIsUploadDocsModalOpen(false);
-        setUploadDocsSuccessMsg(null);
-        setUploadDocsList([]);
-      }, 1000);
-    } catch (err: any) {
-      console.error("Failed to upload medical documents:", err);
-      setUploadDocsError(
-        err?.response?.data?.message ||
-          err?.message ||
-          "Failed to upload medical documents."
-      );
-    } finally {
-      setSubmittingUploadDocs(false);
-    }
-  };
-
-  // Filter records in memory for immediate responsiveness
-  const filteredRecords = records.filter((rec) => {
-    if (statusFilter !== "ALL" && String(rec.status) !== statusFilter) {
-      return false;
-    }
-    if (searchTerm.trim()) {
-      const q = searchTerm.toLowerCase();
-      const matchTitle = rec.title?.toLowerCase().includes(q);
-      const matchDiagnosis = rec.diagnosis?.toLowerCase().includes(q);
-      return matchTitle || matchDiagnosis;
-    }
-    return true;
-  });
-
-  const activeRecordsCount = records.filter((r) => r.status === 1).length;
-  const resolvedRecordsCount = records.filter((r) => r.status === 2).length;
+  const activeRecordsCount = useMemo(
+    () => records.filter((r) => r.status === 1).length,
+    [records]
+  );
+  const resolvedRecordsCount = useMemo(
+    () => records.filter((r) => r.status === 2).length,
+    [records]
+  );
 
   const patientFullName = patientDetails
     ? [patientDetails.firstName, patientDetails.middleName, patientDetails.lastName]
         .filter(Boolean)
         .join(" ")
-    : "Patient Details";
+    : "Patient";
 
   const patientInitials = patientDetails
-    ? [patientDetails.firstName?.charAt(0), patientDetails.lastName?.charAt(0)]
-        .filter(Boolean)
-        .join("")
-        .toUpperCase() || "PT"
-    : "PT";
+    ? `${patientDetails.firstName?.charAt(0) || ""}${patientDetails.lastName?.charAt(0) || ""}`.toUpperCase()
+    : "P";
 
   const genderInfo = getGenderBadge(patientDetails?.gender);
 
@@ -772,15 +416,13 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
     ? [
         patientDetails.address,
         patientDetails.districtName,
-        [patientDetails.stateName, patientDetails.pincode ? `${patientDetails.pincode}` : ""]
-          .filter(Boolean)
-          .join(" - "),
+        patientDetails.stateName,
+        patientDetails.pincode ? `PIN: ${patientDetails.pincode}` : "",
       ]
         .filter(Boolean)
         .join(", ")
     : "";
 
-  // If no active patient is selected
   if (!activePatientPrimaryKey && !activePatientId) {
     return (
       <div className={themeStyles.layout.pageContainer}>
@@ -853,7 +495,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
             )}
           >
             <Stethoscope className="w-7 h-7 text-teal-700" />
-            Patient Clinical History & Records
+            Patient Clinical History &amp; Records
           </h1>
           <p className={themeStyles.typography.subtext}>
             Comprehensive electronic health records, past clinical encounters, diagnostic reports, and active medications.
@@ -884,11 +526,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
 
           <Button
             size="sm"
-            onClick={() => {
-              setCreateError(null);
-              setCreateSuccessMsg(null);
-              setIsCreateModalOpen(true);
-            }}
+            onClick={() => setIsCreateModalOpen(true)}
             className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold cursor-pointer h-9 px-4 rounded-xl shadow-md shadow-teal-600/20 flex items-center gap-1.5"
           >
             <Plus className="w-4 h-4" />
@@ -1016,7 +654,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                   <div className="w-7 h-7 rounded-lg bg-teal-50 text-teal-700 flex items-center justify-center border border-teal-100">
                     <Phone className="w-4 h-4" />
                   </div>
-                  Patient Contacts & Reachability
+                  Patient Contacts &amp; Reachability
                 </CardTitle>
                 <Badge variant="verified" className="text-[10px] bg-teal-50 text-teal-700 border-teal-200">
                   Direct Channel
@@ -1136,7 +774,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                   <div className="w-7 h-7 rounded-lg bg-emerald-50 text-emerald-700 flex items-center justify-center border border-emerald-100">
                     <MapPin className="w-4 h-4" />
                   </div>
-                  Full Residential & Geographic Location
+                  Full Residential &amp; Geographic Location
                 </CardTitle>
                 <Badge variant="outline" className="text-[10px] font-semibold text-slate-600">
                   EHR Location Record
@@ -1384,11 +1022,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
           <div className="pt-2">
             <Button
               size="sm"
-              onClick={() => {
-                setCreateError(null);
-                setCreateSuccessMsg(null);
-                setIsCreateModalOpen(true);
-              }}
+              onClick={() => setIsCreateModalOpen(true)}
               className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold cursor-pointer rounded-xl h-9 px-4 shadow-sm"
             >
               <Plus className="w-4 h-4 mr-1.5" />
@@ -1446,7 +1080,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
 
                     <div className="p-3 rounded-xl bg-slate-50 border border-slate-100 space-y-1">
                       <span className="text-[10px] uppercase font-bold text-slate-400 tracking-wider">
-                        Diagnosis & Assessment
+                        Diagnosis &amp; Assessment
                       </span>
                       <p className="text-xs font-semibold text-slate-800 line-clamp-2">
                         {record.diagnosis || "No diagnosis details specified."}
@@ -1502,813 +1136,55 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
       )}
 
       {/* ========================================================================= */}
-      {/* 1. Medical Record Details Modal */}
+      {/* Modals Encapsulated as Subcomponents */}
       {/* ========================================================================= */}
-      <Dialog open={isDetailsModalOpen} onOpenChange={setIsDetailsModalOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[90vh] overflow-y-auto p-0 rounded-3xl border-slate-200 shadow-2xl">
-          <div className="p-6 bg-linear-to-r from-slate-900 via-teal-950 to-slate-900 text-white sticky top-0 z-20">
-            <div className="flex items-start justify-between gap-4">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <Badge variant="verified" className="text-[10px] bg-teal-500/20 text-teal-300 border-teal-400/30">
-                    Clinical Encounter
-                  </Badge>
-                  {recordDetails && (
-                    <Badge
-                      className={`text-[10px] font-bold ${
-                        recordDetails.status === 1
-                          ? "bg-amber-500 text-white"
-                          : "bg-emerald-600 text-white"
-                      }`}
-                    >
-                      {recordDetails.status === 1 ? "Active Condition" : "Resolved / Completed"}
-                    </Badge>
-                  )}
-                </div>
-                <h3 className="text-xl font-black text-white">
-                  {loadingDetails ? "Loading clinical details..." : recordDetails?.title || "Clinical Record"}
-                </h3>
-              </div>
-            </div>
-          </div>
 
-          <div className="p-6 space-y-6">
-            {loadingDetails ? (
-              <div className="space-y-4 py-8 text-center">
-                <Loader2 className="w-8 h-8 text-teal-600 animate-spin mx-auto" />
-                <p className="text-xs text-slate-500 font-medium">Loading clinical history and attached artifacts...</p>
-              </div>
-            ) : detailsError ? (
-              <Alert variant="destructive" className="p-4">
-                <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                <AlertDescription className="text-xs">{detailsError}</AlertDescription>
-              </Alert>
-            ) : recordDetails ? (
-              <div className="space-y-6">
-                {/* Diagnosis and Description */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-2xl bg-teal-50/60 border border-teal-100 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-teal-800 tracking-wider">
-                      Diagnosis
-                    </span>
-                    <p className="text-sm font-bold text-slate-900">
-                      {recordDetails.diagnosis}
-                    </p>
-                  </div>
+      {/* 1. Create New Clinical Record Modal */}
+      <CreateMedicalRecordModal
+        open={isCreateModalOpen}
+        onOpenChange={setIsCreateModalOpen}
+        patientDetails={patientDetails}
+        attendingDoctorText={user?.doctorId || "Doctor Terminal"}
+        onRecordCreated={() => {
+          setOffset(0);
+          setHasMore(true);
+          void fetchMedicalRecords(0, true);
+        }}
+      />
 
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                      Clinical Timeline
-                    </span>
-                    <div className="flex items-center justify-between text-xs text-slate-800 pt-0.5">
-                      <span>Started: <strong>{recordDetails.startedDate || "Not recorded"}</strong></span>
-                      {recordDetails.resolvedDate && (
-                        <span>Resolved: <strong>{recordDetails.resolvedDate}</strong></span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+      {/* 2. Medical Record Details Modal */}
+      <MedicalRecordDetailsModal
+        open={isDetailsModalOpen}
+        onOpenChange={setIsDetailsModalOpen}
+        recordId={selectedRecordId}
+        patientFullName={patientFullName}
+        onOpenUpdateMeds={handleOpenUpdateMeds}
+        onOpenUploadDocs={handleOpenUploadDocs}
+        refreshTrigger={detailsRefreshTrigger}
+      />
 
-                {recordDetails.description && (
-                  <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200/80 space-y-1.5">
-                    <span className="text-[10px] uppercase font-bold text-slate-500 tracking-wider">
-                      Clinical Notes & Description
-                    </span>
-                    <p className="text-xs text-slate-700 leading-relaxed whitespace-pre-wrap">
-                      {recordDetails.description}
-                    </p>
-                  </div>
-                )}
+      {/* 3. Update Medications Modal */}
+      <UpdateMedicationsModal
+        open={isUpdateMedsModalOpen}
+        onOpenChange={setIsUpdateMedsModalOpen}
+        patientDetails={patientDetails}
+        medicalRecordId={updateMedsRecordId}
+        existingMedications={updateMedsList}
+        onMedicationsUpdated={() => {
+          setDetailsRefreshTrigger((prev) => prev + 1);
+        }}
+      />
 
-                {/* Prescribed Medications */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <Pill className="w-4 h-4 text-teal-600" />
-                      Prescribed Medications ({recordDetails.medications.length})
-                    </h4>
-                  </div>
-
-                  {recordDetails.medications.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
-                      No prescription items recorded for this encounter.
-                    </div>
-                  ) : (
-                    <div className="border border-slate-200 rounded-2xl overflow-hidden shadow-xs">
-                      <table className="w-full text-left text-xs border-collapse">
-                        <thead className="bg-slate-50 border-b border-slate-200 text-[11px] font-bold text-slate-500 uppercase tracking-wider">
-                          <tr>
-                            <th className="p-3">Medication</th>
-                            <th className="p-3">Dosage / Frequency</th>
-                            <th className="p-3">Started Date</th>
-                            <th className="p-3">Status</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-100">
-                          {recordDetails.medications.map((med) => {
-                            const badgeInfo = getMedicationStatusBadge(med.status);
-                            return (
-                              <tr key={med.patientMedicationId} className="hover:bg-slate-50/50">
-                                <td className="p-3">
-                                  <div className="font-bold text-slate-900 flex items-center gap-2">
-                                    <Pill className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                                    <span>{med.medicationName}</span>
-                                  </div>
-                                  {med.description && (
-                                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 ml-5.5">
-                                      {med.description}
-                                    </p>
-                                  )}
-                                </td>
-                                <td className="p-3 font-semibold text-slate-700 font-mono">
-                                  {med.dosage}
-                                </td>
-                                <td className="p-3 text-slate-600">
-                                  {med.startDate}
-                                </td>
-                                <td className="p-3">
-                                  <Badge className={`text-[10px] font-semibold ${badgeInfo.bg}`}>
-                                    {badgeInfo.label}
-                                  </Badge>
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-
-                {/* Attached Clinical Documents */}
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <h4 className="text-sm font-bold text-slate-900 flex items-center gap-2">
-                      <FileText className="w-4 h-4 text-teal-600" />
-                      Attached Clinical Documents ({recordDetails.medicalDocuments.length})
-                    </h4>
-                    <Button
-                      type="button"
-                      size="sm"
-                      onClick={() => handleOpenUploadDocs(recordDetails.patientMedicalRecordId)}
-                      className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl cursor-pointer h-7 px-2.5 flex items-center gap-1 shadow-xs"
-                    >
-                      <Upload className="w-3.5 h-3.5" />
-                      Upload Documents
-                    </Button>
-                  </div>
-
-                  {recordDetails.medicalDocuments.length === 0 ? (
-                    <div className="p-4 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center text-xs text-slate-400">
-                      No documents or lab reports attached to this record.
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                      {recordDetails.medicalDocuments.map((doc) => {
-                        const fileUrl = getDocumentFullUrl(doc.documentUrl);
-
-                        return (
-                          <div
-                            key={doc.patientMedicalDocumentId}
-                            className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs flex flex-col justify-between gap-2.5 hover:border-teal-400 transition-colors"
-                          >
-                            <div className="flex items-center justify-between gap-3">
-                              <div className="flex items-center gap-3 min-w-0">
-                                <div className="w-10 h-10 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-                                  <FileText className="w-5 h-5" />
-                                </div>
-                                <div className="min-w-0">
-                                  <p className="text-xs font-bold text-slate-900 truncate" title={doc.title}>
-                                    {doc.title || "Clinical Document"}
-                                  </p>
-                                  <div className="flex items-center gap-2 text-[11px] text-slate-500">
-                                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                                      {doc.documentTypeName || "Document"}
-                                    </Badge>
-                                    <span>{doc.documentDate}</span>
-                                  </div>
-                                </div>
-                              </div>
-
-                              {fileUrl && (
-                                <a
-                                  href={fileUrl}
-                                  target="_blank"
-                                  rel="noreferrer"
-                                  className="shrink-0"
-                                >
-                                  <Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="h-8 px-2.5 text-xs text-teal-700 hover:text-teal-800 hover:bg-teal-50 border-teal-200 rounded-xl flex items-center gap-1 cursor-pointer font-semibold"
-                                  >
-                                    <ExternalLink className="w-3.5 h-3.5" />
-                                    View
-                                  </Button>
-                                </a>
-                              )}
-                            </div>
-
-                            {doc.description && (
-                              <p className="text-xs text-slate-600 bg-slate-50/80 p-2 rounded-xl border border-slate-100 leading-relaxed">
-                                {doc.description}
-                              </p>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : null}
-          </div>
-
-          <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 sm:justify-end">
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setIsDetailsModalOpen(false)}
-              className="text-xs rounded-xl cursor-pointer"
-            >
-              Close
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* ========================================================================= */}
-      {/* 2. Create New Medical Record Modal */}
-      {/* ========================================================================= */}
-      <Dialog open={isCreateModalOpen} onOpenChange={setIsCreateModalOpen}>
-        <DialogContent className="sm:max-w-3xl max-h-[92vh] overflow-y-auto p-0 rounded-3xl border-slate-200 shadow-2xl">
-          <form onSubmit={handleCreateMedicalRecord}>
-            <div className="p-6 bg-linear-to-r from-teal-900 via-slate-900 to-cyan-950 text-white sticky top-0 z-20">
-              <div className="flex items-start justify-between gap-4">
-                <div className="space-y-1">
-                  <Badge variant="verified" className="text-[10px] bg-teal-500/20 text-teal-300 border-teal-400/30">
-                    New Clinical Encounter
-                  </Badge>
-                  <h3 className="text-xl font-black text-white">
-                    Add Medical Record for {patientFullName}
-                  </h3>
-                  <p className="text-xs text-teal-200/80">
-                    Record diagnosis, treatment plan, prescribed medications, and upload clinical reports.
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <div className="p-6 space-y-6">
-              {createError && (
-                <Alert variant="destructive" className="p-4">
-                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0" />
-                  <AlertDescription className="text-xs">{createError}</AlertDescription>
-                </Alert>
-              )}
-
-              {createSuccessMsg && (
-                <Alert className="p-4 bg-emerald-50 text-emerald-800 border-emerald-200">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <AlertDescription className="text-xs font-semibold">{createSuccessMsg}</AlertDescription>
-                </Alert>
-              )}
-
-              {/* Section 1: Encounter Basics */}
-              <div className="space-y-4">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-teal-800 flex items-center gap-1.5">
-                  <Stethoscope className="w-4 h-4 text-teal-600" />
-                  1. Clinical Assessment & Diagnosis
-                </h4>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div className="space-y-1.5">
-                    <label className={themeStyles.form.label}>
-                      Record Title / Visit Reason <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="text"
-                      placeholder="e.g. Acute Bronchitis Evaluation"
-                      value={newTitle}
-                      onChange={(e) => setNewTitle(e.target.value)}
-                      required
-                      className="text-xs rounded-xl h-9 bg-slate-50"
-                    />
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className={themeStyles.form.label}>
-                      Encounter Date <span className="text-red-500">*</span>
-                    </label>
-                    <Input
-                      type="date"
-                      value={newStartedDate}
-                      onChange={(e) => setNewStartedDate(e.target.value)}
-                      required
-                      className="text-xs rounded-xl h-9 bg-slate-50"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className={themeStyles.form.label}>
-                    Diagnosis / Clinical Findings <span className="text-red-500">*</span>
-                  </label>
-                  <Input
-                    type="text"
-                    placeholder="e.g. Type 2 Diabetes with Peripheral Neuropathy, HbA1c 8.2%"
-                    value={newDiagnosis}
-                    onChange={(e) => setNewDiagnosis(e.target.value)}
-                    required
-                    className="text-xs rounded-xl h-9 bg-slate-50"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className={themeStyles.form.label}>
-                    Attending Doctor
-                  </label>
-                  <Input
-                    type="text"
-                    disabled
-                    value={`${user?.doctorId || "Doctor"} (${user?.email || user?.mobile || "Authenticated"})`}
-                    className="text-xs rounded-xl h-9 bg-slate-100 text-slate-500"
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className={themeStyles.form.label}>
-                    Clinical Notes, Observations & Advice
-                  </label>
-                  <textarea
-                    rows={3}
-                    placeholder="Enter detailed clinical examination findings, treatment notes, diet/lifestyle recommendations..."
-                    value={newDescription}
-                    onChange={(e) => setNewDescription(e.target.value)}
-                    className="w-full p-3 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                  />
-                </div>
-              </div>
-
-              {/* Section 2: Medications */}
-              <div className="space-y-3 pt-4 border-t border-slate-200">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-teal-800 flex items-center gap-1.5">
-                    <Pill className="w-4 h-4 text-teal-600" />
-                    2. Prescribe Medications
-                  </h4>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    onClick={handleAddMedication}
-                    className="text-xs border-teal-300 text-teal-700 hover:bg-teal-50 h-8 px-2.5 rounded-xl cursor-pointer font-bold flex items-center gap-1"
-                  >
-                    <Plus className="w-3.5 h-3.5" />
-                    Add Medication
-                  </Button>
-                </div>
-
-                {newMedications.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic p-3 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center">
-                    No medications added yet. Click &ldquo;Add Medication&rdquo; to prescribe drugs with dosage.
-                  </p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {newMedications.map((med, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs space-y-2.5"
-                      >
-                        <div className="flex flex-col sm:flex-row items-center gap-3">
-                          <div className="flex-1 w-full sm:w-auto">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                              Drug Name <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder="e.g. Paracetamol 650mg"
-                              value={med.medicationName}
-                              onChange={(e) =>
-                                handleUpdateMedication(idx, "medicationName", e.target.value)
-                              }
-                              required
-                              className="text-xs rounded-xl h-8 bg-white"
-                            />
-                          </div>
-
-                          <div className="w-full sm:w-44">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                              Dosage / Frequency <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                              type="text"
-                              placeholder="e.g. 1-0-1 After Meals"
-                              value={med.dosage}
-                              onChange={(e) =>
-                                handleUpdateMedication(idx, "dosage", e.target.value)
-                              }
-                              required
-                              className="text-xs rounded-xl h-8 bg-white"
-                            />
-                          </div>
-
-                          <div className="w-full sm:w-36">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                              Start Date <span className="text-red-500">*</span>
-                            </label>
-                            <Input
-                              type="date"
-                              value={med.startDate}
-                              onChange={(e) =>
-                                handleUpdateMedication(idx, "startDate", e.target.value)
-                              }
-                              required
-                              className="text-xs rounded-xl h-8 bg-white"
-                            />
-                          </div>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveMedication(idx)}
-                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-200/60">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Medication Notes / Instructions (Optional)
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="e.g. Take 1 tablet after meals with warm water, avoid milk..."
-                            value={med.description || ""}
-                            onChange={(e) =>
-                              handleUpdateMedication(idx, "description", e.target.value)
-                            }
-                            className="text-xs rounded-xl h-8 bg-white"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Section 3: Document Attachments */}
-              <div className="space-y-3 pt-4 border-t border-slate-200">
-                <div className="flex items-center justify-between">
-                  <h4 className="text-xs font-bold uppercase tracking-wider text-teal-800 flex items-center gap-1.5">
-                    <FileText className="w-4 h-4 text-teal-600" />
-                    3. Upload Clinical Documents / Reports
-                  </h4>
-
-                  <label className="inline-flex items-center gap-1 text-xs bg-slate-100 hover:bg-slate-200 text-slate-800 border border-slate-300 font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors">
-                    <Upload className="w-3.5 h-3.5 text-teal-600" />
-                    Upload File
-                    <input
-                      type="file"
-                      onChange={handleAddDocumentFile}
-                      className="hidden"
-                      accept=".pdf,.png,.jpg,.jpeg,.webp"
-                    />
-                  </label>
-                </div>
-
-                {newDocuments.length === 0 ? (
-                  <p className="text-xs text-slate-400 italic p-3 rounded-xl bg-slate-50 border border-dashed border-slate-200 text-center">
-                    No files attached. Upload prescriptions, blood test reports, or scan results (PDF / Images).
-                  </p>
-                ) : (
-                    <div className="space-y-2.5">
-                    {newDocuments.map((doc, idx) => (
-                      <div
-                        key={idx}
-                        className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5"
-                      >
-                        <div className="flex flex-col sm:flex-row items-center gap-3">
-                          <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-                            <FileText className="w-4 h-4" />
-                          </div>
-
-                          <div className="flex-1 w-full sm:w-auto">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                              Document Title
-                            </label>
-                            <Input
-                              type="text"
-                              value={doc.title}
-                              onChange={(e) =>
-                                handleUpdateDocumentMeta(idx, "title", e.target.value)
-                              }
-                              required
-                              className="text-xs rounded-xl h-8 bg-slate-50"
-                            />
-                          </div>
-
-                          <div className="w-full sm:w-44">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                              Document Type
-                            </label>
-                            <select
-                              value={doc.documentType}
-                              onChange={(e) =>
-                                handleUpdateDocumentMeta(idx, "documentType", Number(e.target.value))
-                              }
-                              className="w-full h-8 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                            >
-                              <option value={1}>Prescription</option>
-                              <option value={2}>Lab Test Report</option>
-                              <option value={3}>Discharge Summary</option>
-                              <option value={4}>Diagnostic Scan</option>
-                              <option value={5}>Other Medical Record</option>
-                            </select>
-                          </div>
-
-                          <div className="w-full sm:w-36">
-                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                              Document Date
-                            </label>
-                            <Input
-                              type="date"
-                              value={doc.documentDate}
-                              onChange={(e) =>
-                                handleUpdateDocumentMeta(idx, "documentDate", e.target.value)
-                              }
-                              required
-                              className="text-xs rounded-xl h-8 bg-slate-50"
-                            />
-                          </div>
-
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => handleRemoveDocument(idx)}
-                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-
-                        <div className="pt-2 border-t border-slate-100">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Document Description / Clinical Notes (Optional)
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="e.g. Fasting glucose report, Dr. Roy handwritten notes..."
-                            value={doc.description || ""}
-                            onChange={(e) =>
-                              handleUpdateDocumentMeta(idx, "description", e.target.value)
-                            }
-                            className="text-xs rounded-xl h-8 bg-slate-50"
-                          />
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-
-            <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsCreateModalOpen(false)}
-                disabled={submittingRecord}
-                className="text-xs rounded-xl cursor-pointer"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={submittingRecord}
-                className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl cursor-pointer shadow-md shadow-teal-600/20 px-4 flex items-center gap-1.5"
-              >
-                {submittingRecord ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Saving Record...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Save & Sync Record</span>
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
-
-      {/* ========================================================================= */}
-      {/* 3. Upload More Documents Modal (Existing Medical Record) */}
-      {/* ========================================================================= */}
-      <Dialog open={isUploadDocsModalOpen} onOpenChange={setIsUploadDocsModalOpen}>
-        <DialogContent className="max-w-2xl w-full p-0 overflow-hidden rounded-3xl bg-white border border-slate-200 shadow-2xl">
-          <div className="p-6 bg-linear-to-r from-teal-700 via-teal-800 to-emerald-900 text-white flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-2xl bg-white/10 backdrop-blur-md flex items-center justify-center border border-white/20">
-                <Upload className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h3 className="text-base font-bold text-white">
-                  Upload Clinical Documents
-                </h3>
-                <p className="text-xs text-teal-100 font-medium">
-                  Attach more prescriptions, reports, or scans to this clinical encounter
-                </p>
-              </div>
-            </div>
-            {patientDetails?.patientId && (
-              <Badge className="bg-white/10 text-white border-white/20 text-xs font-mono">
-                {patientDetails.patientId}
-              </Badge>
-            )}
-          </div>
-
-          <form onSubmit={handleSubmitUploadDocs}>
-            <div className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-              {uploadDocsError && (
-                <Alert variant="destructive" className="bg-rose-50 border-rose-200 text-rose-800 rounded-2xl">
-                  <AlertCircle className="w-4 h-4 text-rose-600" />
-                  <AlertDescription className="text-xs font-medium ml-2">
-                    {uploadDocsError}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              {uploadDocsSuccessMsg && (
-                <Alert className="bg-teal-50 border-teal-200 text-teal-800 rounded-2xl">
-                  <CheckCircle2 className="w-4 h-4 text-teal-600" />
-                  <AlertDescription className="text-xs font-medium ml-2">
-                    {uploadDocsSuccessMsg}
-                  </AlertDescription>
-                </Alert>
-              )}
-
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-bold uppercase tracking-wider text-teal-800 flex items-center gap-1.5">
-                  <FileText className="w-4 h-4 text-teal-600" />
-                  Select & Attach Files
-                </h4>
-
-                <label className="inline-flex items-center gap-1.5 text-xs bg-teal-50 hover:bg-teal-100 text-teal-800 border border-teal-200 font-bold px-3 py-1.5 rounded-xl cursor-pointer transition-colors shadow-xs">
-                  <Upload className="w-3.5 h-3.5 text-teal-600" />
-                  Choose File(s)
-                  <input
-                    type="file"
-                    onChange={handleAddUploadDocFile}
-                    className="hidden"
-                    accept=".pdf,.png,.jpg,.jpeg,.webp"
-                  />
-                </label>
-              </div>
-
-              {uploadDocsList.length === 0 ? (
-                <div className="p-6 rounded-2xl bg-slate-50 border-2 border-dashed border-slate-200 text-center space-y-2">
-                  <Upload className="w-8 h-8 text-slate-300 mx-auto" />
-                  <p className="text-xs font-medium text-slate-500">
-                    No documents selected yet.
-                  </p>
-                  <p className="text-[11px] text-slate-400">
-                    Upload medical prescriptions, blood tests, radiology scans, or discharge summaries (PDF / JPEG / PNG).
-                  </p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {uploadDocsList.map((doc, idx) => (
-                    <div
-                      key={idx}
-                      className="p-3.5 rounded-2xl bg-white border border-slate-200 shadow-xs space-y-2.5"
-                    >
-                      <div className="flex flex-col sm:flex-row items-center gap-3">
-                        <div className="w-9 h-9 rounded-xl bg-teal-50 text-teal-700 flex items-center justify-center shrink-0 border border-teal-100">
-                          <FileText className="w-4 h-4" />
-                        </div>
-
-                        <div className="flex-1 w-full sm:w-auto">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Document Title
-                          </label>
-                          <Input
-                            type="text"
-                            value={doc.title}
-                            onChange={(e) =>
-                              handleUpdateUploadDocMeta(idx, "title", e.target.value)
-                            }
-                            required
-                            className="text-xs rounded-xl h-8 bg-slate-50"
-                          />
-                        </div>
-
-                        <div className="w-full sm:w-44">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Document Type
-                          </label>
-                          <select
-                            value={doc.documentType}
-                            onChange={(e) =>
-                              handleUpdateUploadDocMeta(idx, "documentType", Number(e.target.value))
-                            }
-                            className="w-full h-8 px-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-teal-500 cursor-pointer"
-                          >
-                            <option value={1}>Prescription</option>
-                            <option value={2}>Lab Test Report</option>
-                            <option value={3}>Discharge Summary</option>
-                            <option value={4}>Diagnostic Scan</option>
-                            <option value={5}>Other Medical Record</option>
-                          </select>
-                        </div>
-
-                        <div className="w-full sm:w-36">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Document Date
-                          </label>
-                          <Input
-                            type="date"
-                            value={doc.documentDate}
-                            onChange={(e) =>
-                              handleUpdateUploadDocMeta(idx, "documentDate", e.target.value)
-                            }
-                            required
-                            className="text-xs rounded-xl h-8 bg-slate-50"
-                          />
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveUploadDoc(idx)}
-                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100">
-                        <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                          Document Notes / Clinical Description (Optional)
-                        </label>
-                        <Input
-                          type="text"
-                          placeholder="e.g. Fasting glucose report, Dr. Roy handwritten notes..."
-                          value={doc.description || ""}
-                          onChange={(e) =>
-                            handleUpdateUploadDocMeta(idx, "description", e.target.value)
-                          }
-                          className="text-xs rounded-xl h-8 bg-slate-50"
-                        />
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <DialogFooter className="p-4 bg-slate-50 border-t border-slate-100 flex items-center justify-end gap-2.5">
-              <Button
-                type="button"
-                variant="outline"
-                size="sm"
-                onClick={() => setIsUploadDocsModalOpen(false)}
-                disabled={submittingUploadDocs}
-                className="text-xs rounded-xl cursor-pointer"
-              >
-                Cancel
-              </Button>
-              <Button
-                type="submit"
-                size="sm"
-                disabled={submittingUploadDocs || uploadDocsList.length === 0}
-                className="text-xs bg-teal-600 hover:bg-teal-700 text-white font-bold rounded-xl cursor-pointer shadow-md shadow-teal-600/20 px-4 flex items-center gap-1.5"
-              >
-                {submittingUploadDocs ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Uploading...</span>
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="w-3.5 h-3.5" />
-                    <span>Upload & Attach ({uploadDocsList.length})</span>
-                  </>
-                )}
-              </Button>
-            </DialogFooter>
-          </form>
-        </DialogContent>
-      </Dialog>
+      {/* 4. Upload Documents Modal */}
+      <UploadDocumentsModal
+        open={isUploadDocsModalOpen}
+        onOpenChange={setIsUploadDocsModalOpen}
+        patientDetails={patientDetails}
+        medicalRecordId={uploadDocsRecordId}
+        onDocumentsUploaded={() => {
+          setDetailsRefreshTrigger((prev) => prev + 1);
+        }}
+      />
     </div>
   );
 };

@@ -20,6 +20,8 @@ import {
   UpdatePatientProfileDetailsRes,
   UploadMedicalDocumentsReq,
   UploadMedicalDocumentsRes,
+  UpdateMedicationsReq,
+  UpdateMedicationsRes,
 } from '../proto/generated/patient';
 import { GrpcServiceName } from '../common/utils/constants';
 import type { ClientGrpc } from '@nestjs/microservices';
@@ -27,6 +29,7 @@ import {
   CreateMedicalRecordDto,
   GetPatientsListDto,
   PatientProfileDetailsDto,
+  UpdateMedicationsDto,
   UploadMedicalDocumentsDto,
 } from './patient.dto';
 import { moveFile } from '../common/utils/upload-file';
@@ -252,6 +255,33 @@ export class PatientService implements OnModuleInit {
       }
       throw error;
     }
+  }
+
+  /**
+   * @description Update Medications (Update existing status/endDate/details or insert new medications)
+   * @param request UpdateMedicationsDto
+   * @returns UpdateMedicationsRes
+   */
+  async updateMedications(
+    request: UpdateMedicationsDto,
+  ): Promise<UpdateMedicationsRes> {
+    const updateReq: UpdateMedicationsReq = {
+      patientId: request.patientId,
+      medicalRecordId: request.medicalRecordId,
+      medications: (request.medications ?? []).map((m) => ({
+        patientMedicationId: m.patientMedicationId || m.medicationId,
+        medicationName: m.medicationName,
+        dosage: m.dosage,
+        startDate: m.startDate,
+        endDate: m.endDate,
+        status: m.status,
+        description: m.description,
+      })),
+    };
+
+    return await firstValueFrom(
+      this.patientGrpcService.updateMedications(updateReq),
+    );
   }
 
   /**
