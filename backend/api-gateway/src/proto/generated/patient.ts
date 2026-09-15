@@ -98,6 +98,7 @@ export interface PatientMedicalDocuments {
 export interface PatientMedication {
   medicationName: string;
   dosage: string;
+  description?: string | undefined;
   startDate: string;
 }
 
@@ -204,6 +205,7 @@ export interface GetPatientMedications {
   startDate: string;
   endDate?: string | undefined;
   status: number;
+  description?: string | undefined;
 }
 
 export interface GetPatientMedicalRecordDetailsRes {

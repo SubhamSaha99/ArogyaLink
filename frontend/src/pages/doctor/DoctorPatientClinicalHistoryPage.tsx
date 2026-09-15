@@ -96,6 +96,7 @@ export interface MedicationItem {
   startDate: string;
   endDate?: string;
   status: number; // 1: Active, 2: Completed, 3: Discontinued, 4: On Hold
+  description?: string;
 }
 
 export interface PatientMedicalRecordDetails {
@@ -243,7 +244,12 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
     new Date().toISOString().split("T")[0]
   );
   const [newMedications, setNewMedications] = useState<
-    Array<{ medicationName: string; dosage: string; startDate: string }>
+    Array<{
+      medicationName: string;
+      dosage: string;
+      startDate: string;
+      description?: string;
+    }>
   >([]);
   const [newDocuments, setNewDocuments] = useState<
     Array<{
@@ -505,6 +511,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
       {
         medicationName: "",
         dosage: "",
+        description: "",
         startDate: new Date().toISOString().split("T")[0],
       },
     ]);
@@ -512,7 +519,7 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
 
   const handleUpdateMedication = (
     index: number,
-    field: "medicationName" | "dosage" | "startDate",
+    field: "medicationName" | "dosage" | "startDate" | "description",
     value: string
   ) => {
     setNewMedications((prev) =>
@@ -587,6 +594,9 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
         formData.append(`medications[${idx}].medicationName`, med.medicationName.trim());
         formData.append(`medications[${idx}].dosage`, med.dosage.trim());
         formData.append(`medications[${idx}].startDate`, med.startDate);
+        if (med.description?.trim()) {
+          formData.append(`medications[${idx}].description`, med.description.trim());
+        }
       });
 
       // Append documents with files
@@ -1599,9 +1609,16 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                             const badgeInfo = getMedicationStatusBadge(med.status);
                             return (
                               <tr key={med.patientMedicationId} className="hover:bg-slate-50/50">
-                                <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
-                                  <Pill className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                                  {med.medicationName}
+                                <td className="p-3">
+                                  <div className="font-bold text-slate-900 flex items-center gap-2">
+                                    <Pill className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                    <span>{med.medicationName}</span>
+                                  </div>
+                                  {med.description && (
+                                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 ml-5.5">
+                                      {med.description}
+                                    </p>
+                                  )}
                                 </td>
                                 <td className="p-3 font-semibold text-slate-700 font-mono">
                                   {med.dosage}
@@ -1861,64 +1878,81 @@ export const DoctorPatientClinicalHistoryPage: React.FC = () => {
                     {newMedications.map((med, idx) => (
                       <div
                         key={idx}
-                        className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 flex flex-col sm:flex-row items-center gap-3"
+                        className="p-3.5 rounded-2xl bg-slate-50 border border-slate-200 shadow-xs space-y-2.5"
                       >
-                        <div className="flex-1 w-full sm:w-auto">
+                        <div className="flex flex-col sm:flex-row items-center gap-3">
+                          <div className="flex-1 w-full sm:w-auto">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Drug Name <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              type="text"
+                              placeholder="e.g. Paracetamol 650mg"
+                              value={med.medicationName}
+                              onChange={(e) =>
+                                handleUpdateMedication(idx, "medicationName", e.target.value)
+                              }
+                              required
+                              className="text-xs rounded-xl h-8 bg-white"
+                            />
+                          </div>
+
+                          <div className="w-full sm:w-44">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Dosage / Frequency <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              type="text"
+                              placeholder="e.g. 1-0-1 After Meals"
+                              value={med.dosage}
+                              onChange={(e) =>
+                                handleUpdateMedication(idx, "dosage", e.target.value)
+                              }
+                              required
+                              className="text-xs rounded-xl h-8 bg-white"
+                            />
+                          </div>
+
+                          <div className="w-full sm:w-36">
+                            <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
+                              Start Date <span className="text-red-500">*</span>
+                            </label>
+                            <Input
+                              type="date"
+                              value={med.startDate}
+                              onChange={(e) =>
+                                handleUpdateMedication(idx, "startDate", e.target.value)
+                              }
+                              required
+                              className="text-xs rounded-xl h-8 bg-white"
+                            />
+                          </div>
+
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleRemoveMedication(idx)}
+                            className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-200/60">
                           <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Drug Name
+                            Medication Notes / Instructions (Optional)
                           </label>
                           <Input
                             type="text"
-                            placeholder="e.g. Paracetamol 650mg"
-                            value={med.medicationName}
+                            placeholder="e.g. Take 1 tablet after meals with warm water, avoid milk..."
+                            value={med.description || ""}
                             onChange={(e) =>
-                              handleUpdateMedication(idx, "medicationName", e.target.value)
+                              handleUpdateMedication(idx, "description", e.target.value)
                             }
-                            required
                             className="text-xs rounded-xl h-8 bg-white"
                           />
                         </div>
-
-                        <div className="w-full sm:w-44">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Dosage / Frequency
-                          </label>
-                          <Input
-                            type="text"
-                            placeholder="e.g. 1-0-1 After Meals"
-                            value={med.dosage}
-                            onChange={(e) =>
-                              handleUpdateMedication(idx, "dosage", e.target.value)
-                            }
-                            required
-                            className="text-xs rounded-xl h-8 bg-white"
-                          />
-                        </div>
-
-                        <div className="w-full sm:w-36">
-                          <label className="text-[10px] font-bold text-slate-500 uppercase block mb-1">
-                            Start Date
-                          </label>
-                          <Input
-                            type="date"
-                            value={med.startDate}
-                            onChange={(e) =>
-                              handleUpdateMedication(idx, "startDate", e.target.value)
-                            }
-                            required
-                            className="text-xs rounded-xl h-8 bg-white"
-                          />
-                        </div>
-
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveMedication(idx)}
-                          className="text-rose-600 hover:text-rose-700 hover:bg-rose-50 h-8 w-8 p-0 rounded-xl cursor-pointer shrink-0 mt-4 sm:mt-5"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
                       </div>
                     ))}
                   </div>

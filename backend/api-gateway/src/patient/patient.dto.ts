@@ -166,6 +166,10 @@ export class MedicalMedicationDto {
   dosage!: string;
 
   @IsString()
+  @IsOptional()
+  description?: string | '';
+
+  @IsString()
   @IsNotEmpty()
   @Matches(/^\d{4}-(0[1-9]|1[0-2])-(0[1-9]|[12]\d|3[01])$/, {
     message: 'Start date must be in YYYY-MM-DD format',

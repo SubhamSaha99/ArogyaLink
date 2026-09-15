@@ -111,9 +111,10 @@ message PatientMedicalDocuments {
 }
 
 message PatientMedication {
-  string medicationName = 1;
-  string dosage         = 2;
-  string startDate      = 3;
+  string          medicationName = 1;
+  string          dosage         = 2;
+  optional string description    = 3;
+  string          startDate      = 4;
 }
 
 message CreatePatientMedicalRecordReq {
@@ -218,6 +219,7 @@ message GetPatientMedications {
   string          startDate           = 4;
   optional string endDate             = 5;
   uint32          status              = 6;
+  optional string description         = 7;
 }
 
 message GetPatientMedicalRecordDetailsRes {

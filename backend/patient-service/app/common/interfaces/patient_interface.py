@@ -91,6 +91,7 @@ class PatientMedicationItemInterface(TypedDict):
     patient_medication_id: str
     medication_name: str
     dosage: str
+    description: str | None
     start_date: str
     end_date: str | None
     status: int

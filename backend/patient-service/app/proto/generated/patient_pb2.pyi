@@ -440,22 +440,27 @@ class PatientMedication(_message.Message):
 
     MEDICATIONNAME_FIELD_NUMBER: _builtins.int
     DOSAGE_FIELD_NUMBER: _builtins.int
+    DESCRIPTION_FIELD_NUMBER: _builtins.int
     STARTDATE_FIELD_NUMBER: _builtins.int
     medicationName: _builtins.str
     dosage: _builtins.str
+    description: _builtins.str
     startDate: _builtins.str
     def __init__(
         self,
         *,
         medicationName: _builtins.str = ...,
         dosage: _builtins.str = ...,
+        description: _builtins.str | None = ...,
         startDate: _builtins.str = ...,
     ) -> None: ...
-    _HasFieldArgType: _TypeAlias = _Never  # noqa: Y015
+    _HasFieldArgType: _TypeAlias = _typing.Literal["_description", b"_description", "description", b"description"]  # noqa: Y015
     def HasField(self, field_name: _HasFieldArgType) -> _builtins.bool: ...
-    _ClearFieldArgType: _TypeAlias = _typing.Literal["dosage", b"dosage", "medicationName", b"medicationName", "startDate", b"startDate"]  # noqa: Y015
+    _ClearFieldArgType: _TypeAlias = _typing.Literal["_description", b"_description", "description", b"description", "dosage", b"dosage", "medicationName", b"medicationName", "startDate", b"startDate"]  # noqa: Y015
     def ClearField(self, field_name: _ClearFieldArgType) -> None: ...
-    def WhichOneof(self, oneof_group: _Never) -> None: ...
+    _WhichOneofReturnType__description: _TypeAlias = _typing.Literal["description"]  # noqa: Y015
+    _WhichOneofArgType__description: _TypeAlias = _typing.Literal["_description", b"_description"]  # noqa: Y015
+    def WhichOneof(self, oneof_group: _WhichOneofArgType__description) -> _WhichOneofReturnType__description | None: ...
 
 Global___PatientMedication: _TypeAlias = PatientMedication  # noqa: Y015
 

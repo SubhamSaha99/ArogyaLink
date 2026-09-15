@@ -8,6 +8,7 @@ class MedicalMedication(BaseModel):
     medical_record_id: str
     medication_name: str
     dosage: str
+    description: str | None = None
     start_date: date
     end_date: date | None = None
     status: MedicationStatus = MedicationStatus.ACTIVE

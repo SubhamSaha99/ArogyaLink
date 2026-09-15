@@ -1,4 +1,9 @@
-import { BadRequestException, Inject, Injectable, OnModuleInit } from '@nestjs/common';
+import {
+  BadRequestException,
+  Inject,
+  Injectable,
+  OnModuleInit,
+} from '@nestjs/common';
 import {
   CreatePatientMedicalRecordReq,
   CreatePatientMedicalRecordRes,
@@ -155,12 +160,7 @@ export class PatientService implements OnModuleInit {
         );
       }
 
-      const medications: PatientMedication[] =
-        request.medications?.map((med) => ({
-          medicationName: med.medicationName,
-          dosage: med.dosage,
-          startDate: med.startDate,
-        })) ?? [];
+      const medications: PatientMedication[] = request.medications ?? [];
 
       const medicalRecordReq: CreatePatientMedicalRecordReq = {
         medicalRecord: {
@@ -194,8 +194,8 @@ export class PatientService implements OnModuleInit {
 
   /**
    * @description Upload Medical Documents
-   * @param request 
-   * @param documents 
+   * @param request
+   * @param documents
    * @returns UploadMedicalDocumentsRes
    */
   async uploadMedicalDocuments(

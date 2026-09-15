@@ -63,6 +63,7 @@ export interface MedicationItem {
   startDate: string;
   endDate?: string;
   status: number; // 1: Active, 2: Completed, 3: Discontinued, 4: On Hold
+  description?: string;
 }
 
 export interface PatientMedicalRecordDetails {
@@ -729,9 +730,16 @@ export const PatientMedicalRecordsPage: React.FC = () => {
                             const badgeInfo = getMedicationStatusBadge(med.status);
                             return (
                               <tr key={med.patientMedicationId} className="hover:bg-slate-50/50">
-                                <td className="p-3 font-bold text-slate-900 flex items-center gap-2">
-                                  <Pill className="w-3.5 h-3.5 text-teal-600 shrink-0" />
-                                  {med.medicationName}
+                                <td className="p-3">
+                                  <div className="font-bold text-slate-900 flex items-center gap-2">
+                                    <Pill className="w-3.5 h-3.5 text-teal-600 shrink-0" />
+                                    <span>{med.medicationName}</span>
+                                  </div>
+                                  {med.description && (
+                                    <p className="text-[11px] text-slate-500 font-normal mt-0.5 ml-5.5">
+                                      {med.description}
+                                    </p>
+                                  )}
                                 </td>
                                 <td className="p-3 font-semibold text-slate-700 font-mono">
                                   {med.dosage}

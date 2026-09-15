@@ -3,7 +3,7 @@
 import grpc
 import warnings
 
-import patient_pb2 as patient__pb2
+from . import patient_pb2 as patient__pb2
 
 GRPC_GENERATED_VERSION = '1.83.1'
 GRPC_VERSION = grpc.__version__

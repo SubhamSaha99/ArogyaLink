@@ -245,6 +245,7 @@ class MedicalRecordRepository:
                 "patient_medication_id": str(med["_id"]),
                 "medication_name": med.get("medication_name", ""),
                 "dosage": med.get("dosage", ""),
+                "description": med.get("description"),
                 "start_date": str(med.get("start_date", "") or ""),
                 "end_date": (
                     str(med.get("end_date", "") or "") if med.get("end_date") else None

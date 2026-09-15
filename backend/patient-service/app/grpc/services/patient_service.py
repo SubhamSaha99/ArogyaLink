@@ -171,6 +171,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                 medical_record_id="",
                 medication_name=med.medicationName,
                 dosage=med.dosage,
+                description=med.description if med.description else "",
                 start_date=date.fromisoformat(med.startDate),
             )
             for med in request.medications
@@ -395,6 +396,7 @@ class PatientService(patient_pb2_grpc.PatientServiceServicer):
                     startDate=med["start_date"],
                     endDate=med.get("end_date"),
                     status=med["status"],
+                    description=med.get("description"),
                 )
                 for med in result["medications"]
             ],
