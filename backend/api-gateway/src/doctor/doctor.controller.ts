@@ -34,7 +34,7 @@ export class DoctorController {
    * @param file
    * @returns json
    */
-  @Post('updateDoctorProfileDetails')
+  @Post('doctor-profile-details')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   @UseInterceptors(
@@ -69,7 +69,7 @@ export class DoctorController {
    * @param request
    * @returns json
    */
-  @Post('updateDoctorProfessionalDetails')
+  @Post('doctor-professional-details')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   async updateDoctorProfessionalDetails(
@@ -95,7 +95,7 @@ export class DoctorController {
    * @param request
    * @returns json
    */
-  @Post('updateDoctorQualifications')
+  @Post('doctor-qualifications')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   async updateDoctorQualifications(
@@ -121,7 +121,7 @@ export class DoctorController {
    * @param request
    * @returns json
    */
-  @Post('getDoctorDetails')
+  @Post('doctor-details')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getDoctorDetails(
@@ -154,10 +154,10 @@ export class DoctorController {
   }
 
   /**
-   * Get Doctor Master Data
+   * @description Get Doctor Master Data
    * @returns json
    */
-  @Get('getDoctorMasterData')
+  @Get('doctor-master-data')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getDoctorMasterData() {
@@ -175,7 +175,7 @@ export class DoctorController {
    * @param request
    * @returns json
    */
-  @Post('getDoctorList')
+  @Post('doctors-list')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getDoctorList(@Body() request: GetDoctorListDto) {
@@ -192,10 +192,27 @@ export class DoctorController {
    * @param user
    * @returns json
    */
-  @Get('getAssociatedHealthInstitutes')
+  @Get('associated-health-institutes')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR)
   async getAssociatedHealthInstitutes(@CurrentUser() user: JwtPayload) {
+    const result = await this.doctorService.getAssociatedHealthInstitutes(
+      user.userPrimaryKey,
+      user.userBusinessId,
+    );
+    return {
+      success: true,
+      message: 'Associated Health Institutes Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  @Get('associated-health-institutes-master-data')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.DOCTOR)
+  async getAssociatedHealthInstitutesMasterData(
+    @CurrentUser() user: JwtPayload,
+  ) {
     const result = await this.doctorService.getAssociatedHealthInstitutes(
       user.userPrimaryKey,
       user.userBusinessId,

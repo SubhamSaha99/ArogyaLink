@@ -431,14 +431,6 @@ export const PatientProfilePage: React.FC = () => {
                 <span className="font-mono text-emerald-300 font-semibold">
                   Patient ID: {patientId}
                 </span>
-                {details?.patientPrimaryKey && (
-                  <>
-                    <span>•</span>
-                    <span className="text-slate-400">
-                      Primary Key: #{details.patientPrimaryKey}
-                    </span>
-                  </>
-                )}
               </div>
             </div>
           </div>

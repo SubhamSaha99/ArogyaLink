@@ -7,7 +7,6 @@ import {
   Param,
   Post,
   UploadedFile,
-  UploadedFiles,
   UseInterceptors,
 } from '@nestjs/common';
 import { PatientService } from './patient.service';
@@ -34,7 +33,7 @@ export class PatientController {
    * @param file
    * @returns json
    */
-  @Post('updatePatientProfileDetails')
+  @Post('patient-profile-details')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.PATIENT)
   @UseInterceptors(
@@ -68,7 +67,7 @@ export class PatientController {
    * @param user
    * @returns json
    */
-  @Post('getPatientDetails')
+  @Post('patient-details')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getPatientDetails(
@@ -103,7 +102,7 @@ export class PatientController {
    * @param request
    * @returns json
    */
-  @Post('getPatientsList')
+  @Post('patients-list')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getPatientsList(
@@ -135,7 +134,7 @@ export class PatientController {
    * * Get States
    * @returns json
    */
-  @Get('states')
+  @Get('states-master-data')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getStates() {
@@ -153,7 +152,7 @@ export class PatientController {
    * @param id
    * @returns json
    */
-  @Get('districts/:id')
+  @Get('districts-master-data/:id')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.PATIENT, UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   async getDistricts(@Param('id') id: string) {

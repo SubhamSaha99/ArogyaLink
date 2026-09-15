@@ -24,7 +24,7 @@ import { UserRole } from '../common/utils/constants';
 import { MultipartNestedInterceptor } from '../common/interceptor/multipart-nested.interceptor';
 import { MedicalRecordService } from './medical-record.service';
 
-@Controller('medicalRecord')
+@Controller('medical-record')
 export class MedicalRecordController {
   constructor(private readonly medicalRecordService: MedicalRecordService) {}
 
@@ -35,7 +35,7 @@ export class MedicalRecordController {
    * @param documents
    * @returns json
    */
-  @Post('createPatientMedicalRecord')
+  @Post('patient-medical-record')
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   @UseInterceptors(
     AnyFilesInterceptor(
@@ -92,7 +92,7 @@ export class MedicalRecordController {
    * @param documents
    * @returns json
    */
-  @Post('uploadMedicalDocuments')
+  @Post('medical-documents')
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   @UseInterceptors(
     AnyFilesInterceptor(
@@ -123,7 +123,7 @@ export class MedicalRecordController {
    * @param request UpdateMedicationsDto
    * @returns json
    */
-  @Post('updateMedications')
+  @Post('medications')
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE)
   @HttpCode(HttpStatus.OK)
   async updateMedications(@Body() request: UpdateMedicationsDto) {
@@ -142,7 +142,7 @@ export class MedicalRecordController {
    * @param request
    * @returns json
    */
-  @Post('getPatientMedicalRecords')
+  @Post('patient-medical-records')
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
   @HttpCode(HttpStatus.OK)
   async getPatientMedicalRecords(
@@ -179,7 +179,7 @@ export class MedicalRecordController {
    * @param medicalRecordId
    * @returns json
    */
-  @Get('getPatientMedicalRecordDetails/:id')
+  @Get('patient-medical-record-details/:id')
   @Auth(UserRole.DOCTOR, UserRole.HEALTH_INSTITUTE, UserRole.PATIENT)
   @HttpCode(HttpStatus.OK)
   async getPatientMedicalRecordDetails(@Param('id') medicalRecordId: string) {

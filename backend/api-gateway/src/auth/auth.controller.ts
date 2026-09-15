@@ -34,7 +34,7 @@ export class AuthController {
    * @param request
    * @returns json
    */
-  @Post('healthInstituteRegistration')
+  @Post('health-institute-registration')
   async healthInstituteRegistration(@Body() request: HealthInstituteRegDto) {
     const result = await this.authService.healthInstituteRegistration(request);
 
@@ -51,7 +51,7 @@ export class AuthController {
    * @param httpRequest
    * @returns json
    */
-  @Post('healthInstituteLogin')
+  @Post('health-institute-login')
   @HttpCode(HttpStatus.OK)
   async healthInstituteLogin(
     @Body() request: HealthInstituteLoginDto,
@@ -86,7 +86,7 @@ export class AuthController {
    * @param request
    * @returns json
    */
-  @Post('doctorRegistration')
+  @Post('doctor-registration')
   async doctorRegistration(@Body() request: DoctorRegDto) {
     const result = await this.authService.doctorRegistration(request);
 
@@ -103,7 +103,7 @@ export class AuthController {
    * @param httpRequest
    * @returns json
    */
-  @Post('doctorLogin')
+  @Post('doctor-login')
   @HttpCode(HttpStatus.OK)
   async doctorLogin(
     @Body() request: DoctorLoginDto,
@@ -138,7 +138,7 @@ export class AuthController {
    * @param request
    * @returns json
    */
-  @Post('patientRegistration')
+  @Post('patient-registration')
   async patientRegistration(@Body() request: PatientRegDto) {
     const result = await this.authService.patientRegistration(request);
 
@@ -149,7 +149,7 @@ export class AuthController {
     };
   }
 
-  @Post('patientLogin')
+  @Post('patient-login')
   @HttpCode(HttpStatus.OK)
   async patientLogin(
     @Body() request: PatientLoginDto,
@@ -184,7 +184,7 @@ export class AuthController {
    * @param request
    * @returns json
    */
-  @Post('refreshToken')
+  @Post('refresh-token')
   @HttpCode(HttpStatus.OK)
   async refreshToken(@Body() request: RefreshTokenDto) {
     const result = await this.authService.refreshToken(request);

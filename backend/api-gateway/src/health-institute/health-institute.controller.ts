@@ -19,7 +19,7 @@ import { UserRole } from '../common/utils/constants';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 
-@Controller('healthInstitute')
+@Controller('health-institute')
 export class HealthInstituteController {
   constructor(
     private readonly healthInstituteService: HealthInstituteService,
@@ -31,7 +31,7 @@ export class HealthInstituteController {
    * @param user
    * @returns json
    */
-  @Post('updateHealthInstituteProfile')
+  @Post('health-institute-profile')
   @Auth(UserRole.HEALTH_INSTITUTE)
   async updateHealthInstituteProfile(
     @Body() request: UpdateHealthInstituteProfileDto,
@@ -55,7 +55,7 @@ export class HealthInstituteController {
    * @param user
    * @returns json
    */
-  @Get('getHealthInstituteDetails')
+  @Get('health-institute-details')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getHealthInstituteDetails(@CurrentUser() user: JwtPayload) {
@@ -75,7 +75,7 @@ export class HealthInstituteController {
    * * Get States
    * @returns json
    */
-  @Get('states')
+  @Get('states-master-data')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getStates() {
@@ -93,7 +93,7 @@ export class HealthInstituteController {
    * @param id
    * @returns json
    */
-  @Get('districts/:id')
+  @Get('districts-master-data/:id')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getDistricts(@Param('id') id: string) {
@@ -110,7 +110,7 @@ export class HealthInstituteController {
    * @description Get Health Institutes
    * @returns json
    */
-  @Get('registrationCouncils')
+  @Get('registration-councils-master-data')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getRegistrationCouncils() {
@@ -127,7 +127,7 @@ export class HealthInstituteController {
    * @description Get appoint doctor master data
    * @returns json
    */
-  @Get('appointDoctorMasterData')
+  @Get('appoint-doctor-master-data')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getAppointDoctorMasterData() {
@@ -147,7 +147,7 @@ export class HealthInstituteController {
    * @param user 
    * @returns json
    */
-  @Post('getUnAppointedDoctorsList')
+  @Post('unappointed-doctors-list')
   @HttpCode(HttpStatus.OK)
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getUnAppointedDoctorsList(
@@ -166,7 +166,7 @@ export class HealthInstituteController {
     };
   }
 
-  @Post('appointDoctor')
+  @Post('appoint-doctor')
   @Auth(UserRole.HEALTH_INSTITUTE)
   async appointDoctor(
     @Body() request: AppointDoctorDto,
@@ -184,7 +184,7 @@ export class HealthInstituteController {
     };
   }
 
-  @Post('getAppointedDoctorsList')
+  @Post('appointed-doctors-list')
   @Auth(UserRole.HEALTH_INSTITUTE)
   async getAppointedDoctorsList(
     @Body() request: GetAppointedDoctorsListDto,

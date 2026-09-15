@@ -185,7 +185,6 @@ export const DoctorPatientsPage: React.FC = () => {
         setOffset(nextOffset);
         setHasMore(nextOffset < total && fetchedPatients.length > 0);
       } catch (err: any) {
-        console.error("Failed to fetch patients list:", err);
         const errMsg =
           err?.response?.data?.message ||
           err?.message ||
