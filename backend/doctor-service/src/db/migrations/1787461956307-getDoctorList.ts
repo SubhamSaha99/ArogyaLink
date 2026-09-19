@@ -15,8 +15,8 @@ export class GetDoctorList1787461956307 implements MigrationInterface {
             RETURNS TABLE (
                 doctors JSONB,
                 total BIGINT,
-                "resultOffset" INTEGER,
-                "resultLimit" INTEGER
+                "offset" INTEGER,
+                "limit" INTEGER
             )
             LANGUAGE plpgsql
             AS $$
@@ -128,8 +128,8 @@ export class GetDoctorList1787461956307 implements MigrationInterface {
                         SELECT COUNT(*)
                         FROM filtered_doctors
                     ) AS total,
-                    p_offset AS "resultOffset",
-                    p_limit AS "resultLimit";
+                    p_offset AS "offset",
+                    p_limit AS "limit";
 
 
             EXCEPTION

@@ -7,6 +7,8 @@ import {
   GetAppointedDoctorsRes,
   GetAssociatedDoctorsIdReq,
   GetAssociatedDoctorsIdRes,
+  GetAssociatedHealthInstitutesMasterDataReq,
+  GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   GetDistrictsReq,
@@ -86,5 +88,9 @@ export class HealthInstituteController implements HealthInstituteServiceControll
     request: GetAssociatedDoctorsIdReq,
   ): Promise<GetAssociatedDoctorsIdRes> {
     return this.healthInstituteService.getAssociatedDoctorsId(request);
+  }
+
+  async getAssociatedHealthInstitutesMasterData(request: GetAssociatedHealthInstitutesMasterDataReq): Promise<GetAssociatedHealthInstitutesMasterDataRes> {
+      return this.healthInstituteService.getAssociatedHealthInstitutesMasterData(request);
   }
 }

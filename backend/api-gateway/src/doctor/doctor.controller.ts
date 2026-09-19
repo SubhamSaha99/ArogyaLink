@@ -213,7 +213,7 @@ export class DoctorController {
   async getAssociatedHealthInstitutesMasterData(
     @CurrentUser() user: JwtPayload,
   ) {
-    const result = await this.doctorService.getAssociatedHealthInstitutes(
+    const result = await this.doctorService.getAssociatedHealthInstitutesMasterData(
       user.userPrimaryKey,
       user.userBusinessId,
     );

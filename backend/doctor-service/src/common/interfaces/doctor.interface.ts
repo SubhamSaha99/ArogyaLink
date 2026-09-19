@@ -1,5 +1,9 @@
-export interface UpdateDoctorResponse {
+export interface UpdateDoctorQueryResponse {
   f_result: string;
+}
+
+export interface UpdateDoctorResponse {
+    doctorId: string;
 }
 
 export interface DoctorQualifications {
@@ -45,6 +49,14 @@ export interface GetDoctorQualificationDetailsResponse {
 }
 
 export interface GetDoctorDetailsResponse {
+  doctorPrimaryKey: number;
+  doctorId: string;
+  profileDetails: GetDoctorProfileDetailsResponse;
+  professionalDetails: GetDoctorProfessionalDetailsResponse;
+  qualificationDetails: GetDoctorQualificationDetailsResponse[];
+}
+
+export interface GetDoctorDetailsQueryResponse {
   status: string;
   doctorPrimaryKey: number;
   doctorId: string;
@@ -82,8 +94,8 @@ export interface DoctorListItem {
 export interface GetDoctorListResponse {
   doctors: DoctorListItem[];
   total: number;
-  resultOffset: number;
-  resultLimit: number;
+  offset: number;
+  limit: number;
 }
 
 export interface AppointedDoctorDetailsItem {

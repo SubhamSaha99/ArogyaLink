@@ -1,101 +1,210 @@
-import { Controller } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  HttpCode,
+  HttpStatus,
+  Post,
+  Req,
+  Ip,
+  Get,
+  UseGuards,
+} from '@nestjs/common';
+import type { Request } from 'express';
 import { AuthService } from './auth.service';
 import {
-  AuthServiceController,
-  AuthServiceControllerMethods,
-  CompensateDoctorRegistrationReq,
-  CompensateDoctorRegistrationRes,
-  DoctorRegistrationReq,
-  DoctorLoginReq,
-  DoctorLoginRes,
-  DoctorRegistrationRes,
-  HealthInstituteLoginReq,
-  HealthInstituteLoginRes,
-  HealthInstituteRegReq,
-  HealthInstituteRegRes,
-  RefreshTokenReq,
-  RefreshTokenRes,
-  LogoutReq,
-  LogoutRes,
-  ValidateAccessTokenReq,
-  ValidateAccessTokenRes,
-  CompensateHealthInstituteRegistrationReq,
-  CompensateHealthInstituteRegistrationRes,
-  PatientRegistrationReq,
-  PatientRegistrationRes,
-  CompensatePatientRegistrationReq,
-  CompensatePatientRegistrationRes,
-  PatientLoginReq,
-  PatientLoginRes,
-} from '../proto/generated/auth';
-import { Observable } from 'rxjs';
+  HealthInstituteRegDto,
+  HealthInstituteLoginDto,
+  DoctorRegDto,
+  DoctorLoginDto,
+  RefreshTokenDto,
+  PatientRegDto,
+  PatientLoginDto,
+} from './auth.dto';
+import { UAParser } from 'ua-parser-js';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 
-@Controller()
-@AuthServiceControllerMethods()
-export class AuthController implements AuthServiceController {
+@Controller('auth')
+export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
-  async healthInstituteRegistration(
-    request: HealthInstituteRegReq,
-  ): Promise<HealthInstituteRegRes> {
-    return this.authService.healthInstituteRegistration(request);
+  /**
+   * * Health Institute Registration
+   * @param request
+   * @returns json
+   */
+  @Post('health-institute-registration')
+  async healthInstituteRegistration(@Body() request: HealthInstituteRegDto) {
+    const result = await this.authService.healthInstituteRegistration(request);
+
+    return {
+      success: true,
+      message: 'Health institute registered successfully',
+      data: result,
+    };
   }
 
-  async compensateHealthInstituteRegistration(
-    request: CompensateHealthInstituteRegistrationReq,
-  ): Promise<CompensateHealthInstituteRegistrationRes> {
-    return this.authService.compensateHealthInstituteRegistration(request);
-  }
-
+  /**
+   * * Health Institute Login
+   * @param request
+   * @param httpRequest
+   * @returns json
+   */
+  @Post('health-institute-login')
+  @HttpCode(HttpStatus.OK)
   async healthInstituteLogin(
-    request: HealthInstituteLoginReq,
-  ): Promise<HealthInstituteLoginRes> {
-    return this.authService.healthInstituteLogin(request);
+    @Body() request: HealthInstituteLoginDto,
+    @Req() httpRequest: Request,
+    @Ip() requestIp: string,
+  ) {
+    const userAgent = httpRequest.headers['user-agent'] ?? '';
+
+    const parser = new UAParser(userAgent);
+    const deviceDetails = parser.getResult();
+
+    const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+      .filter(Boolean)
+      .join(' on ');
+
+    const result = await this.authService.healthInstituteLogin(
+      request,
+      requestIp,
+      userAgent,
+      deviceName,
+    );
+
+    return {
+      success: true,
+      message: 'Health institute logged in successfully',
+      data: result,
+    };
   }
 
-  async createDoctorAuth(
-    request: DoctorRegistrationReq,
-  ): Promise<DoctorRegistrationRes> {
-    return this.authService.doctorRegistration(request);
+  /**
+   * * Doctor Registration
+   * @param request
+   * @returns json
+   */
+  @Post('doctor-registration')
+  async doctorRegistration(@Body() request: DoctorRegDto) {
+    const result = await this.authService.doctorRegistration(request);
+
+    return {
+      success: true,
+      message: 'Doctor registered successfully',
+      data: result,
+    };
   }
 
-  async compensateDoctorRegistration(
-    request: CompensateDoctorRegistrationReq,
-  ): Promise<CompensateDoctorRegistrationRes> {
-    return this.authService.compensateDoctorRegistration(request);
+  /**
+   * * Doctor login
+   * @param request
+   * @param httpRequest
+   * @returns json
+   */
+  @Post('doctor-login')
+  @HttpCode(HttpStatus.OK)
+  async doctorLogin(
+    @Body() request: DoctorLoginDto,
+    @Req() httpRequest: Request,
+    @Ip() requestIp: string,
+  ) {
+    const userAgent = httpRequest.headers['user-agent'] ?? '';
+
+    const parser = new UAParser(userAgent);
+    const deviceDetails = parser.getResult();
+
+    const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+      .filter(Boolean)
+      .join(' on ');
+
+    const result = await this.authService.doctorLogin(
+      request,
+      requestIp,
+      userAgent,
+      deviceName,
+    );
+
+    return {
+      success: true,
+      message: 'Doctor logged in successfully',
+      data: result,
+    };
   }
 
-  async doctorLogin(request: DoctorLoginReq): Promise<DoctorLoginRes> {
-    return this.authService.doctorLogin(request);
+  /**
+   * @description Patient Registration
+   * @param request
+   * @returns json
+   */
+  @Post('patient-registration')
+  async patientRegistration(@Body() request: PatientRegDto) {
+    const result = await this.authService.patientRegistration(request);
+
+    return {
+      success: true,
+      message: 'Patient registered successfully',
+      data: result,
+    };
   }
 
-  async patientRegistration(
-    request: PatientRegistrationReq,
-  ): Promise<PatientRegistrationRes> {
-    return this.authService.patientRegistration(request);
+  @Post('patient-login')
+  @HttpCode(HttpStatus.OK)
+  async patientLogin(
+    @Body() request: PatientLoginDto,
+    @Req() httpRequest: Request,
+    @Ip() requestIp: string,
+  ) {
+    const userAgent = httpRequest.headers['user-agent'] ?? '';
+
+    const parser = new UAParser(userAgent);
+    const deviceDetails = parser.getResult();
+
+    const deviceName = [deviceDetails.browser.name, deviceDetails.os.name]
+      .filter(Boolean)
+      .join(' on ');
+
+    const result = await this.authService.patientLogin(
+      request,
+      requestIp,
+      userAgent,
+      deviceName,
+    );
+
+    return {
+      success: true,
+      message: 'patient logged in successfully',
+      data: result,
+    };
   }
 
-  async compensatePatientRegistration(
-    request: CompensatePatientRegistrationReq,
-  ): Promise<CompensatePatientRegistrationRes> {
-    return this.authService.compensatePatientRegistration(request);
+  /**
+   * * Refresh Auth Token
+   * @param request
+   * @returns json
+   */
+  @Post('refresh-token')
+  @HttpCode(HttpStatus.OK)
+  async refreshToken(@Body() request: RefreshTokenDto) {
+    const result = await this.authService.refreshToken(request);
+
+    return {
+      success: true,
+      message: 'Token refreshed successfully.',
+      data: result,
+    };
   }
 
-  async patientLogin(request: PatientLoginReq): Promise<PatientLoginRes> {
-    return this.authService.patientLogin(request);
-  }
+  @Get('logout')
+  @HttpCode(HttpStatus.OK)
+  @UseGuards(JwtAuthGuard)
+  async logout(@CurrentUser() user: JwtPayload) {
+    await this.authService.logout(user.sessionId);
 
-  async refreshToken(request: RefreshTokenReq): Promise<RefreshTokenRes> {
-    return this.authService.refreshToken(request);
-  }
-
-  async logout(request: LogoutReq): Promise<LogoutRes> {
-    return this.authService.logout(request);
-  }
-
-  async validateAccessToken(
-    request: ValidateAccessTokenReq,
-  ): Promise<ValidateAccessTokenRes> {
-    return this.authService.validateAccessToken(request);
+    return {
+      success: true,
+      message: 'Logged out successfully.',
+    };
   }
 }

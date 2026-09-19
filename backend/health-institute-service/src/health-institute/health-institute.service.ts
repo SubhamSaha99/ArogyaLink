@@ -9,6 +9,8 @@ import {
   GetAppointedDoctorsRes,
   GetAssociatedDoctorsIdReq,
   GetAssociatedDoctorsIdRes,
+  GetAssociatedHealthInstitutesMasterDataReq,
+  GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   GetDistrictsReq,
@@ -560,4 +562,8 @@ export class HealthInstituteService {
     };
     return doctorPrimaryKeys;
   }
+
+  async getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesMasterDataReq,
+  ): Promise<GetAssociatedHealthInstitutesMasterDataRes> {}
 }

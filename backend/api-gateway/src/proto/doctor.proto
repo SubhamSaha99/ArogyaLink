@@ -198,3 +198,4 @@ message DoctorDetails {
 message GetAppointedDoctorDetailsRes {
   repeated DoctorDetails doctors = 1;
 }
+

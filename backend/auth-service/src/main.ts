@@ -1,23 +1,28 @@
 import { NestFactory } from '@nestjs/core';
-import { MicroserviceOptions, Transport } from '@nestjs/microservices';
-import { join } from 'node:path';
+import { ValidationPipe } from '@nestjs/common';
 import { AppModule } from './app.module';
-import { AUTH_PACKAGE_NAME } from './proto/generated/auth';
+import { AllExceptionsFilter } from './common/filters/all-exceptions.filter';
 
 async function bootstrap() {
-  const app = await NestFactory.createMicroservice<MicroserviceOptions>(
-    AppModule,
-    {
-      transport: Transport.GRPC,
-      options: {
-        package: AUTH_PACKAGE_NAME,
-        protoPath: join(__dirname, 'proto/auth.proto'),
-        url: process.env.AUTH_SERVICE_GRPC_URL ?? '0.0.0.0:50051',
-      },
-    },
+  const app = await NestFactory.create(AppModule);
+  app.enableCors({
+    origin: [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'http://127.0.0.1:5173',
+    ],
+    credentials: true,
+  });
+  app.setGlobalPrefix('api');
+  app.useGlobalPipes(
+    new ValidationPipe({
+      whitelist: true,
+      transform: true,
+    }),
   );
 
+  app.useGlobalFilters(new AllExceptionsFilter());
+  await app.listen(process.env.PORT ?? 3001);
   app.enableShutdownHooks();
-  await app.listen();
 }
 void bootstrap();

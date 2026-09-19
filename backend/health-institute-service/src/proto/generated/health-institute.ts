@@ -181,6 +181,15 @@ export interface GetAssociatedDoctorsIdRes {
   doctorPrimaryKeys: number[];
 }
 
+export interface GetAssociatedHealthInstitutesMasterDataReq {
+  doctorPrimaryKey: number;
+  doctorId: string;
+}
+
+export interface GetAssociatedHealthInstitutesMasterDataRes {
+  associatedHealthInstitute: MasterDataItem[];
+}
+
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
@@ -207,6 +216,10 @@ export interface HealthInstituteServiceClient {
   ): Observable<GetAssociatedHealthInstitutesRes>;
 
   getAssociatedDoctorsId(request: GetAssociatedDoctorsIdReq): Observable<GetAssociatedDoctorsIdRes>;
+
+  getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesMasterDataReq,
+  ): Observable<GetAssociatedHealthInstitutesMasterDataRes>;
 }
 
 export interface HealthInstituteServiceController {
@@ -253,6 +266,13 @@ export interface HealthInstituteServiceController {
   getAssociatedDoctorsId(
     request: GetAssociatedDoctorsIdReq,
   ): Promise<GetAssociatedDoctorsIdRes> | Observable<GetAssociatedDoctorsIdRes> | GetAssociatedDoctorsIdRes;
+
+  getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesMasterDataReq,
+  ):
+    | Promise<GetAssociatedHealthInstitutesMasterDataRes>
+    | Observable<GetAssociatedHealthInstitutesMasterDataRes>
+    | GetAssociatedHealthInstitutesMasterDataRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {
@@ -269,6 +289,7 @@ export function HealthInstituteServiceControllerMethods() {
       "getAppointedDoctors",
       "getAssociatedHealthInstitutes",
       "getAssociatedDoctorsId",
+      "getAssociatedHealthInstitutesMasterData",
     ];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);

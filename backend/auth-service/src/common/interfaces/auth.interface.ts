@@ -16,6 +16,13 @@ export interface healthInstituteLoginQueryInterface {
   password: string;
 }
 
+export interface HealthInstituteLoginResponse {
+  healthInstituteId: string;
+  email: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface rateLimitOptionsInterface {
   key: string;
   maxAttempts: number;
@@ -38,6 +45,14 @@ export interface doctorLoginQueryInterface {
   password: string;
 }
 
+export interface DoctorLoginResponse {
+  doctorId: string;
+  email: string;
+  mobile: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
 export interface patientQueryInterface {
     status: string;
     patientPrimaryKey: number;
@@ -51,4 +66,25 @@ export interface patientLoginQueryInterface {
   email: string;
   mobile: string;
   password: string;
+}
+
+export interface PatientLoginResponse {
+  patientId: string;
+  email: string;
+  mobile: string;
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface RefreshTokenResponse {
+  accessToken: string;
+  refreshToken: string;
+}
+
+export interface LogoutResponse {
+  success: boolean;
+}
+
+export interface ValidateAccessTokenResponse {
+  valid: boolean
 }

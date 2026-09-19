@@ -25,6 +25,8 @@ import { deleteFile } from '../common/utils/file-util';
 import { moveFile } from '../common/utils/upload-file';
 import { GrpcServiceName } from '../common/utils/constants';
 import {
+  GetAssociatedHealthInstitutesMasterDataReq,
+  GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesRes,
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteServiceClient,
@@ -154,7 +156,7 @@ export class DoctorService implements OnModuleInit {
   }
 
   /**
-   * * Get Doctor Master Data
+   * @description Get Doctor Master Data
    * @returns GetDoctorMasterDataRes
    */
   async getDoctorMasterData(): Promise<GetDoctorMasterDataRes> {
@@ -184,6 +186,28 @@ export class DoctorService implements OnModuleInit {
         doctorPrimaryKey,
         doctorId,
       }),
+    );
+  }
+
+  /**
+   * @description
+   * @param doctorPrimaryKey
+   * @param doctorId
+   * @returns
+   */
+  async getAssociatedHealthInstitutesMasterData(
+    doctorPrimaryKey: number,
+    doctorId: string,
+  ): Promise<GetAssociatedHealthInstitutesMasterDataRes> {
+    const requestData: GetAssociatedHealthInstitutesMasterDataReq = {
+      doctorPrimaryKey,
+      doctorId,
+    };
+
+    return await firstValueFrom(
+      this.healthInstituteGrpcService.getAssociatedHealthInstitutesMasterData(
+        requestData,
+      ),
     );
   }
 }

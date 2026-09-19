@@ -4,6 +4,7 @@ export const Errors = {
   invalidCredentialError: 'invalidCredential',
   doctorNotFoundError: 'doctorNotFound',
   helathInstituteNotFoundError: 'helathInstituteNotFound',
+  patientNotFoundError: 'patientNotFound',
   dbError: 'dbError',
 } as const;
 
@@ -13,6 +14,13 @@ export enum UserRole {
   HEALTH_INSTITUTE = 'HEALTH_INSTITUTE',
   ADMIN = 'ADMIN',
 }
+
+export const GrpcServiceName = {
+  AUTH: 'AUTH_PACKAGE',
+  DOCTOR: 'DOCTOR_PACKAGE',
+  HEALTH_INSTITUTE: 'HEALTH_INSTITUTE_PACKAGE',
+  PATIENT: 'PATIENT_PACKAGE',
+} as const;
 
 export enum SecurityAction {
   LOGIN_SUCCESS = 'LOGIN_SUCCESS',
