@@ -10,7 +10,7 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "health_institute";
 
-export interface CreateHealthInstituteProfileReq {
+export interface HealthInstituteProfileReq {
   healthInstitutePrimaryKey: number;
   healthInstituteId: string;
   healthInstituteName: string;
@@ -18,23 +18,20 @@ export interface CreateHealthInstituteProfileReq {
   email: string;
 }
 
-export interface CreateHealthInstituteProfileRes {
+export interface HealthInstituteProfileRes {
   healthInstituteId: string;
 }
 
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
-  createHealthInstituteProfile(request: CreateHealthInstituteProfileReq): Observable<CreateHealthInstituteProfileRes>;
+  createHealthInstituteProfile(request: HealthInstituteProfileReq): Observable<HealthInstituteProfileRes>;
 }
 
 export interface HealthInstituteServiceController {
   createHealthInstituteProfile(
-    request: CreateHealthInstituteProfileReq,
-  ):
-    | Promise<CreateHealthInstituteProfileRes>
-    | Observable<CreateHealthInstituteProfileRes>
-    | CreateHealthInstituteProfileRes;
+    request: HealthInstituteProfileReq,
+  ): Promise<HealthInstituteProfileRes> | Observable<HealthInstituteProfileRes> | HealthInstituteProfileRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {

@@ -1,5 +1,12 @@
-import { Injectable, Logger } from '@nestjs/common';
-import { DoctorProfileReq, DoctorProfileRes } from '../proto/generated/doctor';
+import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import {
+  DoctorProfileReq,
+  DoctorProfileRes,
+  GetAppointedDoctorDetailsReq,
+  GetAppointedDoctorDetailsRes,
+  GetDoctorListRes,
+  GetUnAppointedDoctorsListReq,
+} from '../proto/generated/doctor';
 import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
 import {
@@ -18,16 +25,36 @@ import {
   GetDoctorListDto,
 } from './doctor.dto';
 import { deleteFile, moveFile } from '../common/utils/file-util';
+import {
+  GetAssociatedHealthInstitutesReq,
+  GetAssociatedHealthInstitutesRes,
+  HEALTH_INSTITUTE_SERVICE_NAME,
+  HealthInstituteServiceClient,
+} from '../proto/generated/health-intitute';
+import type { ClientGrpc } from '@nestjs/microservices';
+import { GrpcServiceName } from '../common/utils/constants';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
-export class DoctorService {
+export class DoctorService implements OnModuleInit {
   private readonly logger = new Logger(DoctorService.name);
+  private healthInstituteGrpcService!: HealthInstituteServiceClient;
+
   constructor(
     private readonly doctorRepository: DoctorRepository,
     private readonly configService: ConfigService,
     private readonly redisService: RedisService,
     private readonly redisCacheService: RedisCacheService,
+    @Inject(GrpcServiceName.HEALTH_INSTITUTE)
+    private readonly healthInstituteClient: ClientGrpc,
   ) {}
+
+  onModuleInit() {
+    this.healthInstituteGrpcService =
+      this.healthInstituteClient.getService<HealthInstituteServiceClient>(
+        HEALTH_INSTITUTE_SERVICE_NAME,
+      );
+  }
 
   /**
    * @description create doctor profile service
@@ -42,6 +69,26 @@ export class DoctorService {
     return {
       doctorId: result,
     };
+  }
+
+  /**
+   * @description get appointed doctor details service
+   * @param request
+   * @returns GetAppointedDoctorDetailsRes
+   */
+  async getAppointedDoctorDetails(
+    request: GetAppointedDoctorDetailsReq,
+  ): Promise<GetAppointedDoctorDetailsRes> {
+    try {
+      const result =
+        await this.doctorRepository.getAppointedDoctorDetails(request);
+
+      return {
+        doctors: Array.isArray(result.doctors) ? result.doctors : [],
+      };
+    } catch (error) {
+      throw error;
+    }
   }
 
   /**
@@ -260,44 +307,53 @@ export class DoctorService {
   }
 
   /**
-   * @description Get unappointed doctors list
+   * @description get associated health institutes service
+   * @param doctorPrimaryKey
+   * @param doctorId
+   * @returns GetAssociatedHealthInstitutesRes
+   */
+  async getAssociatedHealthInstitutes(
+    doctorPrimaryKey: number,
+    doctorId: string,
+  ): Promise<GetAssociatedHealthInstitutesRes> {
+    const associatedHealthInstitutesRequest: GetAssociatedHealthInstitutesReq =
+      {
+        doctorPrimaryKey,
+        doctorId,
+      };
+    return await firstValueFrom(
+      this.healthInstituteGrpcService.getAssociatedHealthInstitutes(
+        associatedHealthInstitutesRequest,
+      ),
+    );
+  }
+
+  /**
+   * @description get un appointed doctors list grpc service
    * @param request
    * @returns GetDoctorListRes
    */
-  //   async getUnAppointedDoctorsList(
-  //     request: GetUnAppointedDoctorsListReq,
-  //   ): Promise<GetDoctorListRes> {
-  //     const doctorPrimaryKeys = Array.isArray(request.doctorPrimaryKeys)
-  //       ? request.doctorPrimaryKeys
-  //       : [];
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+  ): Promise<GetDoctorListRes> {
+    const doctorPrimaryKeys = Array.isArray(request.doctorPrimaryKeys)
+      ? request.doctorPrimaryKeys
+      : [];
 
-  //     const result = await this.dataSource.query<GetDoctorListResponse[]>(
-  //       `SELECT * FROM get_unappointed_doctors_list($1, $2, $3, $4, $5, $6::INTEGER[])`,
-  //       [
-  //         request.offset,
-  //         request.limit,
-  //         request.search,
-  //         request.stateId,
-  //         request.councilId,
-  //         doctorPrimaryKeys,
-  //       ],
-  //     );
+    const result = await this.doctorRepository.getUnAppointedDoctorsList(
+      request,
+      doctorPrimaryKeys,
+    );
 
-  //     const procedureResult = result?.[0];
-
-  //     if (!procedureResult) {
-  //       throwRpcException(status.INTERNAL, 'Database Error!');
-  //     }
-
-  //     return {
-  //       doctors: Array.isArray(procedureResult.doctors)
-  //         ? procedureResult.doctors
-  //         : [],
-  //       total: Number(procedureResult.total ?? 0),
-  //       offset: Number(procedureResult.resultOffset ?? request.offset ?? 0),
-  //       limit: Number(procedureResult.resultLimit ?? request.limit ?? 0),
-  //     };
-  //   }
+    return {
+      doctors: Array.isArray(result.doctors)
+        ? result.doctors
+        : [],
+      total: Number(result.total ?? 0),
+      offset: Number(result.offset ?? request.offset ?? 0),
+      limit: Number(result.limit ?? request.limit ?? 0),
+    };
+  }
 
   /**
    * @description get doctor list service
@@ -320,31 +376,4 @@ export class DoctorService {
       throw error;
     }
   }
-
-  /**
-   * @description Get Appointed Doctor Details.
-   * @param request
-   * @returns GetAppointedDoctorDetailsRes
-   */
-  //   async getAppointedDoctorDetails(
-  //     request: GetAppointedDoctorDetailsReq,
-  //   ): Promise<GetAppointedDoctorDetailsRes> {
-  //     const result = await this.dataSource.query<
-  //       GetAppointedDoctorDetailsResponse[]
-  //     >(`SELECT * FROM get_appointed_doctors_by_primary_key($1:: INTEGER[])`, [
-  //       request.doctorPrimaryKeys,
-  //     ]);
-
-  //     const procedureResult = result?.[0];
-
-  //     if (!procedureResult) {
-  //       throwRpcException(status.INTERNAL, 'Database Error!');
-  //     }
-
-  //     return {
-  //       doctors: Array.isArray(procedureResult.doctors)
-  //         ? procedureResult.doctors
-  //         : [],
-  //     };
-  //   }
 }

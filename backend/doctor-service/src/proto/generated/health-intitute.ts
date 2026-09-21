@@ -2,25 +2,13 @@
 // versions:
 //   protoc-gen-ts_proto  v2.12.0
 //   protoc               v3.21.12
-// source: health-institute.proto
+// source: health-intitute.proto
 
 /* eslint-disable */
 import { GrpcMethod, GrpcStreamMethod } from "@nestjs/microservices";
 import { Observable } from "rxjs";
 
 export const protobufPackage = "health_institute";
-
-export interface HealthInstituteProfileReq {
-  healthInstitutePrimaryKey: number;
-  healthInstituteId: string;
-  healthInstituteName: string;
-  healthInstituteType: number;
-  email: string;
-}
-
-export interface HealthInstituteProfileRes {
-  healthInstituteId: string;
-}
 
 export interface GetAssociatedHealthInstitutesReq {
   doctorPrimaryKey: number;
@@ -47,18 +35,12 @@ export interface GetAssociatedHealthInstitutesRes {
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
-  createHealthInstituteProfile(request: HealthInstituteProfileReq): Observable<HealthInstituteProfileRes>;
-
   getAssociatedHealthInstitutes(
     request: GetAssociatedHealthInstitutesReq,
   ): Observable<GetAssociatedHealthInstitutesRes>;
 }
 
 export interface HealthInstituteServiceController {
-  createHealthInstituteProfile(
-    request: HealthInstituteProfileReq,
-  ): Promise<HealthInstituteProfileRes> | Observable<HealthInstituteProfileRes> | HealthInstituteProfileRes;
-
   getAssociatedHealthInstitutes(
     request: GetAssociatedHealthInstitutesReq,
   ):
@@ -69,7 +51,7 @@ export interface HealthInstituteServiceController {
 
 export function HealthInstituteServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createHealthInstituteProfile", "getAssociatedHealthInstitutes"];
+    const grpcMethods: string[] = ["getAssociatedHealthInstitutes"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("HealthInstituteService", method)(constructor.prototype[method], method, descriptor);

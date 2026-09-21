@@ -1,96 +1,240 @@
-import { Controller } from '@nestjs/common';
 import {
-  AppointDoctorReq,
-  AppointDoctorRes,
-  GetAppointDoctorMasterDataRes,
-  GetAppointedDoctorsReq,
-  GetAppointedDoctorsRes,
-  GetAssociatedDoctorsIdReq,
-  GetAssociatedDoctorsIdRes,
-  GetAssociatedHealthInstitutesMasterDataReq,
-  GetAssociatedHealthInstitutesMasterDataRes,
+  Body,
+  Controller,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  Post,
+} from '@nestjs/common';
+import {
+  AppointDoctorDto,
+  GetAppointedDoctorsListDto,
+  GetUnAppointedDoctorsListDto,
+  UpdateHealthInstituteProfileDto,
+} from './health-institute.dto';
+import { HealthInstituteService } from './health-institute.service';
+import { Auth } from '../common/decorators/auth.decorator';
+import { UserRole } from '../common/utils/constants';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
+import { GrpcMethod } from '@nestjs/microservices';
+import { HEALTH_INSTITUTE_SERVICE_NAME } from '../proto/generated/health-institute';
+import type {
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
-  GetDistrictsReq,
-  GetDistrictsRes,
-  GetHealthInstituteDetailsReq,
-  GetHealthInstituteDetailsRes,
-  GetRegistrationCouncilRes,
-  GetStatesRes,
   HealthInstituteProfileReq,
   HealthInstituteProfileRes,
-  HealthInstituteServiceController,
-  HealthInstituteServiceControllerMethods,
-  UpdateHealthInstituteProfileReq,
-  UpdateHealthInstituteProfileRes,
 } from '../proto/generated/health-institute';
-import { HealthInstituteService } from './health-institute.service';
-import { Observable } from 'rxjs';
 
-@Controller()
-@HealthInstituteServiceControllerMethods()
-export class HealthInstituteController implements HealthInstituteServiceController {
+@Controller('health-institute')
+export class HealthInstituteController {
   constructor(
     private readonly healthInstituteService: HealthInstituteService,
   ) {}
 
-  async createHealthInstituteProfile(
+  /**
+   * @description Create health institute profile grpc controller.
+   * @param request
+   * @returns DoctorProfileRes
+   */
+  @GrpcMethod(HEALTH_INSTITUTE_SERVICE_NAME, 'CreateHealthInstituteProfile')
+  async createDoctorProfile(
     request: HealthInstituteProfileReq,
   ): Promise<HealthInstituteProfileRes> {
-    return this.healthInstituteService.createHealthInstituteProfile(request);
+    return await this.healthInstituteService.createHealthInstituteProfile(
+      request,
+    );
   }
 
-  async updateHealthInstituteProfile(
-    request: UpdateHealthInstituteProfileReq,
-  ): Promise<UpdateHealthInstituteProfileRes> {
-    return this.healthInstituteService.updateHealthInstituteProfile(request);
-  }
-
-  async getHealthInstituteDetails(
-    request: GetHealthInstituteDetailsReq,
-  ): Promise<GetHealthInstituteDetailsRes> {
-    return this.healthInstituteService.getHealthInstituteDetails(request);
-  }
-
-  async getStates(): Promise<GetStatesRes> {
-    return this.healthInstituteService.getStates();
-  }
-
-  async getDistricts(request: GetDistrictsReq): Promise<GetDistrictsRes> {
-    return this.healthInstituteService.getDistricts(request);
-  }
-
-  async getRegistrationCouncils(): Promise<GetRegistrationCouncilRes> {
-    return this.healthInstituteService.getRegistrationCouncils();
-  }
-
-  async getAppointDoctorMasterData(): Promise<GetAppointDoctorMasterDataRes> {
-    return this.healthInstituteService.getAppointDoctorMasterData();
-  }
-
-  async appointDoctor(request: AppointDoctorReq): Promise<AppointDoctorRes> {
-    return this.healthInstituteService.appointDoctor(request);
-  }
-
-  async getAppointedDoctors(
-    request: GetAppointedDoctorsReq,
-  ): Promise<GetAppointedDoctorsRes> {
-    return this.healthInstituteService.getAppointedDoctors(request);
-  }
-
+  /**
+   * @description get associated health institutes grpc controller.
+   * @param request
+   * @returns GetAssociatedHealthInstitutesRes
+   */
+  @GrpcMethod(HEALTH_INSTITUTE_SERVICE_NAME, 'GetAssociatedHealthInstitutes')
   async getAssociatedHealthInstitutes(
     request: GetAssociatedHealthInstitutesReq,
   ): Promise<GetAssociatedHealthInstitutesRes> {
-    return this.healthInstituteService.getAssociatedHealthInstitutes(request);
+    return await this.healthInstituteService.getAssociatedHealthInstitutes(
+      request,
+    );
   }
 
-  async getAssociatedDoctorsId(
-    request: GetAssociatedDoctorsIdReq,
-  ): Promise<GetAssociatedDoctorsIdRes> {
-    return this.healthInstituteService.getAssociatedDoctorsId(request);
+  /**
+   * @description Update health institute profile
+   * @param request
+   * @param user
+   * @returns json
+   */
+  @Post('health-institute-profile')
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async updateHealthInstituteProfile(
+    @Body() request: UpdateHealthInstituteProfileDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result =
+      await this.healthInstituteService.updateHealthInstituteProfile(
+        request,
+        user.userBusinessId,
+      );
+
+    return {
+      success: true,
+      message: 'Deatils Updated Successfully.',
+      data: result,
+    };
   }
 
-  async getAssociatedHealthInstitutesMasterData(request: GetAssociatedHealthInstitutesMasterDataReq): Promise<GetAssociatedHealthInstitutesMasterDataRes> {
-      return this.healthInstituteService.getAssociatedHealthInstitutesMasterData(request);
+  /**
+   * * Get health institute details
+   * @param user
+   * @returns json
+   */
+  @Get('health-institute-details')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getHealthInstituteDetails(@CurrentUser() user: JwtPayload) {
+    const result = await this.healthInstituteService.getHealthInstituteDetails(
+      user.userPrimaryKey,
+      user.userBusinessId,
+    );
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
   }
+
+  /**
+   * * Get States
+   * @returns json
+   */
+  @Get('states-master-data')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getStates() {
+    const result = await this.healthInstituteService.getStates();
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description get districts
+   * @param id
+   * @returns json
+   */
+  @Get('districts-master-data/:id')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getDistricts(@Param('id') id: string) {
+    const result = await this.healthInstituteService.getDistricts(Number(id));
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Get Health Institutes
+   * @returns json
+   */
+  @Get('registration-councils-master-data')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getRegistrationCouncils() {
+    const result = await this.healthInstituteService.getRegistrationCouncils();
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description Get appoint doctor master data
+   * @returns json
+   */
+  @Get('appoint-doctor-master-data')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getAppointDoctorMasterData() {
+    const result =
+      await this.healthInstituteService.getAppointDoctorMasterData();
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  @Post('appoint-doctor')
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async appointDoctor(
+    @Body() request: AppointDoctorDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result = await this.healthInstituteService.appointDoctor(
+      request,
+      user.userPrimaryKey,
+      user.userBusinessId,
+    );
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  @Post('appointed-doctors-list')
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getAppointedDoctorsList(
+    @Body() request: GetAppointedDoctorsListDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result = await this.healthInstituteService.getAppointedDoctorsList(
+      request,
+      user.userPrimaryKey,
+    );
+
+    return {
+      success: true,
+      message: 'Details Fetched Successfully.',
+      data: result,
+    };
+  }
+
+  /**
+   * @description get unappointed doctor list controller
+   * @param request
+   * @param user
+   * @returns json
+   */
+    @Post('unappointed-doctors-list')
+    @HttpCode(HttpStatus.OK)
+    @Auth(UserRole.HEALTH_INSTITUTE)
+    async getUnAppointedDoctorsList(
+      @Body() request: GetUnAppointedDoctorsListDto,
+      @CurrentUser() user: JwtPayload,
+    ) {
+      const result = await this.healthInstituteService.getUnAppointedDoctorsList(
+        request,
+        user.userPrimaryKey,
+      );
+
+      return {
+        success: true,
+        message: 'Doctor List Fetched Successfully.',
+        data: result,
+      };
+    }
 }

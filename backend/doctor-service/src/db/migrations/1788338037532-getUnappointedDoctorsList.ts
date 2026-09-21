@@ -14,8 +14,8 @@ export class GetUnappointedDoctorsList1788338037532 implements MigrationInterfac
             RETURNS TABLE (
                 doctors JSONB,
                 total BIGINT,
-                "resultOffset" INTEGER,
-                "resultLimit" INTEGER
+                "offset" INTEGER,
+                "limit" INTEGER
             )
             LANGUAGE plpgsql
             AS $$
@@ -139,9 +139,9 @@ export class GetUnappointedDoctorsList1788338037532 implements MigrationInterfac
                         FROM filtered_doctors
                     ) AS total,
 
-                    p_offset AS "resultOffset",
+                    p_offset AS "offset",
 
-                    p_limit AS "resultLimit";
+                    p_limit AS "limit";
 
 
             EXCEPTION

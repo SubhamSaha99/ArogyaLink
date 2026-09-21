@@ -47,8 +47,8 @@ import {
 } from './auth.dto';
 import { AuthRepository } from './auth.repository';
 import {
-  CreateHealthInstituteProfileReq,
-  CreateHealthInstituteProfileRes,
+  HealthInstituteProfileReq,
+  HealthInstituteProfileRes,
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteServiceClient,
 } from '../proto/generated/health-institute';
@@ -107,7 +107,7 @@ export class AuthService implements OnModuleInit {
    */
   async healthInstituteRegistration(
     request: HealthInstituteRegDto,
-  ): Promise<CreateHealthInstituteProfileRes> {
+  ): Promise<HealthInstituteProfileRes> {
     let healthInstitutePrimaryKey: number | null = null;
     let healthInstituteId: string | null = null;
     try {
@@ -123,7 +123,7 @@ export class AuthService implements OnModuleInit {
       healthInstitutePrimaryKey = result.healthInstitutePrimaryKey;
       healthInstituteId = result.healthInstituteId;
 
-      const healthInstituteProfileRequest: CreateHealthInstituteProfileReq = {
+      const healthInstituteProfileRequest: HealthInstituteProfileReq = {
         healthInstitutePrimaryKey,
         healthInstituteId,
         healthInstituteName: request.healthInstituteName,

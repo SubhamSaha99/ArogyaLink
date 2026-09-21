@@ -27,6 +27,10 @@ import { DOCTOR_SERVICE_NAME } from '../proto/generated/doctor';
 import type {
   DoctorProfileReq,
   DoctorProfileRes,
+  GetAppointedDoctorDetailsReq,
+  GetAppointedDoctorDetailsRes,
+  GetDoctorListRes,
+  GetUnAppointedDoctorsListReq,
 } from '../proto/generated/doctor';
 
 @Controller('doctor')
@@ -34,7 +38,7 @@ export class DoctorController {
   constructor(private readonly doctorService: DoctorService) {}
 
   /**
-   * @description Create doctor profile grpc method.
+   * @description create doctor profile grpc method
    * @param request
    * @returns DoctorProfileRes
    */
@@ -42,7 +46,29 @@ export class DoctorController {
   async createDoctorProfile(
     request: DoctorProfileReq,
   ): Promise<DoctorProfileRes> {
-    return this.doctorService.createDoctorProfile(request);
+    return await this.doctorService.createDoctorProfile(request);
+  }
+
+  /**
+   * @description get appointed doctor details grpc method
+   * @param request
+   * @returns
+   */
+  @GrpcMethod(DOCTOR_SERVICE_NAME, 'GetAppointedDoctorDetails')
+  async getAppointedDoctorDetails(
+    request: GetAppointedDoctorDetailsReq,
+  ): Promise<GetAppointedDoctorDetailsRes> {
+    return await this.doctorService.getAppointedDoctorDetails(request);
+  }
+
+  /**
+   * @description get un appointed doctors list grpc controller
+   * @param request 
+   * @returns GetDoctorListRes
+   */
+  @GrpcMethod(DOCTOR_SERVICE_NAME, 'GetUnAppointedDoctorsList')
+  async getUnAppointedDoctorsList(request: GetUnAppointedDoctorsListReq): Promise<GetDoctorListRes> {
+    return await this.doctorService.getUnAppointedDoctorsList(request);
   }
 
   /**
@@ -206,24 +232,24 @@ export class DoctorController {
   }
 
   /**
-   * @description Get Associated Health Institutes.
+   * @description get associated health institutes controller
    * @param user
    * @returns json
    */
-  //   @Get('associated-health-institutes')
-  //   @HttpCode(HttpStatus.OK)
-  //   @Auth(UserRole.DOCTOR)
-  //   async getAssociatedHealthInstitutes(@CurrentUser() user: JwtPayload) {
-  //     const result = await this.doctorService.getAssociatedHealthInstitutes(
-  //       user.userPrimaryKey,
-  //       user.userBusinessId,
-  //     );
-  //     return {
-  //       success: true,
-  //       message: 'Associated Health Institutes Fetched Successfully.',
-  //       data: result,
-  //     };
-  //   }
+    @Get('associated-health-institutes')
+    @HttpCode(HttpStatus.OK)
+    @Auth(UserRole.DOCTOR)
+    async getAssociatedHealthInstitutes(@CurrentUser() user: JwtPayload) {
+      const result = await this.doctorService.getAssociatedHealthInstitutes(
+        user.userPrimaryKey,
+        user.userBusinessId,
+      );
+      return {
+        success: true,
+        message: 'Associated Health Institutes Fetched Successfully.',
+        data: result,
+      };
+    }
 
   //   @Get('associated-health-institutes-master-data')
   //   @HttpCode(HttpStatus.OK)

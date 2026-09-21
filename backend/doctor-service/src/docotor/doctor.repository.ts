@@ -2,12 +2,17 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {
   DoctorQualifications,
+  GetAppointedDoctorDetailsResponse,
   GetDoctorDetailsQueryResponse,
   GetDoctorListResponse,
   GetDoctorMasterDataResponse,
   UpdateDoctorQueryResponse,
 } from '../common/interfaces/doctor.interface';
-import { DoctorProfileReq } from '../proto/generated/doctor';
+import {
+  DoctorProfileReq,
+  GetAppointedDoctorDetailsReq,
+  GetUnAppointedDoctorsListReq,
+} from '../proto/generated/doctor';
 import { Errors } from '../common/utils/constants';
 import {
   DoctorBasicDetailsDto,
@@ -38,11 +43,11 @@ export class DoctorRepository {
       ],
     );
 
-    const procedureResult: string = result[0]?.f_result;
+    const queryResult: string = result[0]?.f_result;
 
     if (
-      typeof procedureResult === 'string' &&
-      !/^AGL-DOC\d{6}$/.test(procedureResult)
+      typeof queryResult === 'string' &&
+      !/^AGL-DOC\d{6}$/.test(queryResult)
     ) {
       throw new HttpException(
         'Invalid response from query',
@@ -50,21 +55,47 @@ export class DoctorRepository {
       );
     }
 
-    if (!procedureResult) {
+    if (!queryResult) {
       throw new HttpException(
         'Invalid response!',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    if (procedureResult === Errors.dbError) {
+    if (queryResult === Errors.dbError) {
       throw new HttpException(
         'Database error!',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    return procedureResult;
+    return queryResult;
+  }
+
+  /**
+   * @description get appointed doctor details repository
+   * @param request
+   * @returns GetAppointedDoctorDetailsResponse
+   */
+  async getAppointedDoctorDetails(
+    request: GetAppointedDoctorDetailsReq,
+  ): Promise<GetAppointedDoctorDetailsResponse> {
+    const result = await this.dataSource.query<
+      GetAppointedDoctorDetailsResponse[]
+    >(`SELECT * FROM get_appointed_doctors_by_primary_key($1:: INTEGER[])`, [
+      request.doctorPrimaryKeys,
+    ]);
+
+    const queryResult = result?.[0];
+
+    if (!queryResult) {
+      throw new HttpException(
+        'Invalid response!',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return queryResult;
   }
 
   /**
@@ -89,11 +120,11 @@ export class DoctorRepository {
       ],
     );
 
-    const procedureResult: string = result?.[0]?.f_result;
+    const queryResult: string = result?.[0]?.f_result;
 
     if (
-      typeof procedureResult === 'string' &&
-      !/^AGL-DOC\d{6}$/.test(procedureResult)
+      typeof queryResult === 'string' &&
+      !/^AGL-DOC\d{6}$/.test(queryResult)
     ) {
       throw new HttpException(
         'Invalid response from query',
@@ -101,7 +132,7 @@ export class DoctorRepository {
       );
     }
 
-    switch (procedureResult) {
+    switch (queryResult) {
       case Errors.invalidIdError:
         throw new HttpException('Doctor Not found!', HttpStatus.NOT_FOUND);
       case Errors.dbError:
@@ -111,7 +142,7 @@ export class DoctorRepository {
         );
     }
 
-    return procedureResult;
+    return queryResult;
   }
 
   async updateDoctorProfessionalDetails(
@@ -133,11 +164,11 @@ export class DoctorRepository {
       ],
     );
 
-    const procedureResult: string = result?.[0]?.f_result;
+    const queryResult: string = result?.[0]?.f_result;
 
     if (
-      typeof procedureResult === 'string' &&
-      !/^AGL-DOC\d{6}$/.test(procedureResult)
+      typeof queryResult === 'string' &&
+      !/^AGL-DOC\d{6}$/.test(queryResult)
     ) {
       throw new HttpException(
         'Invalid response from query',
@@ -145,7 +176,7 @@ export class DoctorRepository {
       );
     }
 
-    switch (procedureResult) {
+    switch (queryResult) {
       case Errors.invalidIdError:
         throw new HttpException('Doctor Not found!', HttpStatus.NOT_FOUND);
       case Errors.dbError:
@@ -155,7 +186,7 @@ export class DoctorRepository {
         );
     }
 
-    return procedureResult;
+    return queryResult;
   }
 
   /**
@@ -175,11 +206,11 @@ export class DoctorRepository {
       [doctorPrimaryKey, doctorId, JSON.stringify(qualifications)],
     );
 
-    const procedureResult: string = result?.[0]?.f_result;
+    const queryResult: string = result?.[0]?.f_result;
 
     if (
-      typeof procedureResult === 'string' &&
-      !/^AGL-DOC\d{6}$/.test(procedureResult)
+      typeof queryResult === 'string' &&
+      !/^AGL-DOC\d{6}$/.test(queryResult)
     ) {
       throw new HttpException(
         'Invalid response from query',
@@ -187,7 +218,7 @@ export class DoctorRepository {
       );
     }
 
-    switch (procedureResult) {
+    switch (queryResult) {
       case Errors.invalidIdError:
         throw new HttpException('Doctor Not found!', HttpStatus.NOT_FOUND);
       case Errors.dbError:
@@ -196,7 +227,7 @@ export class DoctorRepository {
           HttpStatus.INTERNAL_SERVER_ERROR,
         );
     }
-    return procedureResult;
+    return queryResult;
   }
 
   /**
@@ -212,16 +243,16 @@ export class DoctorRepository {
       [doctorPrimaryKey],
     );
 
-    const procedureResult = result?.[0];
+    const queryResult = result?.[0];
 
-    if (!procedureResult) {
+    if (!queryResult) {
       throw new HttpException(
         'Invalid response!',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    switch (procedureResult.status) {
+    switch (queryResult.status) {
       case Errors.invalidIdError:
         throw new HttpException('Doctor Not found!', HttpStatus.NOT_FOUND);
       case Errors.dbError:
@@ -231,7 +262,7 @@ export class DoctorRepository {
         );
     }
 
-    return procedureResult;
+    return queryResult;
   }
 
   /**
@@ -281,15 +312,49 @@ export class DoctorRepository {
       ],
     );
 
-    const procedureResult = result?.[0];
+    const queryResult = result?.[0];
 
-    if (!procedureResult) {
+    if (!queryResult) {
       throw new HttpException(
         'Database error!',
         HttpStatus.INTERNAL_SERVER_ERROR,
       );
     }
 
-    return procedureResult;
+    return queryResult;
+  }
+
+  /**
+   * @description get un appointed doctors list grpc repository
+   * @param request 
+   * @param doctorPrimaryKeys 
+   * @returns GetDoctorListResponse
+   */
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+    doctorPrimaryKeys: number[],
+  ): Promise<GetDoctorListResponse> {
+    const result = await this.dataSource.query<GetDoctorListResponse[]>(
+      `SELECT * FROM get_unappointed_doctors_list($1, $2, $3, $4, $5, $6::INTEGER[])`,
+      [
+        request.offset,
+        request.limit,
+        request.search,
+        request.stateId,
+        request.councilId,
+        doctorPrimaryKeys,
+      ],
+    );
+
+    const queryResult = result?.[0];
+
+    if (!queryResult) {
+      throw new HttpException(
+        'Database error!',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return queryResult;
   }
 }

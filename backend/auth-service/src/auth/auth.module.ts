@@ -2,7 +2,6 @@ import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
-import { HealthInstitute } from '../db/entities/health-institute.entity';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtUtil } from '../common/util/jwt.util';

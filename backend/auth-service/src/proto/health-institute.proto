@@ -3,10 +3,10 @@ syntax = "proto3";
 package health_institute;
 
 service HealthInstituteService {
-  rpc CreateHealthInstituteProfile(CreateHealthInstituteProfileReq) returns (CreateHealthInstituteProfileRes);
+  rpc CreateHealthInstituteProfile(HealthInstituteProfileReq) returns (HealthInstituteProfileRes);
 }
 
-message CreateHealthInstituteProfileReq {
+message HealthInstituteProfileReq {
   uint32 healthInstitutePrimaryKey = 1;
   string healthInstituteId         = 2;
   string healthInstituteName       = 3;
@@ -14,6 +14,6 @@ message CreateHealthInstituteProfileReq {
   string email                     = 5;
 }
 
-message CreateHealthInstituteProfileRes {
+message HealthInstituteProfileRes {
   string healthInstituteId = 1;
 }

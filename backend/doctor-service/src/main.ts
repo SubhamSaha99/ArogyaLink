@@ -29,6 +29,8 @@ async function bootstrap() {
     },
   });
 
+  await app.startAllMicroservices();
+
   app.enableCors({
     origin: [
       'http://localhost:5173',

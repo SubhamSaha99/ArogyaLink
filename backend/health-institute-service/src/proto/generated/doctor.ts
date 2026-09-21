@@ -10,20 +10,6 @@ import { Observable } from "rxjs";
 
 export const protobufPackage = "doctor";
 
-export interface DoctorProfileReq {
-  doctorPrimaryKey: number;
-  doctorId: string;
-  email: string;
-  mobile: string;
-  firstName: string;
-  middleName?: string | undefined;
-  lastName: string;
-}
-
-export interface DoctorProfileRes {
-  doctorId: string;
-}
-
 export interface GetAppointedDoctorDetailsReq {
   doctorPrimaryKeys: number[];
 }
@@ -73,18 +59,12 @@ export interface GetDoctorListRes {
 export const DOCTOR_PACKAGE_NAME = "doctor";
 
 export interface DoctorServiceClient {
-  createDoctorProfile(request: DoctorProfileReq): Observable<DoctorProfileRes>;
-
   getAppointedDoctorDetails(request: GetAppointedDoctorDetailsReq): Observable<GetAppointedDoctorDetailsRes>;
 
   getUnAppointedDoctorsList(request: GetUnAppointedDoctorsListReq): Observable<GetDoctorListRes>;
 }
 
 export interface DoctorServiceController {
-  createDoctorProfile(
-    request: DoctorProfileReq,
-  ): Promise<DoctorProfileRes> | Observable<DoctorProfileRes> | DoctorProfileRes;
-
   getAppointedDoctorDetails(
     request: GetAppointedDoctorDetailsReq,
   ): Promise<GetAppointedDoctorDetailsRes> | Observable<GetAppointedDoctorDetailsRes> | GetAppointedDoctorDetailsRes;
@@ -96,7 +76,7 @@ export interface DoctorServiceController {
 
 export function DoctorServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["createDoctorProfile", "getAppointedDoctorDetails", "getUnAppointedDoctorsList"];
+    const grpcMethods: string[] = ["getAppointedDoctorDetails", "getUnAppointedDoctorsList"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("DoctorService", method)(constructor.prototype[method], method, descriptor);
