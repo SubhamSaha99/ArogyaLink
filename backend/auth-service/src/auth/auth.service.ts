@@ -460,7 +460,7 @@ export class AuthService implements OnModuleInit {
     } catch (error) {
       if (patientPrimaryKey) {
         try {
-          await this.authRepository.compensateDoctorRegistration(
+          await this.authRepository.compensatePatientRegistration(
             patientPrimaryKey,
           );
         } catch (rollbackError) {
