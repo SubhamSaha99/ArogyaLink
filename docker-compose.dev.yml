@@ -70,6 +70,137 @@ services:
     networks:
       - arogyalink-network
 
+  arogyalink_auth_service:
+    image: subhamsahadev/arogyalink-auth-service:1.0.0
+    container_name: auth_service
+    restart: always
+    environment:
+      NODE_ENV: container
+      DB_HOST: auth_postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: auth_db
+      PORT: 8081
+      DOCTOR_SERVICE_GRPC_URL: arogyalink_doctor_service:50051
+      HEALTH_INSTITUTE_SERVICE_GRPC_URL: arogyalink_health_institute_service:50052
+      PATIENT_SERVICE_GRPC_URL: arogyalink_patient_service:50053
+      JWT_ACCESS_SECRET: ec97a195ed1a29dededd1cdec2a20f79058c584f136fb914524b418e0d66d73b
+      JWT_ACCESS_EXPIRES_IN: 180s
+      JWT_REFRESH_SECRET: 12b582e3b30a2786e82fc83e91a7a7805f142255f1ba1d4bdae43efd513501eb
+      JWT_REFRESH_EXPIRES_IN: 1d
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    ports:
+      - "8081:8081"
+    volumes:
+      - auth_service_uploads:/usr/src/app/uploads
+    depends_on:
+      - auth_postgres
+      - redis
+    networks:
+      - arogyalink-network
+
+  arogyalink_doctor_service:
+    image: subhamsahadev/arogyalink-doctor-service:1.0.0
+    container_name: doctor_service
+    restart: always
+    environment:
+      NODE_ENV: container
+      PORT: 8082
+      DOCTOR_SERVICE_GRPC_URL: arogyalink_doctor_service:50051
+      HEALTH_INSTITUTE_SERVICE_GRPC_URL: arogyalink_health_institute_service:50052
+      DB_HOST: doctor_postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: doctor_db
+      API_BASE_URL: http://localhost:8080
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_ACCESS_SECRET: ec97a195ed1a29dededd1cdec2a20f79058c584f136fb914524b418e0d66d73b
+      JWT_ACCESS_EXPIRES_IN: 180s
+      JWT_REFRESH_SECRET: 12b582e3b30a2786e82fc83e91a7a7805f142255f1ba1d4bdae43efd513501eb
+      JWT_REFRESH_EXPIRES_IN: 1d
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY:-}
+      APPWRITE_BUCKET_ID: ${APPWRITE_BUCKET_ID:-}
+    ports:
+      - "8082:8082"
+      - "50051:50051"
+    volumes:
+      - doctor_service_uploads:/usr/src/app/uploads
+    depends_on:
+      - doctor_postgres
+      - redis
+    networks:
+      - arogyalink-network
+
+  arogyalink_health_institute_service:
+    image: subhamsahadev/arogyalink-health-institute-service:1.0.0
+    container_name: health_institute_service
+    restart: always
+    environment:
+      NODE_ENV: container
+      PORT: 8083
+      DOCTOR_SERVICE_GRPC_URL: arogyalink_doctor_service:50051
+      HEALTH_INSTITUTE_SERVICE_GRPC_URL: arogyalink_health_institute_service:50052
+      DB_HOST: health_institute_postgres
+      DB_PORT: 5432
+      DB_USERNAME: postgres
+      DB_PASSWORD: postgres
+      DB_NAME: health_institute_db
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      JWT_ACCESS_SECRET: ec97a195ed1a29dededd1cdec2a20f79058c584f136fb914524b418e0d66d73b
+      JWT_ACCESS_EXPIRES_IN: 180s
+      JWT_REFRESH_SECRET: 12b582e3b30a2786e82fc83e91a7a7805f142255f1ba1d4bdae43efd513501eb
+      JWT_REFRESH_EXPIRES_IN: 1d
+    ports:
+      - "8083:8083"
+      - "50052:50052"
+    volumes:
+      - health_institute_service_uploads:/usr/src/app/uploads
+    depends_on:
+      - health_institute_postgres
+      - redis
+    networks:
+      - arogyalink-network
+
+  arogyalink_patient_service:
+    image: subhamsahadev/arogyalink-patient-service:1.0.0
+    container_name: patient_service
+    restart: always
+    environment:
+      NODE_ENV: development
+      PORT: 8084
+      MONGODB_URL: mongodb://root:root@patient_mongo:27017/
+      MONGODB_DATABASE: arogya_link_patient
+      PATIENT_SERVICE_GRPC_URL: arogyalink_patient_service:50053
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      API_BASE_URL: http://localhost:8080
+      APPWRITE_ENDPOINT: ${APPWRITE_ENDPOINT:-}
+      APPWRITE_PROJECT_ID: ${APPWRITE_PROJECT_ID:-}
+      APPWRITE_API_KEY: ${APPWRITE_API_KEY:-}
+      APPWRITE_BUCKET_ID: ${APPWRITE_BUCKET_ID:-}
+      JWT_ACCESS_SECRET: ec97a195ed1a29dededd1cdec2a20f79058c584f136fb914524b418e0d66d73b
+      JWT_ACCESS_EXPIRES_IN: 180s
+      JWT_REFRESH_SECRET: 12b582e3b30a2786e82fc83e91a7a7805f142255f1ba1d4bdae43efd513501eb
+      JWT_REFRESH_EXPIRES_IN: 1d
+      JWT_ALGORITHM: HS256
+    ports:
+      - "8084:8084"
+      - "50053:50053"
+    volumes:
+      - patient_service_uploads:/usr/src/app/uploads
+    depends_on:
+      - patient_mongo
+      - redis
+    networks:
+      - arogyalink-network
+
 networks:
   arogyalink-network:
     driver: bridge
@@ -80,3 +211,7 @@ volumes:
   health_institute_postgres_data:
   patient_mongo_data:
   redis_data:
+  auth_service_uploads:
+  doctor_service_uploads:
+  health_institute_service_uploads:
+  patient_service_uploads:

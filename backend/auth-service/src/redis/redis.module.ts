@@ -12,7 +12,7 @@ import { RedisService } from './redis.service';
       provide: REDIS_CLIENT,
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
-        const env = configService.get<string>('DEV_ENV') || 'local';
+        const env = configService.get<string>('NODE_ENV') || 'development';
         const host =
           env === 'container'
             ? configService.getOrThrow<string>('REDIS_HOST')

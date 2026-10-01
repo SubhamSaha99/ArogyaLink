@@ -14,27 +14,35 @@ import { Patient } from './entities/patient.entity';
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
       inject: [ConfigService],
-      useFactory: (configService: ConfigService) => ({
-        type: 'postgres',
-        host: configService.getOrThrow<string>('DB_HOST'),
-        port: configService.getOrThrow<number>('DB_PORT'),
-        username: configService.getOrThrow<string>('DB_USERNAME'),
-        password: configService.getOrThrow<string>('DB_PASSWORD'),
-        database: configService.getOrThrow<string>('DB_NAME'),
-        autoLoadEntities: true,
-        synchronize: true,
-        migrationsRun: false,
-        migrations: ['dist/db/migrations/*.js'],
-        entities: [
-          HealthInstitute,
-          Doctor,
-          Patient,
-          UserSession,
-          SecurityAuditLog,
-          DbExceptionLog,
-        ],
-        logging: true,
-      }),
+      useFactory: (configService: ConfigService) => {
+        const env = configService.get<string>('NODE_ENV') || 'development';
+        const hostKey =
+          env === 'container'
+            ? configService.getOrThrow<string>('DB_HOST')
+            : '127.0.0.1';
+
+        return {
+          type: 'postgres',
+          host: hostKey,
+          port: configService.getOrThrow<number>('DB_PORT'),
+          username: configService.getOrThrow<string>('DB_USERNAME'),
+          password: configService.getOrThrow<string>('DB_PASSWORD'),
+          database: configService.getOrThrow<string>('DB_NAME'),
+          autoLoadEntities: true,
+          synchronize: env === 'container' ? false : true,
+          migrationsRun: false,
+          migrations: ['dist/db/migrations/*.js'],
+          entities: [
+            HealthInstitute,
+            Doctor,
+            Patient,
+            UserSession,
+            SecurityAuditLog,
+            DbExceptionLog,
+          ],
+          logging: true,
+        };
+      },
     }),
   ],
   providers: [DatabaseService],

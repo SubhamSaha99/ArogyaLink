@@ -24,7 +24,8 @@ import {
   DoctorQualificationsDto,
   GetDoctorListDto,
 } from './doctor.dto';
-import { deleteFile, moveFile } from '../common/utils/file-util';
+import { deleteFile } from '../common/utils/file-util';
+import { AppwriteStorage } from '../common/utils/appwrite-storage';
 import {
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
@@ -39,6 +40,7 @@ import { firstValueFrom } from 'rxjs';
 export class DoctorService implements OnModuleInit {
   private readonly logger = new Logger(DoctorService.name);
   private healthInstituteGrpcService!: HealthInstituteServiceClient;
+  private appwriteStorage?: AppwriteStorage;
 
   constructor(
     private readonly doctorRepository: DoctorRepository,
@@ -48,6 +50,11 @@ export class DoctorService implements OnModuleInit {
     @Inject(GrpcServiceName.HEALTH_INSTITUTE)
     private readonly healthInstituteClient: ClientGrpc,
   ) {}
+
+  private getAppwriteStorage(): AppwriteStorage {
+    this.appwriteStorage ??= new AppwriteStorage(this.configService);
+    return this.appwriteStorage;
+  }
 
   onModuleInit() {
     this.healthInstituteGrpcService =
@@ -108,10 +115,8 @@ export class DoctorService implements OnModuleInit {
     try {
       // TODO: Upload File
       if (profileImage) {
-        uploadedImagePath = await moveFile(
-          profileImage.path,
-          `${doctorId}/doctor-profile`,
-        );
+        uploadedImagePath = `appwrite:${await this.getAppwriteStorage().upload(profileImage.path, profileImage.originalname)}`;
+        await deleteFile(profileImage.path);
       }
       // TODO: Update details
       const result = await this.doctorRepository.updateDoctorProfileDetails(
@@ -126,7 +131,11 @@ export class DoctorService implements OnModuleInit {
       };
     } catch (error) {
       if (uploadedImagePath) {
-        await deleteFile(uploadedImagePath);
+        if (uploadedImagePath.startsWith('appwrite:')) {
+          await this.getAppwriteStorage().delete(uploadedImagePath.slice('appwrite:'.length));
+        } else {
+          await deleteFile(uploadedImagePath);
+        }
       }
       throw error;
     }
@@ -229,7 +238,9 @@ export class DoctorService implements OnModuleInit {
           } = result;
 
           const profileImage = profileDetails.profileImage
-            ? `${this.configService.get<string>('API_BASE_URL') ?? 'http://localhost:8080'}/uploads/${profileDetails.profileImage}`
+            ? profileDetails.profileImage.startsWith('appwrite:')
+              ? await this.getAppwriteStorage().viewUrl(profileDetails.profileImage.slice('appwrite:'.length))
+              : `${this.configService.get<string>('API_BASE_URL') ?? 'http://localhost:8080'}/uploads/${profileDetails.profileImage}`
             : '';
 
           const response: GetDoctorDetailsResponse = {

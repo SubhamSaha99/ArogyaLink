@@ -19,9 +19,9 @@ class Settings(BaseSettings):
         default="0.0.0.0:50054",
         validation_alias="PATIENT_SERVICE_GRPC_URL",
     )
-    redisHostDev: str = Field(
+    redisHost: str = Field(
         default="127.0.0.1",
-        validation_alias="REDIS_HOST_DEV",
+        validation_alias="REDIS_HOST",
     )
     redisPort: int = Field(
         default=6379,
@@ -31,6 +31,18 @@ class Settings(BaseSettings):
         default="http://localhost:8080",
         validation_alias="API_BASE_URL",
     )
+    # appwriteEndpoint: str | None = Field(
+    #     default=None, validation_alias="APPWRITE_ENDPOINT"
+    # )
+    # appwriteProjectId: str | None = Field(
+    #     default=None, validation_alias="APPWRITE_PROJECT_ID"
+    # )
+    # appwriteApiKey: str | None = Field(
+    #     default=None, validation_alias="APPWRITE_API_KEY"
+    # )
+    # appwriteBucketId: str | None = Field(
+    #     default=None, validation_alias="APPWRITE_BUCKET_ID"
+    # )
     jwtAccessSecret: str = Field(
         default="jwt_access_secret", validation_alias="JWT_ACCESS_SECRET"
     )
