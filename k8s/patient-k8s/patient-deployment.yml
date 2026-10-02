@@ -1,0 +1,108 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arogyalink-patient-deployment
+  namespace: arogyalink
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: patient
+
+  template:
+    metadata:
+      name: patient-pod
+      namespace: arogyalink
+      labels:
+        app: patient
+
+    spec:
+      containers:
+        - name: arogyalink-patient
+          image: subhamsahadev/arogyalink-patient-service:1.0.0
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "1g"
+            limits:
+              memory: "1Gi"
+              cpu: "2g"
+          ports:
+            - containerPort: 8084
+            - containerPort: 5053
+
+          # Environment variables
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: nodeEnv
+            - name: MONGODB_URL
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: mongodbUrl
+            - name: MONGODB_DATABASE
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: mongodbDatabase
+            - name: PORT
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: port
+            - name: PATIENT_SERVICE_GRPC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: patientServiceGrpcUrl
+            - name: API_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: apiBaseUrl
+            - name: JWT_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: jwtAccessSecret
+            - name: JWT_ACCESS_EXPIRES_IN
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: jwtAccessExpiresIn
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: jwtRefreshSecret
+            - name: JWT_REFRESH_EXPIRES_IN
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: jwtRefreshExpiresIn
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: redisHost
+            - name: JWT_ALGORITHM
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: jwtAlgorithm
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: patient-secret
+                  key: redisPort
+          volumeMounts:
+            - name: patient-storage
+              mountPath: /usr/src/app/uploads
+
+      volumes:
+        - name: patient-storage
+          persistentVolumeClaim:
+            claimName: patient-pvc

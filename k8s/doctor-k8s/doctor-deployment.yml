@@ -1,0 +1,119 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: doctor-deployment
+  namespace: arogyalink
+spec:
+  selector:
+    matchLabels:
+      app: doctor
+  template:
+    metadata:
+      labels:
+        app: doctor
+    spec:
+      containers:
+        - name: arogyalink-doctor
+          image: subhamsahadev/arogyalink-doctor-service:1.0.0
+          resources:
+            requests:
+              memory: "500Mi"
+              cpu: "1g"
+            limits:
+              memory: "1Gi"
+              cpu: "2g"
+          ports:
+            - containerPort: 8082
+            - containerPort: 5051
+
+          # Environments
+          env:
+            - name: NODE_ENV
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: nodeEnv
+            - name: DB_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: dbHost
+            - name: DB_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: dbPort
+            - name: DB_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: dbUsername
+            - name: DB_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: dbPassword
+            - name: DB_NAME
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: dbName
+            - name: PORT
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: port
+            - name: DOCTOR_SERVICE_GRPC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: doctorServiceGrpcUrl
+            - name: HEALTH_INSTITUTE_SERVICE_GRPC_URL
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: healthInstituteServiceGrpcUrl
+            - name: API_BASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: apiBaseUrl
+            - name: JWT_ACCESS_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: jwtAccessSecret
+            - name: JWT_ACCESS_EXPIRES_IN
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: jwtAccessExpiresIn
+            - name: JWT_REFRESH_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: jwtRefreshSecret
+            - name: JWT_REFRESH_EXPIRES_IN
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: jwtRefreshExpiresIn
+            - name: REDIS_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: redisHost
+            - name: REDIS_PORT
+              valueFrom:
+                secretKeyRef:
+                  name: doctor-secret
+                  key: redisPort
+
+          volumeMounts:
+            - name: doctor-storage
+              mountPath: /usr/src/app/uploads
+
+      volumes:
+        - name: doctor-storage
+          persistentVolumeClaim:
+            claimName: doctor-pvc

@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-institute-service
+  namespace: arogyalink
+spec:
+  selector:
+    app: health-institute
+  ports:
+    - protocol: TCP
+      port: 8083
+      targetPort: 8085
+    - protocol: TCP
+      port: 5052
+      targetPort: 5052
