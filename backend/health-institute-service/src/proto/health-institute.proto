@@ -6,6 +6,8 @@ service HealthInstituteService {
   rpc CreateHealthInstituteProfile(HealthInstituteProfileReq) returns (HealthInstituteProfileRes);
 
   rpc GetAssociatedHealthInstitutes(GetAssociatedHealthInstitutesReq) returns (GetAssociatedHealthInstitutesRes);
+
+  rpc GetAssociatedHealthInstitutesMasterData(GetAssociatedHealthInstitutesReq) returns (GetAssociatedHealthInstitutesMasterDataRes);
 }
 
 message HealthInstituteProfileReq {
@@ -40,4 +42,14 @@ message GetAssociatedHealthInstitutesData {
 
 message GetAssociatedHealthInstitutesRes {
   repeated GetAssociatedHealthInstitutesData healthInstitutes = 1;
+}
+
+message MasterDataItem {
+  uint32 id   = 1;
+  string name = 2;
+  string code = 3;
+}
+
+message GetAssociatedHealthInstitutesMasterDataRes {
+  repeated MasterDataItem healthInstitutes = 1;
 }

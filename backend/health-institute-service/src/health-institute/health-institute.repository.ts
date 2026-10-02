@@ -1,6 +1,7 @@
 import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import {
+    GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesReq,
   HealthInstituteProfileReq,
 } from '../proto/generated/health-institute';
@@ -103,6 +104,31 @@ export class HealthInstituteRepository {
     }
 
     return queryResult;
+  }
+
+  /**
+   * @description get associated health institutes master data grpc repository.
+   * @param request 
+   * @returns MasterDataItemResposne[]
+   */
+  async getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesReq,
+  ): Promise<MasterDataItemResposne[]> {
+
+    const result = await this.dataSource.query<
+      MasterDataItemResposne[]
+    >(`SELECT * FROM get_associated_health_institutes_master_data($1)`, [
+      request.doctorPrimaryKey,
+    ]);
+
+    if (result.length === 0) {
+      throw new HttpException(
+        'Invalid response from query',
+        HttpStatus.INTERNAL_SERVER_ERROR,
+      );
+    }
+
+    return result;
   }
 
   /**

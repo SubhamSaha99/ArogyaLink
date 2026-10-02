@@ -9,7 +9,7 @@ WORKDIR /usr/src/app
 COPY package*.json ./
 
 # Install all dependencies required for building
-RUN npm install --force
+RUN npm install
 
 # Copy application source
 COPY . .
@@ -21,7 +21,7 @@ RUN npm run build
 RUN rm -rf node_modules
 
 # Install production dependencies only
-RUN npm install --force --omit=dev
+RUN npm install --omit=dev
 
 
 # =========================

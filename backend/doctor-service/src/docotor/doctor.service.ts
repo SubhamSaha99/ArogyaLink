@@ -1,4 +1,8 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import type { ClientGrpc } from '@nestjs/microservices';
+import { GrpcServiceName } from '../common/utils/constants';
+import { firstValueFrom } from 'rxjs';
 import {
   DoctorProfileReq,
   DoctorProfileRes,
@@ -7,7 +11,6 @@ import {
   GetDoctorListRes,
   GetUnAppointedDoctorsListReq,
 } from '../proto/generated/doctor';
-import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
 import {
   DoctorQualifications,
@@ -27,14 +30,13 @@ import {
 import { deleteFile } from '../common/utils/file-util';
 import { AppwriteStorage } from '../common/utils/appwrite-storage';
 import {
+  GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteServiceClient,
 } from '../proto/generated/health-intitute';
-import type { ClientGrpc } from '@nestjs/microservices';
-import { GrpcServiceName } from '../common/utils/constants';
-import { firstValueFrom } from 'rxjs';
+import { ApiResponseType } from '../common/utils/constants';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {
@@ -99,6 +101,31 @@ export class DoctorService implements OnModuleInit {
   }
 
   /**
+   * @description get un appointed doctors list grpc service
+   * @param request
+   * @returns GetDoctorListRes
+   */
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+  ): Promise<GetDoctorListRes> {
+    const doctorPrimaryKeys = Array.isArray(request.doctorPrimaryKeys)
+      ? request.doctorPrimaryKeys
+      : [];
+
+    const result = await this.doctorRepository.getUnAppointedDoctorsList(
+      request,
+      doctorPrimaryKeys,
+    );
+
+    return {
+      doctors: Array.isArray(result.doctors) ? result.doctors : [],
+      total: Number(result.total ?? 0),
+      offset: Number(result.offset ?? request.offset ?? 0),
+      limit: Number(result.limit ?? request.limit ?? 0),
+    };
+  }
+
+  /**
    * @description update doctor basic details service
    * @param request
    * @param doctorId
@@ -132,7 +159,9 @@ export class DoctorService implements OnModuleInit {
     } catch (error) {
       if (uploadedImagePath) {
         if (uploadedImagePath.startsWith('appwrite:')) {
-          await this.getAppwriteStorage().delete(uploadedImagePath.slice('appwrite:'.length));
+          await this.getAppwriteStorage().delete(
+            uploadedImagePath.slice('appwrite:'.length),
+          );
         } else {
           await deleteFile(uploadedImagePath);
         }
@@ -239,7 +268,9 @@ export class DoctorService implements OnModuleInit {
 
           const profileImage = profileDetails.profileImage
             ? profileDetails.profileImage.startsWith('appwrite:')
-              ? await this.getAppwriteStorage().viewUrl(profileDetails.profileImage.slice('appwrite:'.length))
+              ? await this.getAppwriteStorage().viewUrl(
+                  profileDetails.profileImage.slice('appwrite:'.length),
+                )
               : `${this.configService.get<string>('API_BASE_URL') ?? 'http://localhost:8080'}/uploads/${profileDetails.profileImage}`
             : '';
 
@@ -318,55 +349,6 @@ export class DoctorService implements OnModuleInit {
   }
 
   /**
-   * @description get associated health institutes service
-   * @param doctorPrimaryKey
-   * @param doctorId
-   * @returns GetAssociatedHealthInstitutesRes
-   */
-  async getAssociatedHealthInstitutes(
-    doctorPrimaryKey: number,
-    doctorId: string,
-  ): Promise<GetAssociatedHealthInstitutesRes> {
-    const associatedHealthInstitutesRequest: GetAssociatedHealthInstitutesReq =
-      {
-        doctorPrimaryKey,
-        doctorId,
-      };
-    return await firstValueFrom(
-      this.healthInstituteGrpcService.getAssociatedHealthInstitutes(
-        associatedHealthInstitutesRequest,
-      ),
-    );
-  }
-
-  /**
-   * @description get un appointed doctors list grpc service
-   * @param request
-   * @returns GetDoctorListRes
-   */
-  async getUnAppointedDoctorsList(
-    request: GetUnAppointedDoctorsListReq,
-  ): Promise<GetDoctorListRes> {
-    const doctorPrimaryKeys = Array.isArray(request.doctorPrimaryKeys)
-      ? request.doctorPrimaryKeys
-      : [];
-
-    const result = await this.doctorRepository.getUnAppointedDoctorsList(
-      request,
-      doctorPrimaryKeys,
-    );
-
-    return {
-      doctors: Array.isArray(result.doctors)
-        ? result.doctors
-        : [],
-      total: Number(result.total ?? 0),
-      offset: Number(result.offset ?? request.offset ?? 0),
-      limit: Number(result.limit ?? request.limit ?? 0),
-    };
-  }
-
-  /**
    * @description get doctor list service
    * @param request
    * @returns GetDoctorListResponse
@@ -386,5 +368,46 @@ export class DoctorService implements OnModuleInit {
     } catch (error) {
       throw error;
     }
+  }
+
+  /**
+   * @description get associated health institutes service
+   * @param doctorPrimaryKey
+   * @param doctorId
+   * @param apiResponseType
+   * @returns GetAssociatedHealthInstitutesRes or GetAssociatedHealthInstitutesMasterDataRes
+   */
+  async getAssociatedHealthInstitutes(
+    doctorPrimaryKey: number,
+    doctorId: string,
+    apiResponseType: string = ApiResponseType.detailed,
+  ): Promise<
+    | GetAssociatedHealthInstitutesRes
+    | GetAssociatedHealthInstitutesMasterDataRes
+  > {
+    let result:
+      | GetAssociatedHealthInstitutesRes
+      | GetAssociatedHealthInstitutesMasterDataRes;
+
+    const associatedHealthInstitutesRequest: GetAssociatedHealthInstitutesReq =
+      {
+        doctorPrimaryKey,
+        doctorId,
+      };
+
+    if (apiResponseType === ApiResponseType.master) {
+      result = await firstValueFrom(
+        this.healthInstituteGrpcService.getAssociatedHealthInstitutesMasterData(
+          associatedHealthInstitutesRequest,
+        ),
+      );
+    } else {
+      result = await firstValueFrom(
+        this.healthInstituteGrpcService.getAssociatedHealthInstitutes(
+          associatedHealthInstitutesRequest,
+        ),
+      );
+    }
+    return result;
   }
 }

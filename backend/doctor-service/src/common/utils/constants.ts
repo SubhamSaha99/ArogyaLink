@@ -4,7 +4,7 @@ export const Errors = {
   emailNotExistError: 'emailNotExist',
   invalidIdError: 'invalidIdError',
   dbError: 'dbError',
-} as const;
+};
 
 export enum UserRole {
   DOCTOR = 'DOCTOR',
@@ -21,3 +21,8 @@ export const GrpcServiceName = {
 } as const;
 
 export const REDIS_CLIENT = 'REDIS_CLIENT';
+
+export const ApiResponseType = {
+    detailed: 'detailedData',
+    master: 'masterData'
+}

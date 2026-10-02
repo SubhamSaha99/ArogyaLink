@@ -4,6 +4,7 @@ import {
   Get,
   HttpCode,
   HttpStatus,
+  Param,
   Post,
   UploadedFile,
   UseInterceptors,
@@ -63,11 +64,13 @@ export class DoctorController {
 
   /**
    * @description get un appointed doctors list grpc controller
-   * @param request 
+   * @param request
    * @returns GetDoctorListRes
    */
   @GrpcMethod(DOCTOR_SERVICE_NAME, 'GetUnAppointedDoctorsList')
-  async getUnAppointedDoctorsList(request: GetUnAppointedDoctorsListReq): Promise<GetDoctorListRes> {
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+  ): Promise<GetDoctorListRes> {
     return await this.doctorService.getUnAppointedDoctorsList(request);
   }
 
@@ -234,38 +237,25 @@ export class DoctorController {
   /**
    * @description get associated health institutes controller
    * @param user
+   * @param data
    * @returns json
    */
-    @Get('associated-health-institutes')
-    @HttpCode(HttpStatus.OK)
-    @Auth(UserRole.DOCTOR)
-    async getAssociatedHealthInstitutes(@CurrentUser() user: JwtPayload) {
-      const result = await this.doctorService.getAssociatedHealthInstitutes(
-        user.userPrimaryKey,
-        user.userBusinessId,
-      );
-      return {
-        success: true,
-        message: 'Associated Health Institutes Fetched Successfully.',
-        data: result,
-      };
-    }
-
-  //   @Get('associated-health-institutes-master-data')
-  //   @HttpCode(HttpStatus.OK)
-  //   @Auth(UserRole.DOCTOR)
-  //   async getAssociatedHealthInstitutesMasterData(
-  //     @CurrentUser() user: JwtPayload,
-  //   ) {
-  //     const result =
-  //       await this.doctorService.getAssociatedHealthInstitutesMasterData(
-  //         user.userPrimaryKey,
-  //         user.userBusinessId,
-  //       );
-  //     return {
-  //       success: true,
-  //       message: 'Associated Health Institutes Fetched Successfully.',
-  //       data: result,
-  //     };
-  //   }
+  @Get('associated-health-institutes/:data')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.DOCTOR)
+  async getAssociatedHealthInstitutes(
+    @CurrentUser() user: JwtPayload,
+    @Param() data?: string,
+  ) {
+    const result = await this.doctorService.getAssociatedHealthInstitutes(
+      user.userPrimaryKey,
+      user.userBusinessId,
+      data
+    );
+    return {
+      success: true,
+      message: 'Associated Health Institutes Fetched Successfully.',
+      data: result,
+    };
+  }
 }

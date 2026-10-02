@@ -32,12 +32,26 @@ export interface GetAssociatedHealthInstitutesRes {
   healthInstitutes: GetAssociatedHealthInstitutesData[];
 }
 
+export interface MasterDataItem {
+  id: number;
+  name: string;
+  code: string;
+}
+
+export interface GetAssociatedHealthInstitutesMasterDataRes {
+  healthInstitutes: MasterDataItem[];
+}
+
 export const HEALTH_INSTITUTE_PACKAGE_NAME = "health_institute";
 
 export interface HealthInstituteServiceClient {
   getAssociatedHealthInstitutes(
     request: GetAssociatedHealthInstitutesReq,
   ): Observable<GetAssociatedHealthInstitutesRes>;
+
+  getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesReq,
+  ): Observable<GetAssociatedHealthInstitutesMasterDataRes>;
 }
 
 export interface HealthInstituteServiceController {
@@ -47,11 +61,18 @@ export interface HealthInstituteServiceController {
     | Promise<GetAssociatedHealthInstitutesRes>
     | Observable<GetAssociatedHealthInstitutesRes>
     | GetAssociatedHealthInstitutesRes;
+
+  getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesReq,
+  ):
+    | Promise<GetAssociatedHealthInstitutesMasterDataRes>
+    | Observable<GetAssociatedHealthInstitutesMasterDataRes>
+    | GetAssociatedHealthInstitutesMasterDataRes;
 }
 
 export function HealthInstituteServiceControllerMethods() {
   return function (constructor: Function) {
-    const grpcMethods: string[] = ["getAssociatedHealthInstitutes"];
+    const grpcMethods: string[] = ["getAssociatedHealthInstitutes", "getAssociatedHealthInstitutesMasterData"];
     for (const method of grpcMethods) {
       const descriptor: any = Reflect.getOwnPropertyDescriptor(constructor.prototype, method);
       GrpcMethod("HealthInstituteService", method)(constructor.prototype[method], method, descriptor);

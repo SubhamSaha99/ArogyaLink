@@ -1,5 +1,6 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import {
+    GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   HealthInstituteProfileReq,
@@ -97,6 +98,53 @@ export class HealthInstituteService implements OnModuleInit {
           return {
             healthInstitutes: Array.isArray(result.healthInstitutes)
               ? result.healthInstitutes
+              : [],
+          };
+        },
+        {
+          ttl: 300,
+          lockTtl: 10,
+          retries: 5,
+          retryDelay: 50,
+          jitter: Math.floor(Math.random() * 300),
+        },
+      );
+    } catch (error) {
+      if (
+        error instanceof Error &&
+        error.message.toLowerCase().includes('redis')
+      ) {
+        this.logger.warn(
+          `Redis operation failed for doctor ${request.doctorId}`,
+          error.message,
+        );
+      }
+
+      throw error;
+    }
+  }
+
+  /**
+   * @description get associated health institutes master data grpc service.
+   * @param request
+   * @returns GetAssociatedHealthInstitutesRes
+   */
+  async getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesReq,
+  ): Promise<GetAssociatedHealthInstitutesMasterDataRes> {
+    const cacheKey = `associated-health-institute-master-data:${request.doctorId}`;
+    try {
+      return await this.redisCacheService.getOrSet(
+        cacheKey,
+        async () => {
+          const result =
+            await this.healthInstituteRepository.getAssociatedHealthInstitutesMasterData(
+              request,
+            );
+
+          return {
+            healthInstitutes: Array.isArray(result)
+              ? result
               : [],
           };
         },

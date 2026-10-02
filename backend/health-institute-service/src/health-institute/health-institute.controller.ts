@@ -21,6 +21,7 @@ import type { JwtPayload } from '../common/interfaces/jwt-payload.interface';
 import { GrpcMethod } from '@nestjs/microservices';
 import { HEALTH_INSTITUTE_SERVICE_NAME } from '../proto/generated/health-institute';
 import type {
+  GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   HealthInstituteProfileReq,
@@ -57,6 +58,23 @@ export class HealthInstituteController {
     request: GetAssociatedHealthInstitutesReq,
   ): Promise<GetAssociatedHealthInstitutesRes> {
     return await this.healthInstituteService.getAssociatedHealthInstitutes(
+      request,
+    );
+  }
+
+  /**
+   * @description get associated health institutes master data grpc controller.
+   * @param request 
+   * @returns GetAssociatedHealthInstitutesMasterDataRes
+   */
+  @GrpcMethod(
+    HEALTH_INSTITUTE_SERVICE_NAME,
+    'GetAssociatedHealthInstitutesMasterData',
+  )
+  async getAssociatedHealthInstitutesMasterData(
+    request: GetAssociatedHealthInstitutesReq,
+  ): Promise<GetAssociatedHealthInstitutesMasterDataRes> {
+    return await this.healthInstituteService.getAssociatedHealthInstitutesMasterData(
       request,
     );
   }
@@ -219,22 +237,22 @@ export class HealthInstituteController {
    * @param user
    * @returns json
    */
-    @Post('unappointed-doctors-list')
-    @HttpCode(HttpStatus.OK)
-    @Auth(UserRole.HEALTH_INSTITUTE)
-    async getUnAppointedDoctorsList(
-      @Body() request: GetUnAppointedDoctorsListDto,
-      @CurrentUser() user: JwtPayload,
-    ) {
-      const result = await this.healthInstituteService.getUnAppointedDoctorsList(
-        request,
-        user.userPrimaryKey,
-      );
+  @Post('unappointed-doctors-list')
+  @HttpCode(HttpStatus.OK)
+  @Auth(UserRole.HEALTH_INSTITUTE)
+  async getUnAppointedDoctorsList(
+    @Body() request: GetUnAppointedDoctorsListDto,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    const result = await this.healthInstituteService.getUnAppointedDoctorsList(
+      request,
+      user.userPrimaryKey,
+    );
 
-      return {
-        success: true,
-        message: 'Doctor List Fetched Successfully.',
-        data: result,
-      };
-    }
+    return {
+      success: true,
+      message: 'Doctor List Fetched Successfully.',
+      data: result,
+    };
+  }
 }
