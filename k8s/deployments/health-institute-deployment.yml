@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: health-institute-deployment
+  name: arogyalink-health-institute-deployment
   namespace: arogyalink
 spec:
   selector:
@@ -17,11 +17,11 @@ spec:
           image: subhamsahadev/arogyalink-health-institute-service:1.0.0
           resources:
             requests:
-              memory: "500Mi"
-              cpu: "1g"
+              cpu: 250m
+              memory: 500Mi
             limits:
-              memory: "1Gi"
-              cpu: "2g"
+              cpu: 500m
+              memory: 1Gi
           ports:
             - containerPort: 8083
             - containerPort: 5052
@@ -30,78 +30,92 @@ spec:
           env:
             - name: NODE_ENV
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: nodeEnv
+
             - name: DB_HOST
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: dbHost
+
             - name: DB_PORT
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: dbPort
+
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
                   name: health-institute-secret
                   key: dbUsername
+
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: health-institute-secret
                   key: dbPassword
+
             - name: DB_NAME
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: dbName
+
             - name: PORT
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: port
+
             - name: DOCTOR_SERVICE_GRPC_URL
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: doctorServiceGrpcUrl
+
             - name: HEALTH_INSTITUTE_SERVICE_GRPC_URL
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: healthInstituteServiceGrpcUrl
+
             - name: JWT_ACCESS_SECRET
               valueFrom:
                 secretKeyRef:
                   name: health-institute-secret
                   key: jwtAccessSecret
+
             - name: JWT_ACCESS_EXPIRES_IN
               valueFrom:
                 secretKeyRef:
                   name: health-institute-secret
                   key: jwtAccessExpiresIn
+
             - name: JWT_REFRESH_SECRET
               valueFrom:
                 secretKeyRef:
                   name: health-institute-secret
                   key: jwtRefreshSecret
+
             - name: JWT_REFRESH_EXPIRES_IN
               valueFrom:
                 secretKeyRef:
                   name: health-institute-secret
                   key: jwtRefreshExpiresIn
+
             - name: REDIS_HOST
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: redisHost
+
             - name: REDIS_PORT
               valueFrom:
-                secretKeyRef:
-                  name: health-institute-secret
+                configMapKeyRef:
+                  name: health-institute-configmap
                   key: redisPort
 
       #     volumeMounts:

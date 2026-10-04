@@ -1,0 +1,12 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: health-institute-postgres-service
+  namespace: arogyalink
+spec:
+  selector:
+    app: health-institute-postgres
+  ports:
+  - protocol: TCP
+    port: 5432
+    targetPort: 5432

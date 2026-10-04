@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: auth-configmap
+  namespace: arogyalink
+data:
+  nodeEnv: container
+  dbHost: auth-postgres-service
+  dbPort: "5432"
+  dbName: auth_db
+  port: "8081"
+  doctorServiceGrpcUrl: auth-service:50051
+  healthInstituteServiceGrpcUrl: auth-service:50052
+  patientServiceGrpcUrl: patient-service:50053
+  redisHost: redis-service
+  redisPort: "6379"

@@ -1,0 +1,13 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: auth-service
+  namespace: arogyalink
+spec:
+  selector:
+    app: auth
+  ports:
+  - name: access-port
+    protocol: TCP
+    port: 8081
+    targetPort: 8081

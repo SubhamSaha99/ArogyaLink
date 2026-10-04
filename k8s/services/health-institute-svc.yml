@@ -7,9 +7,11 @@ spec:
   selector:
     app: health-institute
   ports:
-    - protocol: TCP
+    - name: access-port
+      protocol: TCP
       port: 8083
       targetPort: 8085
-    - protocol: TCP
+    - name: grpc-port
+      protocol: TCP
       port: 5052
       targetPort: 5052

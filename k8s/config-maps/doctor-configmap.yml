@@ -1,0 +1,16 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: doctor-configmap
+  namespace: arogyalink
+data:
+  nodeEnv: container
+  dbHost: doctor-postgres-service
+  dbPort: "5432"
+  dbName: doctor_db
+  port: "8082"
+  doctorServiceGrpcUrl: 0.0.0.0:50051
+  healthInstituteServiceGrpcUrl: health-institute-service:50052
+  apiBaseUrl: http://localhost:8080
+  redisHost: redis-service
+  redisPort: "6379"

@@ -1,122 +1,134 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: arogyalink-auth-deployment
+  name: arogyalink-doctor-deployment
   namespace: arogyalink
 spec:
-  replicas: 1
   selector:
     matchLabels:
-      app: auth
-
+      app: doctor
   template:
     metadata:
-      name: auth-pod
-      namespace: arogyalink
       labels:
-        app: auth
-
+        app: doctor
     spec:
       containers:
-        - name: arogyalink-auth
-          image: subhamsahadev/arogyalink-auth-service:1.0.0
+        - name: arogyalink-doctor
+          image: subhamsahadev/arogyalink-doctor-service:1.0.0
           resources:
             requests:
-              memory: "500Mi"
-              cpu: "1g"
+              cpu: 250m
+              memory: 500Mi
             limits:
-              memory: "1Gi"
-              cpu: "2g"
+              cpu: 500m
+              memory: 1Gi
           ports:
-          - containerPort: 8081
+            - containerPort: 8082
+            - containerPort: 5051
 
-          # Environment variables
+          # Environments
           env:
             - name: NODE_ENV
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: nodeEnv
+
             - name: DB_HOST
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: dbHost
+
             - name: DB_PORT
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: dbPort
+
             - name: DB_USERNAME
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: dbUsername
+
             - name: DB_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: dbPassword
+
             - name: DB_NAME
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: dbName
+
             - name: PORT
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: port
+
             - name: DOCTOR_SERVICE_GRPC_URL
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: doctorServiceGrpcUrl
+
             - name: HEALTH_INSTITUTE_SERVICE_GRPC_URL
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: healthInstituteServiceGrpcUrl
-            - name: PATIENT_SERVICE_GRPC_URL
+
+            - name: API_BASE_URL
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
-                  key: patientServiceGrpcUrl
+                configMapKeyRef:
+                  name: doctor-configmap
+                  key: apiBaseUrl
+
             - name: JWT_ACCESS_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: jwtAccessSecret
+
             - name: JWT_ACCESS_EXPIRES_IN
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: jwtAccessExpiresIn
+
             - name: JWT_REFRESH_SECRET
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: jwtRefreshSecret
+
             - name: JWT_REFRESH_EXPIRES_IN
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: jwtRefreshExpiresIn
+
             - name: REDIS_HOST
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: redisHost
+
             - name: REDIS_PORT
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: redisPort
+
           volumeMounts:
-            - name: auth-storage
+            - name: doctor-storage
               mountPath: /usr/src/app/uploads
 
       volumes:
-        - name: auth-storage
+        - name: doctor-storage
           persistentVolumeClaim:
-            claimName: auth-pvc
+            claimName: doctor-pvc

@@ -7,9 +7,11 @@ spec:
   selector:
     app: myapp
   ports:
-    - protocol: TCP
+    - name: access-port
+      protocol: TCP
       port: 8084
       targetPort: 8084
-    - protocol: TCP
+    - name: grpc-port
+      protocol: TCP
       port: 5053
       targetPort: 5053

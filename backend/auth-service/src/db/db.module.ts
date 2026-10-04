@@ -29,7 +29,8 @@ import { Patient } from './entities/patient.entity';
           password: configService.getOrThrow<string>('DB_PASSWORD'),
           database: configService.getOrThrow<string>('DB_NAME'),
           autoLoadEntities: true,
-          synchronize: env === 'container' ? false : true,
+          //   synchronize: env === 'container' ? false : true,
+          synchronize: true,
           migrationsRun: false,
           migrations: ['dist/db/migrations/*.js'],
           entities: [

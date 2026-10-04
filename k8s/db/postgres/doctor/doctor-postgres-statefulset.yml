@@ -1,56 +1,58 @@
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: auth-postgres-statefulset
+  name: doctor-postgres-statefulset
   namespace: arogyalink
 spec:
-  serviceName: auth-postgres-service
+  serviceName: doctor-postgres-service
   replicas: 1
   selector:
     matchLabels:
-      app: auth-postgres
+      app: doctor-postgres
   template:
     metadata:
       labels:
-        app: auth-postgres
+        app: doctor-postgres
     spec:
       containers:
-        - name: auth-postgres
+        - name: doctor-postgres
           image: postgres:16
           ports:
             - containerPort: 5432
           resources:
             requests:
-              cpu: 1G
+              cpu: 250m
               memory: 500Mi
             limits:
-              cpu: 2G
+              cpu: 500m
               memory: 1Gi
+              
           env:
             - name: POSTGRES_USER
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: dbUsername
 
             - name: POSTGRES_PASSWORD
               valueFrom:
                 secretKeyRef:
-                  name: auth-secret
+                  name: doctor-secret
                   key: dbPassword
 
             - name: POSTGRES_DB
               valueFrom:
-                secretKeyRef:
-                  name: auth-secret
+                configMapKeyRef:
+                  name: doctor-configmap
                   key: dbName
+
           volumeMounts:
-            - name: auth-postgres-data
+            - name: doctor-postgres-data
               mountPath: /var/lib/postgres
   
   volumeClaimTemplates:
     - metadata:
-        name: auth-postgres-data
+        name: doctor-postgres-data
       spec:
         accessModes:
           - ReadWriteOnce

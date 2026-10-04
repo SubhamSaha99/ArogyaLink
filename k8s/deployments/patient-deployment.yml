@@ -22,11 +22,11 @@ spec:
           image: subhamsahadev/arogyalink-patient-service:1.0.0
           resources:
             requests:
-              memory: "500Mi"
-              cpu: "1g"
+              cpu: 250m
+              memory: 500Mi
             limits:
-              memory: "1Gi"
-              cpu: "2g"
+              cpu: 500m
+              memory: 1Gi
           ports:
             - containerPort: 8084
             - containerPort: 5053
@@ -35,68 +35,81 @@ spec:
           env:
             - name: NODE_ENV
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: nodeEnv
+
             - name: MONGODB_URL
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: mongodbUrl
+
             - name: MONGODB_DATABASE
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: mongodbDatabase
+
             - name: PORT
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: port
+
             - name: PATIENT_SERVICE_GRPC_URL
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: patientServiceGrpcUrl
+
             - name: API_BASE_URL
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: apiBaseUrl
+
             - name: JWT_ACCESS_SECRET
               valueFrom:
                 secretKeyRef:
                   name: patient-secret
                   key: jwtAccessSecret
+
             - name: JWT_ACCESS_EXPIRES_IN
               valueFrom:
                 secretKeyRef:
                   name: patient-secret
                   key: jwtAccessExpiresIn
+
             - name: JWT_REFRESH_SECRET
               valueFrom:
                 secretKeyRef:
                   name: patient-secret
                   key: jwtRefreshSecret
+
             - name: JWT_REFRESH_EXPIRES_IN
               valueFrom:
                 secretKeyRef:
                   name: patient-secret
                   key: jwtRefreshExpiresIn
-            - name: REDIS_HOST
-              valueFrom:
-                secretKeyRef:
-                  name: patient-secret
-                  key: redisHost
+            
+
             - name: JWT_ALGORITHM
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: jwtAlgorithm
+
+            - name: REDIS_HOST
+              valueFrom:
+                configMapKeyRef:
+                  name: patient-configmap
+                  key: redisHost
+
             - name: REDIS_PORT
               valueFrom:
-                secretKeyRef:
-                  name: patient-secret
+                configMapKeyRef:
+                  name: patient-configmap
                   key: redisPort
           volumeMounts:
             - name: patient-storage

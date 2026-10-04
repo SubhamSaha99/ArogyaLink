@@ -1,0 +1,15 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: patient-configmap
+  namespace: arogyalink
+data:
+  nodeEnv: container
+  mongodbUrl: mongodb://root:root@patient-mongo-service:27017/
+  mongodbDatabase: patient_db
+  port: "8084"
+  patientServiceGrpcUrl: 0.0.0.0:50053
+  apiBaseUrl: http://localhost:8080
+  jwtAlgorithm: HS256
+  redisHost: redis-service
+  redisPort: "6379"
