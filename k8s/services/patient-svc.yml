@@ -5,7 +5,7 @@ metadata:
   namespace: arogyalink
 spec:
   selector:
-    app: myapp
+    app: patient
   ports:
     - name: access-port
       protocol: TCP
@@ -13,5 +13,5 @@ spec:
       targetPort: 8084
     - name: grpc-port
       protocol: TCP
-      port: 5053
-      targetPort: 5053
+      port: 50053
+      targetPort: 50053

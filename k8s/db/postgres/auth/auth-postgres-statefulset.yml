@@ -47,7 +47,7 @@ spec:
           volumeMounts:
             - name: auth-postgres-data
               mountPath: /var/lib/postgres
-  
+
   volumeClaimTemplates:
     - metadata:
         name: auth-postgres-data

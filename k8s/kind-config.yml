@@ -1,0 +1,40 @@
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+
+nodes:
+  - role: control-plane
+    image: kindest/node:v1.36.1
+
+  - role: worker
+    image: kindest/node:v1.36.1
+    extraPortMappings:
+      - containerPort: 80
+        hostPort: 8080
+        protocol: TCP
+
+      - containerPort: 443
+        hostPort: 8443
+        protocol: TCP
+
+      # Databases
+      - containerPort: 30432
+        hostPort: 30432
+        protocol: TCP
+
+      - containerPort: 30433
+        hostPort: 30433
+        protocol: TCP
+
+      - containerPort: 30434
+        hostPort: 30434
+        protocol: TCP
+
+      - containerPort: 30435
+        hostPort: 30435
+        protocol: TCP
+
+  - role: worker
+    image: kindest/node:v1.36.1
+
+  - role: worker
+    image: kindest/node:v1.36.1

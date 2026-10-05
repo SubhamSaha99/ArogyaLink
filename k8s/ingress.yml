@@ -1,0 +1,41 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: arogyalink-ingress
+  namespace: arogyalink
+  labels:
+    app.kubernetes.io/name: arogyalink-ingress
+spec:
+  ingressClassName: nginx
+  rules:
+    - host: arogyalink.local
+      http:
+        paths:
+          - path: /api/auth
+            pathType: Prefix
+            backend:
+              service:
+                name: auth-service
+                port:
+                  number: 8081
+          - path: /api/doctor
+            pathType: Prefix
+            backend:
+              service:
+                name: doctor-service
+                port:
+                  number: 8082
+          - path: /api/health-institute
+            pathType: Prefix
+            backend:
+              service:
+                name: health-institute-service
+                port:
+                  number: 8083
+          - path: /api/patient
+            pathType: Prefix
+            backend:
+              service:
+                name: patient-service
+                port:
+                  number: 8084

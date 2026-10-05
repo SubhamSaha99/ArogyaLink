@@ -20,6 +20,7 @@ spec:
       containers:
         - name: arogyalink-auth
           image: subhamsahadev/arogyalink-auth-service:1.0.0
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: 250m

@@ -10,8 +10,8 @@ spec:
     - name: access-port
       protocol: TCP
       port: 8083
-      targetPort: 8085
+      targetPort: 8083
     - name: grpc-port
       protocol: TCP
-      port: 5052
-      targetPort: 5052
+      port: 50052
+      targetPort: 50052

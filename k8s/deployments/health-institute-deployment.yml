@@ -15,6 +15,7 @@ spec:
       containers:
         - name: arogyalink-health-institute
           image: subhamsahadev/arogyalink-health-institute-service:1.0.0
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: 250m

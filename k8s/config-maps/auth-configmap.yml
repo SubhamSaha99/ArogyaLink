@@ -9,8 +9,8 @@ data:
   dbPort: "5432"
   dbName: auth_db
   port: "8081"
-  doctorServiceGrpcUrl: auth-service:50051
-  healthInstituteServiceGrpcUrl: auth-service:50052
+  doctorServiceGrpcUrl: doctor-service:50051
+  healthInstituteServiceGrpcUrl: health-institute-service:50052
   patientServiceGrpcUrl: patient-service:50053
   redisHost: redis-service
   redisPort: "6379"

@@ -20,6 +20,7 @@ spec:
       containers:
         - name: arogyalink-patient
           image: subhamsahadev/arogyalink-patient-service:1.0.0
+          imagePullPolicy: Always
           resources:
             requests:
               cpu: 250m
