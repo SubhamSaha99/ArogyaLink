@@ -27,7 +27,7 @@ spec:
             - containerPort: 8082
             - containerPort: 5051
 
-          # Environments
+          # Environment variables
           env:
             - name: NODE_ENV
               valueFrom:
@@ -125,9 +125,40 @@ spec:
                   name: doctor-configmap
                   key: redisPort
 
+          # Volume mount config
           volumeMounts:
             - name: doctor-storage
               mountPath: /usr/src/app/uploads
+
+          # Probes
+          startupProbe:
+            httpGet:
+              path: /
+              port: 8081
+            initialDelaySeconds: 5
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 12
+            
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 8081
+            initialDelaySeconds: 15
+            periodSeconds: 10
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
+
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8081
+            initialDelaySeconds: 10
+            periodSeconds: 5
+            timeoutSeconds: 5
+            failureThreshold: 3
+            successThreshold: 1
 
       volumes:
         - name: doctor-storage

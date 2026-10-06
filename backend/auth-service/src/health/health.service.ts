@@ -9,7 +9,7 @@ import type {
 
 const TIMEOUT_MS = 3000;
 
-function withTimeout<T>(
+async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
   errorMessage: string,

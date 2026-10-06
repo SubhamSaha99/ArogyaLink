@@ -7,9 +7,9 @@ import type {
   ServiceDependencyHealth,
 } from './health.interface';
 
-const TIMEOUT_MS = 3000;
+const TIMEOUT_MS = 2000;
 
-function withTimeout<T>(
+async function withTimeout<T>(
   promise: Promise<T>,
   timeoutMs: number,
   errorMessage: string,
