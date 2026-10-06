@@ -3,6 +3,10 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
 class Settings(BaseSettings):
+    nodeEnv: str = Field(
+        default="development",
+        validation_alias="NODE_ENV"
+    )
     port: int = Field(
         default=8081,
         validation_alias="PORT",

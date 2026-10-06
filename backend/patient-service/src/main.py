@@ -15,6 +15,7 @@ from src.common.exceptions.handlers import registerExceptionHandlers
 from src.grpc.server import startGrpcServer
 from src.redis.redis_service import RedisService
 from src.patient.patient_router import router as patientRouter
+from src.health.health_router import router as healthRouter
 
 
 logger = getLogger("main")
@@ -29,6 +30,7 @@ app = FastAPI(
 )
 
 registerExceptionHandlers(app)
+app.include_router(healthRouter)
 app.include_router(
     patientRouter,
     prefix="/api",

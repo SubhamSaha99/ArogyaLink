@@ -5,9 +5,10 @@ import { HealthInstituteModule } from './health-institute/health-institute.modul
 import { RedisModule } from './redis/redis.module';
 import { JwtStrategy } from './common/strategies/jwt.strategy';
 import { DatabaseService } from './db/db.service';
+import { HealthModule } from './health/health.module';
 
 @Module({
-  imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule, HealthInstituteModule, RedisModule],
+  imports: [ConfigModule.forRoot({ isGlobal: true }), DatabaseModule, HealthInstituteModule, RedisModule, HealthModule],
   providers: [JwtStrategy, DatabaseService],
 })
 export class AppModule {}

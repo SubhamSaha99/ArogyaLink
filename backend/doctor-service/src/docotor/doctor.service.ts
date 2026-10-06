@@ -1,8 +1,4 @@
 import { Inject, Injectable, Logger, OnModuleInit } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
-import type { ClientGrpc } from '@nestjs/microservices';
-import { GrpcServiceName } from '../common/utils/constants';
-import { firstValueFrom } from 'rxjs';
 import {
   DoctorProfileReq,
   DoctorProfileRes,
@@ -11,6 +7,7 @@ import {
   GetDoctorListRes,
   GetUnAppointedDoctorsListReq,
 } from '../proto/generated/doctor';
+import { ConfigService } from '@nestjs/config';
 import { RedisService } from '../redis/redis.service';
 import {
   DoctorQualifications,
@@ -27,22 +24,22 @@ import {
   DoctorQualificationsDto,
   GetDoctorListDto,
 } from './doctor.dto';
-import { deleteFile } from '../common/utils/file-util';
-import { AppwriteStorage } from '../common/utils/appwrite-storage';
+import { deleteFile, moveFile } from '../common/utils/file-util';
 import {
-  GetAssociatedHealthInstitutesMasterDataRes,
+    GetAssociatedHealthInstitutesMasterDataRes,
   GetAssociatedHealthInstitutesReq,
   GetAssociatedHealthInstitutesRes,
   HEALTH_INSTITUTE_SERVICE_NAME,
   HealthInstituteServiceClient,
 } from '../proto/generated/health-intitute';
-import { ApiResponseType } from '../common/utils/constants';
+import type { ClientGrpc } from '@nestjs/microservices';
+import { ApiResponseType, GrpcServiceName } from '../common/utils/constants';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class DoctorService implements OnModuleInit {
   private readonly logger = new Logger(DoctorService.name);
   private healthInstituteGrpcService!: HealthInstituteServiceClient;
-  private appwriteStorage?: AppwriteStorage;
 
   constructor(
     private readonly doctorRepository: DoctorRepository,
@@ -52,11 +49,6 @@ export class DoctorService implements OnModuleInit {
     @Inject(GrpcServiceName.HEALTH_INSTITUTE)
     private readonly healthInstituteClient: ClientGrpc,
   ) {}
-
-  private getAppwriteStorage(): AppwriteStorage {
-    this.appwriteStorage ??= new AppwriteStorage(this.configService);
-    return this.appwriteStorage;
-  }
 
   onModuleInit() {
     this.healthInstituteGrpcService =
@@ -101,31 +93,6 @@ export class DoctorService implements OnModuleInit {
   }
 
   /**
-   * @description get un appointed doctors list grpc service
-   * @param request
-   * @returns GetDoctorListRes
-   */
-  async getUnAppointedDoctorsList(
-    request: GetUnAppointedDoctorsListReq,
-  ): Promise<GetDoctorListRes> {
-    const doctorPrimaryKeys = Array.isArray(request.doctorPrimaryKeys)
-      ? request.doctorPrimaryKeys
-      : [];
-
-    const result = await this.doctorRepository.getUnAppointedDoctorsList(
-      request,
-      doctorPrimaryKeys,
-    );
-
-    return {
-      doctors: Array.isArray(result.doctors) ? result.doctors : [],
-      total: Number(result.total ?? 0),
-      offset: Number(result.offset ?? request.offset ?? 0),
-      limit: Number(result.limit ?? request.limit ?? 0),
-    };
-  }
-
-  /**
    * @description update doctor basic details service
    * @param request
    * @param doctorId
@@ -142,8 +109,10 @@ export class DoctorService implements OnModuleInit {
     try {
       // TODO: Upload File
       if (profileImage) {
-        uploadedImagePath = `appwrite:${await this.getAppwriteStorage().upload(profileImage.path, profileImage.originalname)}`;
-        await deleteFile(profileImage.path);
+        uploadedImagePath = await moveFile(
+          profileImage.path,
+          `${doctorId}/doctor-profile`,
+        );
       }
       // TODO: Update details
       const result = await this.doctorRepository.updateDoctorProfileDetails(
@@ -158,13 +127,7 @@ export class DoctorService implements OnModuleInit {
       };
     } catch (error) {
       if (uploadedImagePath) {
-        if (uploadedImagePath.startsWith('appwrite:')) {
-          await this.getAppwriteStorage().delete(
-            uploadedImagePath.slice('appwrite:'.length),
-          );
-        } else {
-          await deleteFile(uploadedImagePath);
-        }
+        await deleteFile(uploadedImagePath);
       }
       throw error;
     }
@@ -267,11 +230,7 @@ export class DoctorService implements OnModuleInit {
           } = result;
 
           const profileImage = profileDetails.profileImage
-            ? profileDetails.profileImage.startsWith('appwrite:')
-              ? await this.getAppwriteStorage().viewUrl(
-                  profileDetails.profileImage.slice('appwrite:'.length),
-                )
-              : `${this.configService.get<string>('API_BASE_URL') ?? 'http://localhost:8080'}/uploads/${profileDetails.profileImage}`
+            ? `${this.configService.get<string>('API_BASE_URL') ?? 'http://localhost:8080'}/uploads/${profileDetails.profileImage}`
             : '';
 
           const response: GetDoctorDetailsResponse = {
@@ -346,6 +305,31 @@ export class DoctorService implements OnModuleInit {
 
       throw error;
     }
+  }
+
+  /**
+   * @description get un appointed doctors list grpc service
+   * @param request
+   * @returns GetDoctorListRes
+   */
+  async getUnAppointedDoctorsList(
+    request: GetUnAppointedDoctorsListReq,
+  ): Promise<GetDoctorListRes> {
+    const doctorPrimaryKeys = Array.isArray(request.doctorPrimaryKeys)
+      ? request.doctorPrimaryKeys
+      : [];
+
+    const result = await this.doctorRepository.getUnAppointedDoctorsList(
+      request,
+      doctorPrimaryKeys,
+    );
+
+    return {
+      doctors: Array.isArray(result.doctors) ? result.doctors : [],
+      total: Number(result.total ?? 0),
+      offset: Number(result.offset ?? request.offset ?? 0),
+      limit: Number(result.limit ?? request.limit ?? 0),
+    };
   }
 
   /**
