@@ -3,17 +3,17 @@ import type { Response } from 'express';
 import { HealthService } from './health.service';
 import type { HealthCheckResponse, LivenessResponse } from './health.interface';
 
-@Controller()
+@Controller('health')
 export class HealthController {
   constructor(private readonly healthService: HealthService) {}
 
-  @Get('/')
+  @Get('live')
   getLiveness(): LivenessResponse {
     return this.healthService.getLiveness();
   }
 
-  @Get(['health', 'api/health'])
-  async getHealth(
+  @Get('ready')
+  async getReadiness(
     @Res({ passthrough: true }) res: Response,
   ): Promise<HealthCheckResponse> {
     const health = await this.healthService.check();

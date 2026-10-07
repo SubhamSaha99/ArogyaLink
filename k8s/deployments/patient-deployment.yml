@@ -121,8 +121,8 @@ spec:
           # Probes
           startupProbe:
             httpGet:
-              path: /
-              port: 8081
+              path: /api/health/live
+              port: 8084
             initialDelaySeconds: 5
             periodSeconds: 5
             timeoutSeconds: 5
@@ -130,8 +130,8 @@ spec:
             
           livenessProbe:
             httpGet:
-              path: /
-              port: 8081
+              path: /api/health/live
+              port: 8084
             initialDelaySeconds: 15
             periodSeconds: 10
             timeoutSeconds: 5
@@ -140,8 +140,8 @@ spec:
 
           readinessProbe:
             httpGet:
-              path: /health
-              port: 8081
+              path: /api/health/ready
+              port: 8084
             initialDelaySeconds: 10
             periodSeconds: 5
             timeoutSeconds: 5

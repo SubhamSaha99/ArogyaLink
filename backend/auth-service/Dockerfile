@@ -53,7 +53,7 @@ FROM node:24-alpine3.21 AS production
 
 WORKDIR /usr/src/app
 
-ENV NODE_ENV=conatiner
+ENV NODE_ENV=container
 
 # Copy pruned application
 COPY --from=prune /usr/src/app /usr/src/app
