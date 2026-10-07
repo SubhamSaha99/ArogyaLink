@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: arogyalink-auth-deployment
+  name: auth-deployment
   namespace: arogyalink
 spec:
   replicas: 1

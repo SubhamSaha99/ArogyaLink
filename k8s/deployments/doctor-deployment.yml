@@ -1,7 +1,7 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: arogyalink-doctor-deployment
+  name: doctor-deployment
   namespace: arogyalink
 spec:
   selector:
