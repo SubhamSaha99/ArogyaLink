@@ -17,7 +17,6 @@ from src.redis.redis_service import RedisService
 from src.patient.patient_router import router as patientRouter
 from src.health.health_router import router as healthRouter
 
-
 logger = getLogger("main")
 
 redisService = RedisService()
@@ -30,7 +29,10 @@ app = FastAPI(
 )
 
 registerExceptionHandlers(app)
-app.include_router(healthRouter)
+app.include_router(
+    healthRouter,
+    prefix="/api",
+)
 app.include_router(
     patientRouter,
     prefix="/api",
@@ -38,7 +40,7 @@ app.include_router(
 
 
 async def main():
-    
+
     await connectDatabase()
     await createIndexes()
     await redisService.ping()
@@ -49,11 +51,7 @@ async def main():
     # -------------------------
 
     httpConfig = uvicorn.Config(
-        app,
-        host="0.0.0.0",
-        port=settings.port,
-        log_level="info",
-        reload=False
+        app, host="0.0.0.0", port=settings.port, log_level="info", reload=False
     )
 
     httpServer = uvicorn.Server(httpConfig)
@@ -84,13 +82,9 @@ async def main():
     # Start HTTP
     # -------------------------
 
-    httpTask = asyncio.create_task(
-        httpServer.serve()
-    )
+    httpTask = asyncio.create_task(httpServer.serve())
 
-    logger.info(
-        f"Patient Service HTTP server running on port {settings.port}"
-    )
+    logger.info(f"Patient Service HTTP server running on port {settings.port}")
 
     try:
 
@@ -117,9 +111,7 @@ async def main():
         # Close database
         await closeDatabase()
 
-        logger.info(
-            "Patient Service shutdown completed"
-        )
+        logger.info("Patient Service shutdown completed")
 
 
 if __name__ == "__main__":
